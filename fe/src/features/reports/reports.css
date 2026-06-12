@@ -93,7 +93,7 @@
 
 .crm-reports-table__row span:last-child,
 .crm-reports-table__header span:last-child {
-  text-align: right;
+  text-align: end;
 }
 
 .crm-reports-bars {
@@ -137,7 +137,7 @@
 
   .crm-reports-table__row span:last-child,
   .crm-reports-table__header span:last-child {
-    text-align: left;
+    text-align: start;
   }
 }
 

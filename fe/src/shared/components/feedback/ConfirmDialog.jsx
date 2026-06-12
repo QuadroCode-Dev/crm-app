@@ -7,18 +7,20 @@ import {
   DialogTitle,
 } from '@mui/material';
 import { useId } from 'react';
+import useLanguage from '../../hooks/useLanguage.js';
 
 function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
 }) {
   const titleId = useId();
   const descriptionId = useId();
+  const { t } = useLanguage();
 
   return (
     <Dialog
@@ -35,10 +37,10 @@ function ConfirmDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel} autoFocus>
-          {cancelLabel}
+          {cancelLabel || t('Cancel')}
         </Button>
         <Button color="error" onClick={onConfirm} variant="contained">
-          {confirmLabel}
+          {confirmLabel || t('Confirm')}
         </Button>
       </DialogActions>
     </Dialog>

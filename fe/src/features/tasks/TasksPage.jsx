@@ -30,6 +30,7 @@ import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
 import useAuth from '../../shared/hooks/useAuth.js';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import TaskFormDialog from './TaskFormDialog.jsx';
 import './tasks.css';
@@ -57,6 +58,7 @@ function buildTaskPayload(values) {
 function TasksPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
@@ -103,7 +105,7 @@ function TasksPage() {
       }
       showNotification({
         severity: 'success',
-        message: 'Task created successfully.',
+        message: t('Task created successfully.'),
       });
       setFormOpen(false);
     },
@@ -124,7 +126,7 @@ function TasksPage() {
       }
       showNotification({
         severity: 'success',
-        message: 'Task updated successfully.',
+        message: t('Task updated successfully.'),
       });
       setFormOpen(false);
       setEditingTask(null);
@@ -146,7 +148,7 @@ function TasksPage() {
       }
       showNotification({
         severity: 'success',
-        message: 'Task completed successfully.',
+        message: t('Task completed successfully.'),
       });
     },
     onError: (error) => {
@@ -163,7 +165,7 @@ function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       showNotification({
         severity: 'success',
-        message: 'Task deleted successfully.',
+        message: t('Task deleted successfully.'),
       });
       setDeletingTask(null);
     },
@@ -197,7 +199,7 @@ function TasksPage() {
     () => [
       {
         field: 'title',
-        headerName: 'Title',
+        headerName: t('Title'),
         flex: 1.2,
         minWidth: 220,
         renderCell: (params) => (
@@ -208,13 +210,13 @@ function TasksPage() {
       },
       {
         field: 'leadId',
-        headerName: 'Lead',
+        headerName: t('Lead'),
         flex: 1.2,
         minWidth: 240,
         renderCell: (params) =>
           params.value ? (
             <Link className="crm-tasks-table__lead-link" to={`/leads/${params.value}`}>
-              {leadMap[params.value]?.title || 'Open lead'}
+              {leadMap[params.value]?.title || t('Open lead')}
             </Link>
           ) : (
             <span className="crm-tasks-table__empty-value">-</span>
@@ -222,49 +224,49 @@ function TasksPage() {
       },
       {
         field: 'contactId',
-        headerName: 'Contact',
+        headerName: t('Contact'),
         flex: 1,
         minWidth: 170,
         valueGetter: (value) => (value ? contactMap[value]?.fullName || '-' : '-'),
       },
       {
         field: 'assignedUserName',
-        headerName: 'Assigned user',
+        headerName: t('Assigned user'),
         flex: 1,
         minWidth: 160,
       },
       {
         field: 'priority',
-        headerName: 'Priority',
+        headerName: t('Priority'),
         flex: 0.75,
         minWidth: 120,
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('Status'),
         flex: 0.85,
         minWidth: 140,
       },
       {
         field: 'dueDateUtc',
-        headerName: 'Due date',
+        headerName: t('Due date'),
         flex: 0.9,
         minWidth: 140,
         valueFormatter: (value) => formatDate(value),
       },
       {
         field: 'overdue',
-        headerName: 'Overdue',
+        headerName: t('Overdue'),
         flex: 0.8,
         minWidth: 120,
         sortable: false,
         renderCell: (params) =>
           isOverdue(params.row) ? (
-            <Chip color="error" label="Overdue" size="small" />
+            <Chip color="error" label={t('Overdue')} size="small" />
           ) : (
             <Chip
               color={params.row.isCompleted ? 'success' : 'default'}
-              label={params.row.isCompleted ? 'Done' : 'On track'}
+              label={params.row.isCompleted ? t('Done') : t('On track')}
               size="small"
               variant={params.row.isCompleted ? 'filled' : 'outlined'}
             />
@@ -272,7 +274,7 @@ function TasksPage() {
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('Actions'),
         minWidth: 260,
         sortable: false,
         renderCell: (params) => (
@@ -283,7 +285,7 @@ function TasksPage() {
                 variant="outlined"
                 onClick={() => completeTaskMutation.mutate(params.row.id)}
               >
-                Complete
+                {t('Complete')}
               </Button>
             ) : null}
             <Button
@@ -291,7 +293,7 @@ function TasksPage() {
               variant="outlined"
               onClick={() => handleEdit(params.row)}
             >
-              Edit
+              {t('Edit')}
             </Button>
             <Button
               size="small"
@@ -299,13 +301,13 @@ function TasksPage() {
               color="error"
               onClick={() => setDeletingTask(params.row)}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </Stack>
         ),
       },
     ],
-    [completeTaskMutation, contactMap, leadMap],
+    [completeTaskMutation, contactMap, leadMap, t],
   );
 
   function updateFilters(nextValues) {
@@ -360,7 +362,7 @@ function TasksPage() {
   if (tasksQuery.isError) {
     return (
       <ErrorState
-        title="Unable to load tasks."
+        title={t('Unable to load tasks.')}
         description={normalizeApiError(tasksQuery.error).message}
         onRetry={() => tasksQuery.refetch()}
       />
@@ -372,12 +374,12 @@ function TasksPage() {
   return (
     <Stack spacing={3} className="crm-tasks-page">
       <PageHeader
-        eyebrow="Execution"
-        title="Tasks"
-        description="Track follow-ups, keep owners accountable, and spot overdue work before it slips."
+        eyebrow={t('Execution')}
+        title={t('Tasks')}
+        description={t('Track follow-ups, keep owners accountable, and spot overdue work before it slips.')}
         actions={
           <Button onClick={handleCreate} variant="contained">
-            Add task
+            {t('Add task')}
           </Button>
         }
       />
@@ -389,12 +391,12 @@ function TasksPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Assigned user"
+              label={t('Assigned user')}
               className="crm-tasks-filters__field"
               value={query.assignedUserId}
               onChange={(event) => updateFilters({ assignedUserId: event.target.value })}
             >
-              <option value="">All users</option>
+              <option value="">{t('All users')}</option>
               {assignedUserOptions.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.fullName}
@@ -406,15 +408,15 @@ function TasksPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Status"
+              label={t('Status')}
               className="crm-tasks-filters__field"
               value={query.status}
               onChange={(event) => updateFilters({ status: event.target.value })}
             >
-              <option value="">All statuses</option>
+              <option value="">{t('All statuses')}</option>
               {statusOptions.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {t(option)}
                 </option>
               ))}
             </TextField>
@@ -423,15 +425,15 @@ function TasksPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Priority"
+              label={t('Priority')}
               className="crm-tasks-filters__field"
               value={query.priority}
               onChange={(event) => updateFilters({ priority: event.target.value })}
             >
-              <option value="">All priorities</option>
+              <option value="">{t('All priorities')}</option>
               {priorityOptions.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {t(option)}
                 </option>
               ))}
             </TextField>
@@ -439,7 +441,7 @@ function TasksPage() {
             <TextField
               type="date"
               InputLabelProps={{ shrink: true }}
-              label="Due from"
+              label={t('Due from')}
               className="crm-tasks-filters__field"
               value={query.dueDateFrom}
               onChange={(event) => updateFilters({ dueDateFrom: event.target.value })}
@@ -448,7 +450,7 @@ function TasksPage() {
             <TextField
               type="date"
               InputLabelProps={{ shrink: true }}
-              label="Due to"
+              label={t('Due to')}
               className="crm-tasks-filters__field"
               value={query.dueDateTo}
               onChange={(event) => updateFilters({ dueDateTo: event.target.value })}
@@ -458,12 +460,12 @@ function TasksPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Lead"
+              label={t('Lead')}
               className="crm-tasks-filters__field"
               value={query.leadId}
               onChange={(event) => updateFilters({ leadId: event.target.value })}
             >
-              <option value="">All leads</option>
+              <option value="">{t('All leads')}</option>
               {(leadsQuery.data?.items || []).map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.title}
@@ -475,12 +477,12 @@ function TasksPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Contact"
+              label={t('Contact')}
               className="crm-tasks-filters__field"
               value={query.contactId}
               onChange={(event) => updateFilters({ contactId: event.target.value })}
             >
-              <option value="">All contacts</option>
+              <option value="">{t('All contacts')}</option>
               {(contactsQuery.data?.items || []).map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.fullName}
@@ -498,7 +500,7 @@ function TasksPage() {
                   }
                 />
               }
-              label="Overdue only"
+              label={t('Overdue only')}
             />
 
             <Box className="crm-tasks-filters__actions">
@@ -512,7 +514,7 @@ function TasksPage() {
                   })
                 }
               >
-                Reset
+                {t('Reset')}
               </Button>
             </Box>
           </Box>
@@ -521,9 +523,9 @@ function TasksPage() {
 
       {rows.length === 0 ? (
         <EmptyState
-          title="No tasks match these filters"
-          description="Reset the filters or create a new task to start building the work queue."
-          actionLabel="Create task"
+          title={t('No tasks match these filters')}
+          description={t('Reset the filters or create a new task to start building the work queue.')}
+          actionLabel={t('Create task')}
           onAction={handleCreate}
         />
       ) : (
@@ -575,9 +577,9 @@ function TasksPage() {
 
       <ConfirmDialog
         open={Boolean(deletingTask)}
-        title="Delete task?"
-        description="This removes the task from the work queue. You can't undo this action."
-        confirmLabel="Delete task"
+        title={t('Delete task?')}
+        description={t("This removes the task from the work queue. You can't undo this action.")}
+        confirmLabel={t('Delete task')}
         onCancel={() => setDeletingTask(null)}
         onConfirm={() => deleteTaskMutation.mutate(deletingTask.id)}
       />

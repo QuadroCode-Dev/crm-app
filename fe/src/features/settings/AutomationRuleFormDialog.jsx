@@ -15,23 +15,30 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import * as yup from 'yup';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const automationRuleSchema = yup.object({
-  name: yup.string().trim().required('Rule name is required.'),
-  targetStageId: yup.string().required('Target stage is required.'),
-  isActive: yup.boolean().required(),
-  taskTitleTemplate: yup.string().trim().required('Task title template is required.'),
-  taskDescriptionTemplate: yup.string().trim().required('Task description template is required.'),
-  taskDueOffsetDays: yup
-    .number()
-    .typeError('Due offset is required.')
-    .integer('Due offset must be a whole number.')
-    .min(0, 'Due offset must be 0 or greater.')
-    .required('Due offset is required.'),
-  assignToOwner: yup.boolean().required(),
-});
+function createAutomationRuleSchema(t) {
+  return yup.object({
+    name: yup.string().trim().required(t('Rule name is required.')),
+    targetStageId: yup.string().required(t('Target stage is required.')),
+    isActive: yup.boolean().required(),
+    taskTitleTemplate: yup.string().trim().required(t('Task title template is required.')),
+    taskDescriptionTemplate: yup
+      .string()
+      .trim()
+      .required(t('Task description template is required.')),
+    taskDueOffsetDays: yup
+      .number()
+      .typeError(t('Due offset is required.'))
+      .integer(t('Due offset must be a whole number.'))
+      .min(0, t('Due offset must be 0 or greater.'))
+      .required(t('Due offset is required.')),
+    assignToOwner: yup.boolean().required(),
+  });
+}
 
 function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit }) {
+  const { t } = useLanguage();
   const {
     control,
     handleSubmit,
@@ -47,7 +54,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
       taskDueOffsetDays: 0,
       assignToOwner: true,
     },
-    resolver: yupResolver(automationRuleSchema),
+    resolver: yupResolver(createAutomationRuleSchema(t)),
   });
 
   useEffect(() => {
@@ -64,12 +71,12 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>{rule ? 'Edit automation rule' : 'Create automation rule'}</DialogTitle>
+      <DialogTitle>{rule ? t('Edit automation rule') : t('Create automation rule')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField label="Trigger type" value="StageChanged" fullWidth disabled />
-            <TextField label="Action type" value="CreateTask" fullWidth disabled />
+            <TextField label={t('Trigger type')} value="StageChanged" fullWidth disabled />
+            <TextField label={t('Action type')} value="CreateTask" fullWidth disabled />
           </Stack>
 
           <Controller
@@ -78,7 +85,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Rule name"
+                label={t('Rule name')}
                 error={Boolean(errors.name)}
                 helperText={errors.name?.message}
               />
@@ -92,7 +99,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
               <TextField
                 {...field}
                 select
-                label="Target stage"
+                label={t('Target stage')}
                 error={Boolean(errors.targetStageId)}
                 helperText={errors.targetStageId?.message}
               >
@@ -111,7 +118,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Task title template"
+                label={t('Task title template')}
                 error={Boolean(errors.taskTitleTemplate)}
                 helperText={errors.taskTitleTemplate?.message}
               />
@@ -124,7 +131,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Task description template"
+                label={t('Task description template')}
                 multiline
                 minRows={3}
                 error={Boolean(errors.taskDescriptionTemplate)}
@@ -140,7 +147,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
               <TextField
                 {...field}
                 type="number"
-                label="Task due offset days"
+                label={t('Task due offset days')}
                 error={Boolean(errors.taskDueOffsetDays)}
                 helperText={errors.taskDueOffsetDays?.message}
               />
@@ -164,7 +171,7 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
                       onChange={(event) => field.onChange(event.target.checked)}
                     />
                   }
-                  label="Rule is active"
+                  label={t('Rule is active')}
                 />
               )}
             />
@@ -180,14 +187,14 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
                       onChange={(event) => field.onChange(event.target.checked)}
                     />
                   }
-                  label="Assign generated task to lead owner"
+                  label={t('Assign generated task to lead owner')}
                 />
               )}
             />
           </Stack>
 
           <Stack spacing={0.75}>
-            <Typography variant="subtitle2">Supported placeholders</Typography>
+            <Typography variant="subtitle2">{t('Supported placeholders')}</Typography>
             <Typography className="crm-muted-text">
               {'{leadTitle}'} {'{contactName}'} {'{stageName}'} {'{serviceRequested}'}
             </Typography>
@@ -195,9 +202,9 @@ function AutomationRuleFormDialog({ open, rule, stageOptions, onClose, onSubmit 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('Cancel')}</Button>
         <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting} variant="contained">
-          {rule ? 'Save rule' : 'Create rule'}
+          {rule ? t('Save rule') : t('Create rule')}
         </Button>
       </DialogActions>
     </Dialog>

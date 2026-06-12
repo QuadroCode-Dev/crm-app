@@ -21,6 +21,7 @@ import ConfirmDialog from '../../shared/components/feedback/ConfirmDialog.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import ContactFormDialog from './ContactFormDialog.jsx';
 import './contacts.css';
@@ -41,6 +42,7 @@ function formatDate(value) {
 
 function ContactsPage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
@@ -57,7 +59,7 @@ function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       showNotification({
         severity: 'success',
-        message: 'Contact created successfully.',
+        message: t('Contact created successfully.'),
       });
       setFormOpen(false);
     },
@@ -76,7 +78,7 @@ function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ['contact', variables.id] });
       showNotification({
         severity: 'success',
-        message: 'Contact updated successfully.',
+        message: t('Contact updated successfully.'),
       });
       setFormOpen(false);
       setEditingContact(null);
@@ -95,7 +97,7 @@ function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       showNotification({
         severity: 'success',
-        message: 'Contact deleted successfully.',
+        message: t('Contact deleted successfully.'),
       });
       setDeletingContact(null);
     },
@@ -135,7 +137,7 @@ function ContactsPage() {
   if (contactsQuery.isError) {
     return (
       <ErrorState
-        title="Unable to load contacts."
+        title={t('Unable to load contacts.')}
         description={normalizeApiError(contactsQuery.error).message}
         onRetry={() => contactsQuery.refetch()}
       />
@@ -147,21 +149,21 @@ function ContactsPage() {
   return (
     <Stack spacing={3} className="crm-contacts-page">
       <PageHeader
-        eyebrow="People and companies"
-        title="Contacts"
-        description="Manage the people behind your leads and keep core contact details clean."
+        eyebrow={t('People and companies')}
+        title={t('Contacts')}
+        description={t('Manage the people behind your leads and keep core contact details clean.')}
         actions={
           <Button onClick={handleCreate} variant="contained">
-            Add contact
+            {t('Add contact')}
           </Button>
         }
       />
 
       {contacts.length === 0 ? (
         <EmptyState
-          title="No contacts yet"
-          description="Create your first contact to start linking people and companies to leads."
-          actionLabel="Create contact"
+          title={t('No contacts yet')}
+          description={t('Create your first contact to start linking people and companies to leads.')}
+          actionLabel={t('Create contact')}
           onAction={handleCreate}
         />
       ) : (
@@ -173,30 +175,30 @@ function ContactsPage() {
                   <Box>
                     <Typography variant="h6">{contact.fullName}</Typography>
                     <Typography className="crm-muted-text">
-                      Updated {formatDate(contact.updatedAtUtc)}
+                      {t('Updated')} {formatDate(contact.updatedAtUtc)}
                     </Typography>
                   </Box>
                   <Box className="crm-contact-card__actions">
                     <Button component={Link} to={`/contacts/${contact.id}`} variant="outlined">
-                      Open
+                      {t('Open')}
                     </Button>
                     <Button onClick={() => handleEdit(contact)} variant="outlined">
-                      Edit
+                      {t('Edit')}
                     </Button>
                     <Button
                       color="error"
                       onClick={() => setDeletingContact(contact)}
                       variant="outlined"
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </Box>
                 </Box>
                 <Box className="crm-contact-card__fields">
-                  <ContactField label="Email" value={contact.email} />
-                  <ContactField label="Phone" value={contact.phone} />
-                  <ContactField label="Company" value={contact.companyName} />
-                  <ContactField label="Created" value={formatDate(contact.createdAtUtc)} />
+                  <ContactField label={t('Email')} value={contact.email} />
+                  <ContactField label={t('Phone')} value={contact.phone} />
+                  <ContactField label={t('Company')} value={contact.companyName} />
+                  <ContactField label={t('Created')} value={formatDate(contact.createdAtUtc)} />
                 </Box>
               </CardContent>
             </Card>
@@ -216,9 +218,9 @@ function ContactsPage() {
 
       <ConfirmDialog
         open={Boolean(deletingContact)}
-        title="Delete contact?"
-        description="This removes the contact from the CRM list. You can’t undo this action."
-        confirmLabel="Delete contact"
+        title={t('Delete contact?')}
+        description={t("This removes the contact from the CRM list. You can't undo this action.")}
+        confirmLabel={t('Delete contact')}
         onCancel={() => setDeletingContact(null)}
         onConfirm={() => deleteContactMutation.mutate(deletingContact.id)}
       />

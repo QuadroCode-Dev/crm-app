@@ -13,13 +13,17 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import * as yup from 'yup';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const stageSchema = yup.object({
-  name: yup.string().trim().required('Stage name is required.'),
-  isActive: yup.boolean().required(),
-});
+function createStageSchema(t) {
+  return yup.object({
+    name: yup.string().trim().required(t('Stage name is required.')),
+    isActive: yup.boolean().required(),
+  });
+}
 
 function StageFormDialog({ open, stage, onClose, onSubmit }) {
+  const { t } = useLanguage();
   const {
     control,
     handleSubmit,
@@ -30,7 +34,7 @@ function StageFormDialog({ open, stage, onClose, onSubmit }) {
       name: '',
       isActive: true,
     },
-    resolver: yupResolver(stageSchema),
+    resolver: yupResolver(createStageSchema(t)),
   });
 
   useEffect(() => {
@@ -42,7 +46,7 @@ function StageFormDialog({ open, stage, onClose, onSubmit }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{stage ? 'Edit stage' : 'Create stage'}</DialogTitle>
+      <DialogTitle>{stage ? t('Edit stage') : t('Create stage')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Controller
@@ -51,7 +55,7 @@ function StageFormDialog({ open, stage, onClose, onSubmit }) {
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Stage name"
+                label={t('Stage name')}
                 error={Boolean(errors.name)}
                 helperText={errors.name?.message}
               />
@@ -68,16 +72,16 @@ function StageFormDialog({ open, stage, onClose, onSubmit }) {
                     onChange={(event) => field.onChange(event.target.checked)}
                   />
                 }
-                label="Active stage"
+                label={t('Active stage')}
               />
             )}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('Cancel')}</Button>
         <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting} variant="contained">
-          {isSubmitting ? 'Saving...' : stage ? 'Save stage' : 'Create stage'}
+          {isSubmitting ? t('Saving...') : stage ? t('Save stage') : t('Create stage')}
         </Button>
       </DialogActions>
     </Dialog>

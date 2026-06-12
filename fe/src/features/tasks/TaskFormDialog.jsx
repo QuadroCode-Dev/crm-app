@@ -12,16 +12,19 @@ import {
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const taskSchema = yup.object({
-  title: yup.string().trim().required('Task title is required.'),
-  leadId: yup.string().nullable(),
-  contactId: yup.string().nullable(),
-  assignedUserId: yup.string().required('Assigned user is required.'),
-  priority: yup.string().required('Priority is required.'),
-  status: yup.string().required('Status is required.'),
-  dueDateUtc: yup.string().required('Due date is required.'),
-});
+function createTaskSchema(t) {
+  return yup.object({
+    title: yup.string().trim().required(t('Task title is required.')),
+    leadId: yup.string().nullable(),
+    contactId: yup.string().nullable(),
+    assignedUserId: yup.string().required(t('Assigned user is required.')),
+    priority: yup.string().required(t('Priority is required.')),
+    status: yup.string().required(t('Status is required.')),
+    dueDateUtc: yup.string().required(t('Due date is required.')),
+  });
+}
 
 function toDateInputValue(value) {
   if (!value) {
@@ -42,13 +45,14 @@ function TaskFormDialog({
   priorityOptions,
   statusOptions,
 }) {
+  const { t } = useLanguage();
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: yupResolver(taskSchema),
+    resolver: yupResolver(createTaskSchema(t)),
     defaultValues: {
       title: task?.title || '',
       leadId: task?.leadId || '',
@@ -74,7 +78,7 @@ function TaskFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{task?.id ? 'Edit task' : 'Create task'}</DialogTitle>
+      <DialogTitle>{task?.id ? t('Edit task') : t('Create task')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ paddingTop: 1 }}>
           <Controller
@@ -83,7 +87,7 @@ function TaskFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Title"
+                label={t('Title')}
                 error={Boolean(errors.title)}
                 helperText={errors.title?.message}
               />
@@ -97,11 +101,11 @@ function TaskFormDialog({
               <TextField
                 {...field}
                 select
-                label="Lead"
+                label={t('Lead')}
                 error={Boolean(errors.leadId)}
                 helperText={errors.leadId?.message}
               >
-                <MenuItem value="">No lead</MenuItem>
+                <MenuItem value="">{t('No lead')}</MenuItem>
                 {leadOptions.map((option) => (
                   <MenuItem key={option.id} value={option.id}>
                     {option.title}
@@ -118,11 +122,11 @@ function TaskFormDialog({
               <TextField
                 {...field}
                 select
-                label="Contact"
+                label={t('Contact')}
                 error={Boolean(errors.contactId)}
                 helperText={errors.contactId?.message}
               >
-                <MenuItem value="">No contact</MenuItem>
+                <MenuItem value="">{t('No contact')}</MenuItem>
                 {contactOptions.map((option) => (
                   <MenuItem key={option.id} value={option.id}>
                     {option.fullName}
@@ -139,7 +143,7 @@ function TaskFormDialog({
               <TextField
                 {...field}
                 select
-                label="Assigned user"
+                label={t('Assigned user')}
                 error={Boolean(errors.assignedUserId)}
                 helperText={errors.assignedUserId?.message}
               >
@@ -160,14 +164,14 @@ function TaskFormDialog({
                 <TextField
                   {...field}
                   select
-                  label="Priority"
+                  label={t('Priority')}
                   error={Boolean(errors.priority)}
                   helperText={errors.priority?.message}
                   fullWidth
                 >
                   {priorityOptions.map((option) => (
                     <MenuItem key={option} value={option}>
-                      {option}
+                      {t(option)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -181,14 +185,14 @@ function TaskFormDialog({
                 <TextField
                   {...field}
                   select
-                  label="Status"
+                  label={t('Status')}
                   error={Boolean(errors.status)}
                   helperText={errors.status?.message}
                   fullWidth
                 >
                   {statusOptions.map((option) => (
                     <MenuItem key={option} value={option}>
-                      {option}
+                      {t(option)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -203,7 +207,7 @@ function TaskFormDialog({
               <TextField
                 {...field}
                 type="date"
-                label="Due date"
+                label={t('Due date')}
                 InputLabelProps={{ shrink: true }}
                 error={Boolean(errors.dueDateUtc)}
                 helperText={errors.dueDateUtc?.message}
@@ -213,9 +217,9 @@ function TaskFormDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('Cancel')}</Button>
         <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={isSubmitting}>
-          {task?.id ? 'Save task' : 'Create task'}
+          {task?.id ? t('Save task') : t('Create task')}
         </Button>
       </DialogActions>
     </Dialog>

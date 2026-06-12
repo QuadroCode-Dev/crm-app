@@ -19,6 +19,12 @@ function getLanguageOption(language) {
 }
 
 function resolveTranslation(language, key) {
+  const directCopy = resources[language]?.copy?.[key];
+
+  if (directCopy) {
+    return directCopy;
+  }
+
   return key.split('.').reduce((currentValue, keyPart) => {
     if (!currentValue || typeof currentValue !== 'object') {
       return undefined;

@@ -20,14 +20,14 @@ import useLanguage from '../hooks/useLanguage.js';
 import './layout.css';
 
 function Topbar({ onToggleMenu, showMenuButton = false }) {
-  const { language, languageOptions, setLanguage, t } = useLanguage();
+  const { direction, language, languageOptions, setLanguage, t } = useLanguage();
   const { mode, toggleMode } = useColorMode();
   const appName = import.meta.env.VITE_APP_NAME || t('app.appNameFallback');
   const { logout, user } = useAuth();
   const colorModeLabel = mode === 'dark' ? t('app.switchToLight') : t('app.switchToDark');
 
   return (
-    <AppBar color="transparent" elevation={0} position="fixed" className="crm-topbar">
+    <AppBar color="transparent" dir={direction} elevation={0} position="fixed" className="crm-topbar">
       <Toolbar className="crm-topbar__toolbar">
         <Stack
           direction="row"
@@ -36,7 +36,12 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
           spacing={2}
           className="crm-topbar__content"
         >
-          <Stack direction="row" spacing={1.25} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={1.25}
+            alignItems="center"
+            className="crm-topbar__identity"
+          >
             {showMenuButton ? (
               <IconButton
                 aria-label={t('app.openNavigation')}

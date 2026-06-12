@@ -22,6 +22,7 @@ import ConfirmDialog from '../../shared/components/feedback/ConfirmDialog.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import StageFormDialog from '../pipeline/StageFormDialog.jsx';
 import '../pipeline/pipeline.css';
@@ -51,6 +52,7 @@ function moveStage(stages, stageId, direction) {
 
 function SettingsPipelinePage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [editingStage, setEditingStage] = useState(null);
@@ -72,7 +74,7 @@ function SettingsPipelinePage() {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stages'] });
       showNotification({
         severity: 'success',
-        message: 'Stage created successfully.',
+        message: t('Stage created successfully.'),
       });
       setFormOpen(false);
     },
@@ -90,7 +92,7 @@ function SettingsPipelinePage() {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stages'] });
       showNotification({
         severity: 'success',
-        message: 'Stage updated successfully.',
+        message: t('Stage updated successfully.'),
       });
       setEditingStage(null);
       setFormOpen(false);
@@ -109,7 +111,7 @@ function SettingsPipelinePage() {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stages'] });
       showNotification({
         severity: 'success',
-        message: 'Stage deleted successfully.',
+        message: t('Stage deleted successfully.'),
       });
       setDeletingStage(null);
     },
@@ -155,7 +157,7 @@ function SettingsPipelinePage() {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stages'] });
       showNotification({
         severity: 'success',
-        message: 'Stage order updated successfully.',
+        message: t('Stage order updated successfully.'),
       });
     },
   });
@@ -184,7 +186,7 @@ function SettingsPipelinePage() {
     const error = normalizeApiError(stagesQuery.error);
     return (
       <ErrorState
-        title="Unable to load pipeline stages."
+        title={t('Unable to load pipeline stages.')}
         description={error.message}
         onRetry={() => stagesQuery.refetch()}
       />
@@ -194,9 +196,9 @@ function SettingsPipelinePage() {
   return (
     <Stack spacing={3} className="crm-stage-settings-page">
       <PageHeader
-        eyebrow="Settings"
-        title="Pipeline stages"
-        description="Create, rename, disable, and reorder the stages that shape your CRM pipeline."
+        eyebrow={t('Settings')}
+        title={t('Pipeline stages')}
+        description={t('Create, rename, disable, and reorder the stages that shape your CRM pipeline.')}
         actions={
           <Box className="crm-leads-toolbar">
             <Button
@@ -206,7 +208,7 @@ function SettingsPipelinePage() {
               }}
               variant="contained"
             >
-              Add stage
+              {t('Add stage')}
             </Button>
           </Box>
         }
@@ -214,8 +216,8 @@ function SettingsPipelinePage() {
 
       {sortedStages.length === 0 ? (
         <EmptyState
-          title="No stages configured"
-          description="Create your first pipeline stage to start organizing leads."
+          title={t('No stages configured')}
+          description={t('Create your first pipeline stage to start organizing leads.')}
         />
       ) : (
         <Box className="crm-stage-settings-list">
@@ -226,12 +228,12 @@ function SettingsPipelinePage() {
                   <Box>
                     <Typography variant="h6">{stage.name}</Typography>
                     <Typography className="crm-muted-text">
-                      Order {stage.order} in the pipeline
+                      {t('Order')} {stage.order} {t('in the pipeline')}
                     </Typography>
                   </Box>
                   <Chip
                     color={stage.isActive ? 'success' : 'default'}
-                    label={stage.isActive ? 'Active' : 'Inactive'}
+                    label={stage.isActive ? t('Active') : t('Inactive')}
                     size="small"
                   />
                 </Box>
@@ -243,7 +245,7 @@ function SettingsPipelinePage() {
                       onClick={() => handleMove(stage.id, 'up')}
                       disabled={index === 0 || reorderStagesMutation.isPending}
                     >
-                      Move up
+                      {t('Move up')}
                     </Button>
                     <Button
                       variant="outlined"
@@ -252,7 +254,7 @@ function SettingsPipelinePage() {
                         index === sortedStages.length - 1 || reorderStagesMutation.isPending
                       }
                     >
-                      Move down
+                      {t('Move down')}
                     </Button>
                   </Box>
                   <Box className="crm-stage-settings__order-actions">
@@ -263,14 +265,14 @@ function SettingsPipelinePage() {
                         setFormOpen(true);
                       }}
                     >
-                      Edit
+                      {t('Edit')}
                     </Button>
                     <Button
                       color="error"
                       variant="outlined"
                       onClick={() => setDeletingStage(stage)}
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </Box>
                 </Box>
@@ -292,9 +294,9 @@ function SettingsPipelinePage() {
 
       <ConfirmDialog
         open={Boolean(deletingStage)}
-        title="Delete stage?"
-        description="This removes the stage from the current pipeline configuration."
-        confirmLabel="Delete stage"
+        title={t('Delete stage?')}
+        description={t('This removes the stage from the current pipeline configuration.')}
+        confirmLabel={t('Delete stage')}
         onCancel={() => setDeletingStage(null)}
         onConfirm={() => deleteStageMutation.mutate(deletingStage.id)}
       />

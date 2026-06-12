@@ -3,6 +3,10 @@
   min-height: 100vh;
 }
 
+[dir='rtl'] .crm-app-layout {
+  direction: rtl;
+}
+
 .crm-app-layout__drawer {
   flex-shrink: 0;
 }
@@ -14,6 +18,7 @@
 .crm-app-layout__drawer-paper {
   width: var(--crm-sidebar-width);
   box-sizing: border-box;
+  direction: inherit;
   border-right: 1px solid var(--crm-color-border);
   background-image: linear-gradient(
     180deg,
@@ -35,6 +40,12 @@
     var(--crm-color-background);
 }
 
+[dir='rtl'] .crm-app-layout__content {
+  background:
+    radial-gradient(circle at top left, var(--crm-color-background-accent), transparent 24%),
+    var(--crm-color-background);
+}
+
 .crm-app-layout__content-inner {
   padding: 1rem;
 }
@@ -43,10 +54,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  text-align: start;
 }
 
 .crm-sidebar__brand {
   padding: 1.5rem;
+  align-items: stretch;
 }
 
 .crm-sidebar__section {
@@ -66,9 +79,14 @@
 .crm-sidebar__link {
   margin-bottom: 0.25rem;
   border-radius: 12px;
+  text-align: start;
   transition:
     background-color var(--crm-transition-fast),
     color var(--crm-transition-fast);
+}
+
+.crm-sidebar__link-text {
+  text-align: start;
 }
 
 .crm-sidebar__link.active {
@@ -77,6 +95,7 @@
 }
 
 .crm-topbar {
+  width: 100%;
   border-bottom: 1px solid var(--crm-color-border);
   backdrop-filter: blur(18px);
   background-color: color-mix(in srgb, var(--crm-color-surface) 82%, transparent) !important;
@@ -88,6 +107,24 @@
 
 .crm-topbar__content {
   width: 100%;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.crm-topbar__identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.crm-topbar__identity > .MuiBox-root {
+  min-width: 0;
+}
+
+.crm-topbar__identity .MuiTypography-root {
+  overflow: hidden;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .crm-topbar__menu-button {
@@ -96,7 +133,15 @@
 }
 
 .crm-topbar__actions {
+  flex: 0 0 auto;
   flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  max-width: min(720px, 72%);
+}
+
+[dir='rtl'] .crm-topbar__actions {
+  justify-content: flex-start;
 }
 
 .crm-topbar__language-select {
@@ -119,8 +164,17 @@
   }
 
   .crm-topbar {
-    width: calc(100% - var(--crm-sidebar-width));
-    margin-inline-start: var(--crm-sidebar-width);
+    right: 0;
+    left: var(--crm-sidebar-width);
+    width: auto;
+    margin: 0;
+  }
+
+  [dir='rtl'] .crm-topbar {
+    left: 0;
+    right: var(--crm-sidebar-width);
+    width: auto;
+    margin: 0;
   }
 }
 
@@ -131,13 +185,16 @@
 
   .crm-topbar__toolbar {
     min-height: 68px !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-inline-start: 0.75rem !important;
+    padding-inline-end: 0.75rem !important;
   }
 
   .crm-topbar__actions {
-    gap: 0.75rem;
-    justify-content: flex-end;
+    max-width: none;
+  }
+
+  .crm-topbar__identity {
+    flex: 1 1 12rem;
   }
 }
 

@@ -1,14 +1,17 @@
 import { Box, Drawer, Toolbar, useMediaQuery, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import useLanguage from '../hooks/useLanguage.js';
 import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
 import './layout.css';
 
 function AppLayout() {
   const theme = useTheme();
+  const { direction } = useLanguage();
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const drawerAnchor = direction === 'rtl' ? 'right' : 'left';
 
   useEffect(() => {
     if (isDesktop) {
@@ -28,17 +31,20 @@ function AppLayout() {
     <Box className="crm-app-layout">
       {isDesktop ? (
         <Drawer
+          anchor={drawerAnchor}
           open
           variant="permanent"
           className="crm-app-layout__drawer"
           PaperProps={{
             className: 'crm-app-layout__drawer-paper',
+            dir: direction,
           }}
         >
           <Sidebar />
         </Drawer>
       ) : (
         <Drawer
+          anchor={drawerAnchor}
           open={mobileOpen}
           variant="temporary"
           onClose={handleCloseMenu}
@@ -46,6 +52,7 @@ function AppLayout() {
           ModalProps={{ keepMounted: true }}
           PaperProps={{
             className: 'crm-app-layout__drawer-paper',
+            dir: direction,
           }}
         >
           <Sidebar onNavigate={handleCloseMenu} />

@@ -4,16 +4,19 @@ import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import useAuth from '../../shared/hooks/useAuth.js';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import './auth.css';
 
-const loginSchema = yup.object({
-  email: yup
-    .string()
-    .trim()
-    .email('Enter a valid email address.')
-    .required('Email is required.'),
-  password: yup.string().required('Password is required.'),
-});
+function createLoginSchema(t) {
+  return yup.object({
+    email: yup
+      .string()
+      .trim()
+      .email(t('Enter a valid email address.'))
+      .required(t('Email is required.')),
+    password: yup.string().required(t('Password is required.')),
+  });
+}
 
 const defaultValues = {
   email: '',
@@ -24,6 +27,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { t } = useLanguage();
   const redirectTo = location.state?.from?.pathname || '/dashboard';
   const {
     control,
@@ -32,7 +36,7 @@ function LoginPage() {
     setError,
   } = useForm({
     defaultValues,
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(createLoginSchema(t)),
   });
 
   async function onSubmit(values) {
@@ -45,7 +49,7 @@ function LoginPage() {
       setError('root', {
         message:
           error.response?.data?.message ||
-          'We could not sign you in. Please check your credentials and try again.',
+          t('We could not sign you in. Please check your credentials and try again.'),
       });
     }
   }
@@ -56,11 +60,11 @@ function LoginPage() {
         <Stack component="form" className="crm-login-form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={1} className="crm-login-form__header">
             <Typography variant="overline" className="crm-eyebrow">
-              Authentication
+              {t('Authentication')}
             </Typography>
-            <Typography variant="h4">Login</Typography>
+            <Typography variant="h4">{t('Login')}</Typography>
             <Typography className="crm-muted-text">
-              Sign in to access the CRM workspace.
+              {t('Sign in to access the CRM workspace.')}
             </Typography>
           </Stack>
           {errors.root?.message ? (
@@ -76,7 +80,7 @@ function LoginPage() {
                 error={Boolean(errors.email)}
                 fullWidth
                 helperText={errors.email?.message}
-                label="Email"
+                label={t('Email')}
                 type="email"
               />
             )}
@@ -91,14 +95,14 @@ function LoginPage() {
                 error={Boolean(errors.password)}
                 fullWidth
                 helperText={errors.password?.message}
-                label="Password"
+                label={t('Password')}
                 type="password"
               />
             )}
           />
           <Box className="crm-login-form__actions">
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
+              {isSubmitting ? t('Signing in...') : t('Sign in')}
             </Button>
           </Box>
         </Stack>

@@ -36,16 +36,21 @@ function SidebarLink({ labelKey, to, onNavigate }) {
       className="crm-sidebar__link"
       onClick={onNavigate}
     >
-      <ListItemText primary={t(labelKey)} />
+      <ListItemText
+        primary={t(labelKey)}
+        primaryTypographyProps={{
+          className: 'crm-sidebar__link-text',
+        }}
+      />
     </ListItemButton>
   );
 }
 
 function Sidebar({ onNavigate }) {
-  const { t } = useLanguage();
+  const { direction, t } = useLanguage();
 
   return (
-    <Box className="crm-sidebar">
+    <Box className="crm-sidebar" dir={direction}>
       <Stack spacing={1} className="crm-sidebar__brand">
         <Typography variant="overline" className="crm-eyebrow">
           {t('app.brandEyebrow')}

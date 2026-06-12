@@ -11,12 +11,16 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import * as yup from 'yup';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const noteSchema = yup.object({
-  content: yup.string().trim().required('Note content is required.'),
-});
+function createNoteSchema(t) {
+  return yup.object({
+    content: yup.string().trim().required(t('Note content is required.')),
+  });
+}
 
 function NoteFormDialog({ open, note, onClose, onSubmit }) {
+  const { t } = useLanguage();
   const {
     control,
     handleSubmit,
@@ -26,7 +30,7 @@ function NoteFormDialog({ open, note, onClose, onSubmit }) {
     defaultValues: {
       content: '',
     },
-    resolver: yupResolver(noteSchema),
+    resolver: yupResolver(createNoteSchema(t)),
   });
 
   useEffect(() => {
@@ -37,7 +41,7 @@ function NoteFormDialog({ open, note, onClose, onSubmit }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{note ? 'Edit note' : 'Add note'}</DialogTitle>
+      <DialogTitle>{note ? t('Edit note') : t('Add note')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Controller
@@ -46,7 +50,7 @@ function NoteFormDialog({ open, note, onClose, onSubmit }) {
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Note"
+                label={t('Note')}
                 multiline
                 minRows={4}
                 error={Boolean(errors.content)}
@@ -57,9 +61,9 @@ function NoteFormDialog({ open, note, onClose, onSubmit }) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('Cancel')}</Button>
         <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : note ? 'Save note' : 'Create note'}
+          {isSubmitting ? t('Saving...') : note ? t('Save note') : t('Create note')}
         </Button>
       </DialogActions>
     </Dialog>

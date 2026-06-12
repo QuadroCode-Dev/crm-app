@@ -24,6 +24,7 @@ import PageHeader from '../../shared/components/PageHeader.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import './dashboard.css';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -47,6 +48,7 @@ function formatPreviewDate(value) {
 }
 
 function DashboardPage() {
+  const { t } = useLanguage();
   const leadsQuery = useQuery({
     queryKey: ['dashboard', 'leads'],
     queryFn: () => getLeads({ page: 1, pageSize: 100 }),
@@ -110,38 +112,39 @@ function DashboardPage() {
       {
         label: 'New leads',
         value: formatNumber(newLeads),
-        helper: 'Fresh opportunities needing first response',
+        helper: t('Fresh opportunities needing first response'),
       },
       {
         label: 'Open leads',
         value: formatNumber(openLeads),
-        helper: 'Still active across the pipeline',
+        helper: t('Still active across the pipeline'),
       },
       {
         label: 'Won leads',
         value: formatNumber(wonLeads),
-        helper: 'Closed successfully in the visible dataset',
+        helper: t('Closed successfully in the visible dataset'),
       },
       {
         label: 'Lost leads',
         value: formatNumber(lostLeads),
-        helper: 'Deals that need retrospective review',
+        helper: t('Deals that need retrospective review'),
       },
       {
         label: 'Overdue tasks',
         value: formatNumber(tasksSummary.overdueTasks || 0),
-        helper: 'Follow-ups that have slipped past due date',
+        helper: t('Follow-ups that have slipped past due date'),
       },
       {
         label: 'Estimated pipeline value',
         value: formatCurrency(estimatedPipelineValue),
-        helper: 'Summed from the current pipeline stages',
+        helper: t('Summed from the current pipeline stages'),
       },
     ];
   }, [
     leadsBySourceQuery.data,
     leadsQuery.data,
     pipelineSummaryQuery.data,
+    t,
     tasksSummaryQuery.data,
   ]);
 
@@ -168,7 +171,7 @@ function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div aria-label="Loading dashboard" role="status">
+      <div aria-label={t('Loading content')} role="status">
         <LoadingState />
       </div>
     );
@@ -177,7 +180,7 @@ function DashboardPage() {
   if (firstError) {
     return (
       <ErrorState
-        title="Unable to load dashboard."
+        title={t('Unable to load dashboard.')}
         description={normalizeApiError(firstError).message}
         onRetry={handleRetry}
       />
@@ -187,9 +190,9 @@ function DashboardPage() {
   return (
     <Stack spacing={3} className="crm-dashboard-page">
       <PageHeader
-        eyebrow="Overview"
-        title="Dashboard"
-        description="Keep an eye on pipeline momentum, overdue work, and the next best actions for the team."
+        eyebrow={t('Overview')}
+        title={t('Dashboard')}
+        description={t('Keep an eye on pipeline momentum, overdue work, and the next best actions for the team.')}
       />
 
       <Grid2 container spacing={2}>
@@ -199,7 +202,7 @@ function DashboardPage() {
               <CardContent>
                 <Stack spacing={1}>
                   <Typography className="crm-dashboard-summary-card__label">
-                    {card.label}
+                    {t(card.label)}
                   </Typography>
                   <Typography variant="h4">{card.value}</Typography>
                   <Typography variant="body2" className="crm-muted-text">
@@ -217,22 +220,22 @@ function DashboardPage() {
           <Card className="crm-card crm-dashboard-panel">
             <CardContent>
               <Stack spacing={2}>
-                <Typography variant="h6">Quick actions</Typography>
+                <Typography variant="h6">{t('Quick actions')}</Typography>
                 <Typography className="crm-muted-text">
-                  Jump into the most common CRM workflows without hunting through navigation.
+                  {t('Jump into the most common CRM workflows without hunting through navigation.')}
                 </Typography>
                 <Stack spacing={1.25}>
                   <Button component={RouterLink} to="/leads" variant="contained">
-                    Create lead
+                    {t('Create lead')}
                   </Button>
                   <Button component={RouterLink} to="/tasks" variant="contained">
-                    Create task
+                    {t('Create task')}
                   </Button>
                   <Button component={RouterLink} to="/pipeline" variant="outlined">
-                    Go to pipeline
+                    {t('Go to pipeline')}
                   </Button>
                   <Button component={RouterLink} to="/reports" variant="outlined">
-                    Open reports
+                    {t('Open reports')}
                   </Button>
                 </Stack>
               </Stack>
@@ -245,15 +248,15 @@ function DashboardPage() {
             <CardContent>
               <Stack spacing={2}>
                 <Stack spacing={0.75}>
-                  <Typography variant="h6">Recent lead activity</Typography>
+                  <Typography variant="h6">{t('Recent lead activity')}</Typography>
                   <Typography className="crm-muted-text">
-                    A lightweight preview of the most recently updated opportunities.
+                    {t('A lightweight preview of the most recently updated opportunities.')}
                   </Typography>
                 </Stack>
                 {recentLeadActivity.length === 0 ? (
                   <EmptyState
-                    title="No recent lead activity"
-                    description="As leads start moving through the pipeline, recent changes will appear here."
+                    title={t('No recent lead activity')}
+                    description={t('As leads start moving through the pipeline, recent changes will appear here.')}
                   />
                 ) : (
                   <Stack spacing={1.25}>
@@ -283,15 +286,15 @@ function DashboardPage() {
             <CardContent>
               <Stack spacing={2}>
                 <Stack spacing={0.75}>
-                  <Typography variant="h6">Upcoming tasks</Typography>
+                  <Typography variant="h6">{t('Upcoming tasks')}</Typography>
                   <Typography className="crm-muted-text">
-                    The next pending work items approaching their due date.
+                    {t('The next pending work items approaching their due date.')}
                   </Typography>
                 </Stack>
                 {upcomingTasks.length === 0 ? (
                   <EmptyState
-                    title="No upcoming tasks"
-                    description="Create a task from the queue or link one to a lead to start tracking follow-up work."
+                    title={t('No upcoming tasks')}
+                    description={t('Create a task from the queue or link one to a lead to start tracking follow-up work.')}
                   />
                 ) : (
                   <Stack spacing={1.25}>
@@ -305,7 +308,7 @@ function DashboardPage() {
                         </Stack>
                         <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                           <Chip label={task.priority} size="small" color="primary" variant="outlined" />
-                          <Chip label={task.assignedUserName || 'Unassigned'} size="small" />
+                          <Chip label={task.assignedUserName || t('Unassigned')} size="small" />
                         </Stack>
                       </Box>
                     ))}

@@ -2,6 +2,7 @@ import { Button } from '@mui/material';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
+import LanguageProvider from '../../../app/providers/LanguageProvider.jsx';
 import NotificationProvider from '../../../app/providers/NotificationProvider.jsx';
 import useNotifications from '../../hooks/useNotifications.js';
 import LeadFormDialog from '../../../features/leads/LeadFormDialog.jsx';
@@ -9,6 +10,10 @@ import TaskFormDialog from '../../../features/tasks/TaskFormDialog.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import ErrorState from './ErrorState.jsx';
 import LoadingState from './LoadingState.jsx';
+
+function renderWithLanguage(ui) {
+  return render(<LanguageProvider>{ui}</LanguageProvider>);
+}
 
 function NotificationHarness() {
   const { showNotification } = useNotifications();
@@ -67,7 +72,7 @@ describe('Shared UX feedback', () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();
 
-    render(
+    renderWithLanguage(
       <ConfirmDialog
         open
         title="Delete lead"
@@ -93,7 +98,7 @@ describe('Shared UX feedback', () => {
     const user = userEvent.setup();
     const onRetry = vi.fn();
 
-    render(
+    renderWithLanguage(
       <>
         <LoadingState />
         <ErrorState
@@ -112,7 +117,7 @@ describe('Shared UX feedback', () => {
   });
 
   it('keeps lead and task form fields labeled', () => {
-    render(
+    renderWithLanguage(
       <>
         <LeadFormDialog
           open

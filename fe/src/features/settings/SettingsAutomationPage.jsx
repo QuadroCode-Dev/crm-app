@@ -21,6 +21,7 @@ import ConfirmDialog from '../../shared/components/feedback/ConfirmDialog.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import AutomationRuleFormDialog from './AutomationRuleFormDialog.jsx';
 import './automation.css';
@@ -28,6 +29,7 @@ import { useState } from 'react';
 
 function SettingsAutomationPage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
@@ -49,7 +51,7 @@ function SettingsAutomationPage() {
       queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
       showNotification({
         severity: 'success',
-        message: 'Automation rule created successfully.',
+        message: t('Automation rule created successfully.'),
       });
       setFormOpen(false);
       setEditingRule(null);
@@ -68,7 +70,7 @@ function SettingsAutomationPage() {
       queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
       showNotification({
         severity: 'success',
-        message: 'Automation rule updated successfully.',
+        message: t('Automation rule updated successfully.'),
       });
       setFormOpen(false);
       setEditingRule(null);
@@ -87,7 +89,7 @@ function SettingsAutomationPage() {
       queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
       showNotification({
         severity: 'success',
-        message: 'Automation rule deleted successfully.',
+        message: t('Automation rule deleted successfully.'),
       });
       setDeletingRule(null);
     },
@@ -129,7 +131,7 @@ function SettingsAutomationPage() {
   if (rulesQuery.isError) {
     return (
       <ErrorState
-        title="Unable to load automation rules."
+        title={t('Unable to load automation rules.')}
         description={normalizeApiError(rulesQuery.error).message}
         onRetry={() => rulesQuery.refetch()}
       />
@@ -139,7 +141,7 @@ function SettingsAutomationPage() {
   if (stagesQuery.isError) {
     return (
       <ErrorState
-        title="Unable to load pipeline stages."
+        title={t('Unable to load pipeline stages.')}
         description={normalizeApiError(stagesQuery.error).message}
         onRetry={() => stagesQuery.refetch()}
       />
@@ -152,12 +154,12 @@ function SettingsAutomationPage() {
   return (
     <Stack spacing={3} className="crm-automation-page">
       <PageHeader
-        eyebrow="Settings"
-        title="Automation rules"
-        description="Create lightweight automations that open follow-up tasks when a lead enters a specific stage."
+        eyebrow={t('Settings')}
+        title={t('Automation rules')}
+        description={t('Create lightweight automations that open follow-up tasks when a lead enters a specific stage.')}
         actions={
           <Button variant="contained" onClick={openCreateDialog}>
-            Add automation rule
+            {t('Add automation rule')}
           </Button>
         }
       />
@@ -165,14 +167,13 @@ function SettingsAutomationPage() {
       <Card className="crm-card">
         <CardContent className="crm-automation-page__helper">
           <Stack spacing={1}>
-            <Typography variant="subtitle1">This MVP supports one automation pattern</Typography>
+            <Typography variant="subtitle1">{t('This MVP supports one automation pattern')}</Typography>
             <Typography className="crm-muted-text">
-              Trigger a task when a lead enters a target stage. Placeholder support is intentionally
-              small and explicit for launch.
+              {t('Trigger a task when a lead enters a target stage. Placeholder support is intentionally small and explicit for launch.')}
             </Typography>
             <Box className="crm-automation-page__helper-list">
-              <Chip label="Trigger: StageChanged" color="primary" />
-              <Chip label="Action: CreateTask" variant="outlined" />
+              <Chip label={t('Trigger: StageChanged')} color="primary" />
+              <Chip label={t('Action: CreateTask')} variant="outlined" />
               <Chip label="{leadTitle}" variant="outlined" />
               <Chip label="{contactName}" variant="outlined" />
               <Chip label="{stageName}" variant="outlined" />
@@ -184,9 +185,9 @@ function SettingsAutomationPage() {
 
       {rules.length === 0 ? (
         <EmptyState
-          title="No automation rules yet"
-          description="Create your first stage-change rule to automatically generate follow-up tasks."
-          actionLabel="Create automation rule"
+          title={t('No automation rules yet')}
+          description={t('Create your first stage-change rule to automatically generate follow-up tasks.')}
+          actionLabel={t('Create automation rule')}
           onAction={openCreateDialog}
         />
       ) : (
@@ -198,41 +199,40 @@ function SettingsAutomationPage() {
                   <Box>
                     <Typography variant="h6">{rule.name}</Typography>
                     <Typography className="crm-muted-text">
-                      Fires when a lead enters{' '}
-                      {stageMap[rule.targetStageId]?.name || 'an unknown stage'}.
+                      {t('Fires when a lead enters')} {stageMap[rule.targetStageId]?.name || t('an unknown stage')}.
                     </Typography>
                   </Box>
                   <Chip
-                    label={rule.isActive ? 'Active' : 'Inactive'}
+                    label={rule.isActive ? t('Active') : t('Inactive')}
                     color={rule.isActive ? 'success' : 'default'}
                     variant={rule.isActive ? 'filled' : 'outlined'}
                   />
                 </Box>
 
                 <Box className="crm-automation-page__meta">
-                  <Chip label="Trigger: StageChanged" color="primary" variant="outlined" />
-                  <Chip label="Action: CreateTask" variant="outlined" />
-                  <Chip label={`Due in ${rule.taskDueOffsetDays} day(s)`} variant="outlined" />
+                  <Chip label={t('Trigger: StageChanged')} color="primary" variant="outlined" />
+                  <Chip label={t('Action: CreateTask')} variant="outlined" />
+                  <Chip label={`${t('Due in')} ${rule.taskDueOffsetDays} ${t('day(s)')}`} variant="outlined" />
                   <Chip
-                    label={rule.assignToOwner ? 'Assign to lead owner' : 'Manual assignment'}
+                    label={rule.assignToOwner ? t('Assign to lead owner') : t('Manual assignment')}
                     variant="outlined"
                   />
                 </Box>
 
                 <Box className="crm-automation-page__templates">
                   <Box className="crm-automation-page__template">
-                    <Typography variant="subtitle2">Task title template</Typography>
+                    <Typography variant="subtitle2">{t('Task title template')}</Typography>
                     <Typography>{rule.taskTitleTemplate}</Typography>
                   </Box>
                   <Box className="crm-automation-page__template">
-                    <Typography variant="subtitle2">Task description template</Typography>
+                    <Typography variant="subtitle2">{t('Task description template')}</Typography>
                     <Typography>{rule.taskDescriptionTemplate}</Typography>
                   </Box>
                 </Box>
 
                 <Box className="crm-automation-page__actions">
                   <Box className="crm-automation-page__meta">
-                    <Chip label={`Stage: ${stageMap[rule.targetStageId]?.name || '-'}`} />
+                    <Chip label={`${t('Stage')}: ${stageMap[rule.targetStageId]?.name || '-'}`} />
                   </Box>
                   <Box className="crm-automation-page__actions">
                     <Button
@@ -242,14 +242,14 @@ function SettingsAutomationPage() {
                         setFormOpen(true);
                       }}
                     >
-                      Edit
+                      {t('Edit')}
                     </Button>
                     <Button
                       variant="outlined"
                       color="error"
                       onClick={() => setDeletingRule(rule)}
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </Box>
                 </Box>
@@ -272,9 +272,9 @@ function SettingsAutomationPage() {
 
       <ConfirmDialog
         open={Boolean(deletingRule)}
-        title="Delete automation rule?"
-        description="This removes the automation and stops future stage-change task creation."
-        confirmLabel="Delete rule"
+        title={t('Delete automation rule?')}
+        description={t('This removes the automation and stops future stage-change task creation.')}
+        confirmLabel={t('Delete rule')}
         onCancel={() => setDeletingRule(null)}
         onConfirm={() => deleteRuleMutation.mutate(deletingRule.id)}
       />

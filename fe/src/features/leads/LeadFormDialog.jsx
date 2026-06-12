@@ -11,22 +11,25 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import * as yup from 'yup';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const leadSchema = yup.object({
-  title: yup.string().trim().required('Title is required.'),
-  contactId: yup.string().required('Contact is required.'),
-  source: yup.string().trim().required('Source is required.'),
-  stageId: yup.string().required('Pipeline stage is required.'),
-  ownerUserId: yup.string().required('Owner is required.'),
-  status: yup.string().trim().required('Status is required.'),
-  estimatedCost: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === '' ? null : value))
-    .nullable()
-    .typeError('Estimated cost must be a number.'),
-  serviceRequested: yup.string().trim().nullable(),
-  message: yup.string().trim().nullable(),
-});
+function createLeadSchema(t) {
+  return yup.object({
+    title: yup.string().trim().required(t('Title is required.')),
+    contactId: yup.string().required(t('Contact is required.')),
+    source: yup.string().trim().required(t('Source is required.')),
+    stageId: yup.string().required(t('Pipeline stage is required.')),
+    ownerUserId: yup.string().required(t('Owner is required.')),
+    status: yup.string().trim().required(t('Status is required.')),
+    estimatedCost: yup
+      .number()
+      .transform((value, originalValue) => (originalValue === '' ? null : value))
+      .nullable()
+      .typeError(t('Estimated cost must be a number.')),
+    serviceRequested: yup.string().trim().nullable(),
+    message: yup.string().trim().nullable(),
+  });
+}
 
 function LeadFormDialog({
   contacts,
@@ -39,6 +42,7 @@ function LeadFormDialog({
   onClose,
   onSubmit,
 }) {
+  const { t } = useLanguage();
   const {
     control,
     handleSubmit,
@@ -56,7 +60,7 @@ function LeadFormDialog({
       serviceRequested: '',
       message: '',
     },
-    resolver: yupResolver(leadSchema),
+    resolver: yupResolver(createLeadSchema(t)),
   });
 
   useEffect(() => {
@@ -75,7 +79,7 @@ function LeadFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>{lead ? 'Edit lead' : 'Create lead'}</DialogTitle>
+      <DialogTitle>{lead ? t('Edit lead') : t('Create lead')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Controller
@@ -84,7 +88,7 @@ function LeadFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Title"
+                label={t('Title')}
                 error={Boolean(errors.title)}
                 helperText={errors.title?.message}
               />
@@ -99,11 +103,11 @@ function LeadFormDialog({
                 select
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
-                label="Contact"
+                label={t('Contact')}
                 error={Boolean(errors.contactId)}
                 helperText={errors.contactId?.message}
               >
-                <option value="">Select a contact</option>
+                <option value="">{t('Select a contact')}</option>
                 {contacts.map((contact) => (
                   <option key={contact.id} value={contact.id}>
                     {contact.fullName}
@@ -121,11 +125,11 @@ function LeadFormDialog({
                 select
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
-                label="Source"
+                label={t('Source')}
                 error={Boolean(errors.source)}
                 helperText={errors.source?.message}
               >
-                <option value="">Select a source</option>
+                <option value="">{t('Select a source')}</option>
                 {sourceOptions.map((option) => (
                   <option key={option.id || option} value={option.id || option}>
                     {option.name || option}
@@ -143,11 +147,11 @@ function LeadFormDialog({
                 select
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
-                label="Pipeline stage"
+                label={t('Pipeline stage')}
                 error={Boolean(errors.stageId)}
                 helperText={errors.stageId?.message}
               >
-                <option value="">Select a stage</option>
+                <option value="">{t('Select a stage')}</option>
                 {stageOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.name}
@@ -165,11 +169,11 @@ function LeadFormDialog({
                 select
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
-                label="Owner"
+                label={t('Owner')}
                 error={Boolean(errors.ownerUserId)}
                 helperText={errors.ownerUserId?.message}
               >
-                <option value="">Select an owner</option>
+                <option value="">{t('Select an owner')}</option>
                 {ownerOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.fullName}
@@ -187,14 +191,14 @@ function LeadFormDialog({
                 select
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
-                label="Status"
+                label={t('Status')}
                 error={Boolean(errors.status)}
                 helperText={errors.status?.message}
               >
-                <option value="">Select a status</option>
+                <option value="">{t('Select a status')}</option>
                 {statusOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {t(option)}
                   </option>
                 ))}
               </TextField>
@@ -206,7 +210,7 @@ function LeadFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Estimated cost"
+                label={t('Estimated cost')}
                 error={Boolean(errors.estimatedCost)}
                 helperText={errors.estimatedCost?.message}
               />
@@ -215,19 +219,21 @@ function LeadFormDialog({
           <Controller
             name="serviceRequested"
             control={control}
-            render={({ field }) => <TextField {...field} label="Service requested" />}
+            render={({ field }) => <TextField {...field} label={t('Service requested')} />}
           />
           <Controller
             name="message"
             control={control}
-            render={({ field }) => <TextField {...field} label="Message" multiline minRows={3} />}
+            render={({ field }) => (
+              <TextField {...field} label={t('Message')} multiline minRows={3} />
+            )}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('Cancel')}</Button>
         <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : lead ? 'Save lead' : 'Create lead'}
+          {isSubmitting ? t('Saving...') : lead ? t('Save lead') : t('Create lead')}
         </Button>
       </DialogActions>
     </Dialog>

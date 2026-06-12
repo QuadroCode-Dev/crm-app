@@ -29,6 +29,7 @@ import PageHeader from '../../shared/components/PageHeader.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import './pipeline.css';
 
@@ -72,6 +73,7 @@ export function applyPipelineDragEnd({ activeId, overId, leadStageMap, onStageCh
 }
 
 function StageColumn({ stage, leads, activeStageId, children }) {
+  const { t } = useLanguage();
   const { setNodeRef, isOver } = useDroppable({
     id: `stage-drop-${stage.id}`,
   });
@@ -86,17 +88,17 @@ function StageColumn({ stage, leads, activeStageId, children }) {
       <CardContent className="crm-pipeline-column__content">
         <Box className="crm-pipeline-column__header">
           <Box>
-            <Typography className="crm-pipeline-column__eyebrow">Stage</Typography>
+            <Typography className="crm-pipeline-column__eyebrow">{t('Stage')}</Typography>
             <Typography variant="h6">{stage.name}</Typography>
           </Box>
-          <Chip label={`${leads.length} lead${leads.length === 1 ? '' : 's'}`} size="small" />
+          <Chip label={`${leads.length} ${t('Leads')}`} size="small" />
         </Box>
         <Box className="crm-pipeline-column__list">
           {children}
           {leads.length === 0 ? (
             <EmptyState
-              title="No leads here yet"
-              description="Drag a lead into this stage or create a new lead to start filling the pipeline."
+              title={t('No leads here yet')}
+              description={t('Drag a lead into this stage or create a new lead to start filling the pipeline.')}
             />
           ) : null}
         </Box>
@@ -106,6 +108,7 @@ function StageColumn({ stage, leads, activeStageId, children }) {
 }
 
 function PipelineCard({ lead }) {
+  const { t } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
   });
@@ -130,7 +133,7 @@ function PipelineCard({ lead }) {
         {lead.isDuplicateWarning ? (
           <Chip
             color="warning"
-            label="Duplicate"
+            label={t('Duplicate')}
             size="small"
             className="crm-pipeline-card__meta-chip"
           />
@@ -156,6 +159,7 @@ function PipelineCard({ lead }) {
 
 function PipelinePage() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [activeLeadId, setActiveLeadId] = useState(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -236,7 +240,7 @@ function PipelinePage() {
       queryClient.invalidateQueries({ queryKey: ['lead-stage-timer', updatedLead.id] });
       showNotification({
         severity: 'success',
-        message: 'Lead stage updated successfully.',
+        message: t('Lead stage updated successfully.'),
       });
     },
     onSettled: () => {
@@ -260,7 +264,7 @@ function PipelinePage() {
     const error = normalizeApiError(stagesQuery.error);
     return (
       <ErrorState
-        title="Unable to load pipeline stages."
+        title={t('Unable to load pipeline stages.')}
         description={error.message}
         onRetry={() => stagesQuery.refetch()}
       />
@@ -271,7 +275,7 @@ function PipelinePage() {
     const error = normalizeApiError(leadsQuery.error);
     return (
       <ErrorState
-        title="Unable to load pipeline leads."
+        title={t('Unable to load pipeline leads.')}
         description={error.message}
         onRetry={() => leadsQuery.refetch()}
       />
@@ -281,8 +285,8 @@ function PipelinePage() {
   if (sortedStages.length === 0) {
     return (
       <EmptyState
-        title="No pipeline stages configured"
-        description="Create your first stage in Settings to start organizing leads into a pipeline."
+        title={t('No pipeline stages configured')}
+        description={t('Create your first stage in Settings to start organizing leads into a pipeline.')}
       />
     );
   }
@@ -290,20 +294,20 @@ function PipelinePage() {
   return (
     <Stack spacing={3} className="crm-pipeline-page">
       <PageHeader
-        eyebrow="Sales flow"
-        title="Pipeline"
-        description="Move leads between stages with drag and drop to reflect how deals are progressing."
+        eyebrow={t('Sales flow')}
+        title={t('Pipeline')}
+        description={t('Move leads between stages with drag and drop to reflect how deals are progressing.')}
         actions={
           <Box className="crm-leads-toolbar">
             <Button component={Link} to="/settings/pipeline" variant="outlined">
-              Manage stages
+              {t('Manage stages')}
             </Button>
           </Box>
         }
       />
 
       <Alert severity="info">
-        Drag a lead card into another stage to update the pipeline immediately.
+        {t('Drag a lead card into another stage to update the pipeline immediately.')}
       </Alert>
 
       <DndContext

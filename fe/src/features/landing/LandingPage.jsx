@@ -18,18 +18,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import { submitLeadCapture } from '../../api/publicApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import { saveLeadCaptureSuccess } from './landingStorage.js';
 import './landing.css';
 
-const landingSchema = yup
-  .object({
-    fullName: yup.string().trim().required('Full name is required.'),
+function createLandingSchema(t) {
+  return yup
+    .object({
+      fullName: yup.string().trim().required(t('Full name is required.')),
     email: yup
       .string()
       .trim()
       .nullable()
       .transform((value) => value || '')
-      .test('email-format', 'Enter a valid email address.', (value) => {
+      .test('email-format', t('Enter a valid email address.'), (value) => {
         if (!value) {
           return true;
         }
@@ -42,7 +44,7 @@ const landingSchema = yup
       .number()
       .transform((value, originalValue) => (originalValue === '' ? null : value))
       .nullable()
-      .typeError('Estimated cost must be a number.'),
+      .typeError(t('Estimated cost must be a number.')),
     message: yup.string().trim().nullable(),
     utmSource: yup.string().trim().nullable(),
     utmMedium: yup.string().trim().nullable(),
@@ -50,24 +52,22 @@ const landingSchema = yup
     pageUrl: yup.string().trim().required(),
     honeypot: yup
       .string()
-      .test('honeypot-empty', 'Spam detection was triggered.', (value) => !value),
-  })
-  .test(
-    'email-or-phone',
-    'Provide at least an email or phone number.',
-    (value, context) => {
+      .test('honeypot-empty', t('Spam detection was triggered.'), (value) => !value),
+    })
+    .test('email-or-phone', t('Provide at least an email or phone number.'), (value, context) => {
       if (value?.email || value?.phone) {
         return true;
       }
 
       return context.createError({
         path: 'phone',
-        message: 'Provide at least an email or phone number.',
+        message: t('Provide at least an email or phone number.'),
       });
-    },
-  );
+    });
+}
 
 function LandingPage() {
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -99,7 +99,7 @@ function LandingPage() {
       pageUrl,
       honeypot: '',
     },
-    resolver: yupResolver(landingSchema),
+    resolver: yupResolver(createLandingSchema(t)),
   });
 
   const leadCaptureMutation = useMutation({
@@ -107,7 +107,7 @@ function LandingPage() {
     onSuccess: (response) => {
       const successPayload = {
         trackingId: response.trackingId || '',
-        message: response.message || 'Lead received successfully',
+        message: response.message || t('Lead received successfully'),
       };
 
       saveLeadCaptureSuccess(successPayload);
@@ -123,8 +123,8 @@ function LandingPage() {
         type: 'server',
         message:
           normalizedError.message === 'Submission rejected.'
-            ? 'We could not submit your request. Please review the form and try again.'
-            : 'We could not send your request right now. Please try again in a moment.',
+            ? t('We could not submit your request. Please review the form and try again.')
+            : t('We could not send your request right now. Please try again in a moment.'),
       });
     },
   });
@@ -146,28 +146,27 @@ function LandingPage() {
           <Grid2 size={{ xs: 12, md: 5 }}>
             <Stack spacing={2.5} className="crm-public-card__content">
               <Typography variant="overline" className="crm-eyebrow">
-                Public lead capture
+                {t('Public lead capture')}
               </Typography>
               <Typography variant="h2" className="crm-public-card__title">
-                Turn campaign traffic into qualified conversations.
+                {t('Turn campaign traffic into qualified conversations.')}
               </Typography>
               <Typography className="crm-muted-text crm-public-card__description">
-                Share your project details and the CRM will route your inquiry into the sales
-                pipeline for fast follow-up.
+                {t('Share your project details and the CRM will route your inquiry into the sales pipeline for fast follow-up.')}
               </Typography>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                <Chip label="No login required" />
-                <Chip label="UTM tracking ready" />
-                <Chip label="Spam honeypot enabled" />
+                <Chip label={t('No login required')} />
+                <Chip label={t('UTM tracking ready')} />
+                <Chip label={t('Spam honeypot enabled')} />
               </Stack>
             </Stack>
           </Grid2>
           <Grid2 size={{ xs: 12, md: 7 }}>
             <Box component="form" className="crm-public-form" onSubmit={handleSubmit(onSubmit)}>
               <Stack spacing={2.5}>
-                <Typography variant="h5">Request a callback</Typography>
+                <Typography variant="h5">{t('Request a callback')}</Typography>
                 <Typography className="crm-muted-text">
-                  Tell us what you need. Email or phone is enough for us to reach back out.
+                  {t('Tell us what you need. Email or phone is enough for us to reach back out.')}
                 </Typography>
                 {errors.root?.message ? (
                   <Alert severity="error">{errors.root.message}</Alert>
@@ -181,7 +180,7 @@ function LandingPage() {
                         <TextField
                           {...field}
                           fullWidth
-                          label="Full name"
+                          label={t('Full name')}
                           error={Boolean(errors.fullName)}
                           helperText={errors.fullName?.message}
                         />
@@ -193,7 +192,7 @@ function LandingPage() {
                       name="serviceRequested"
                       control={control}
                       render={({ field }) => (
-                        <TextField {...field} fullWidth label="Service requested" />
+                        <TextField {...field} fullWidth label={t('Service requested')} />
                       )}
                     />
                   </Grid2>
@@ -205,7 +204,7 @@ function LandingPage() {
                         <TextField
                           {...field}
                           fullWidth
-                          label="Email"
+                          label={t('Email')}
                           error={Boolean(errors.email)}
                           helperText={errors.email?.message}
                         />
@@ -220,7 +219,7 @@ function LandingPage() {
                         <TextField
                           {...field}
                           fullWidth
-                          label="Phone"
+                          label={t('Phone')}
                           error={Boolean(errors.phone)}
                           helperText={errors.phone?.message}
                         />
@@ -235,7 +234,7 @@ function LandingPage() {
                         <TextField
                           {...field}
                           fullWidth
-                          label="Estimated cost"
+                          label={t('Estimated cost')}
                           error={Boolean(errors.estimatedCost)}
                           helperText={errors.estimatedCost?.message}
                         />
@@ -247,7 +246,7 @@ function LandingPage() {
                       name="message"
                       control={control}
                       render={({ field }) => (
-                        <TextField {...field} fullWidth label="Message" multiline minRows={4} />
+                        <TextField {...field} fullWidth label={t('Message')} multiline minRows={4} />
                       )}
                     />
                   </Grid2>
@@ -256,28 +255,28 @@ function LandingPage() {
                   name="utmSource"
                   control={control}
                   render={({ field }) => (
-                    <input {...field} type="hidden" aria-label="UTM source" />
+                    <input {...field} type="hidden" aria-label={t('UTM source')} />
                   )}
                 />
                 <Controller
                   name="utmMedium"
                   control={control}
                   render={({ field }) => (
-                    <input {...field} type="hidden" aria-label="UTM medium" />
+                    <input {...field} type="hidden" aria-label={t('UTM medium')} />
                   )}
                 />
                 <Controller
                   name="utmCampaign"
                   control={control}
                   render={({ field }) => (
-                    <input {...field} type="hidden" aria-label="UTM campaign" />
+                    <input {...field} type="hidden" aria-label={t('UTM campaign')} />
                   )}
                 />
                 <Controller
                   name="pageUrl"
                   control={control}
                   render={({ field }) => (
-                    <input {...field} type="hidden" aria-label="Page URL" />
+                    <input {...field} type="hidden" aria-label={t('Page URL')} />
                   )}
                 />
                 <Controller
@@ -287,7 +286,7 @@ function LandingPage() {
                     <input
                       {...field}
                       type="hidden"
-                      aria-label="Honeypot"
+                      aria-label={t('Honeypot')}
                       data-testid="landing-honeypot"
                     />
                   )}
@@ -299,7 +298,7 @@ function LandingPage() {
                   alignItems={{ xs: 'flex-start', sm: 'center' }}
                 >
                   <Typography variant="body2" className="crm-muted-text">
-                    By submitting, you agree to be contacted about this request.
+                    {t('By submitting, you agree to be contacted about this request.')}
                   </Typography>
                   <Button
                     type="submit"
@@ -307,7 +306,7 @@ function LandingPage() {
                     size="large"
                     disabled={leadCaptureMutation.isPending}
                   >
-                    {leadCaptureMutation.isPending ? 'Sending...' : 'Submit request'}
+                    {leadCaptureMutation.isPending ? t('Sending...') : t('Submit request')}
                   </Button>
                 </Stack>
               </Stack>

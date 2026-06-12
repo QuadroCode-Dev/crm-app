@@ -42,6 +42,7 @@ import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
 import useAuth from '../../shared/hooks/useAuth.js';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
@@ -106,6 +107,7 @@ function Field({ label, value }) {
 }
 
 function TimelineItem({ item }) {
+  const { t } = useLanguage();
   const Icon = activityIconMap[item.activityType] || CreateOutlinedIcon;
   const metadataEntries = Object.entries(item.metadata || {});
 
@@ -121,7 +123,7 @@ function TimelineItem({ item }) {
         </Box>
         <Typography>{item.description}</Typography>
         <Typography className="crm-muted-text">
-          {item.user?.fullName ? `By ${item.user.fullName}` : 'System activity'}
+          {item.user?.fullName ? `${t('By')} ${item.user.fullName}` : t('System activity')}
         </Typography>
         {metadataEntries.length ? (
           <Box className="crm-activity-item__meta">
@@ -149,6 +151,7 @@ function LeadDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -221,7 +224,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead', id] });
       showNotification({
         severity: 'success',
-        message: 'Lead updated successfully.',
+        message: t('Lead updated successfully.'),
       });
       setFormOpen(false);
     },
@@ -251,7 +254,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       showNotification({
         severity: 'success',
-        message: 'Lead deleted successfully.',
+        message: t('Lead deleted successfully.'),
       });
       navigate('/leads');
     },
@@ -270,7 +273,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
-        message: 'Note created successfully.',
+        message: t('Note created successfully.'),
       });
       setNoteFormOpen(false);
     },
@@ -289,7 +292,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
-        message: 'Note updated successfully.',
+        message: t('Note updated successfully.'),
       });
       setEditingNote(null);
       setNoteFormOpen(false);
@@ -309,7 +312,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
-        message: 'Note deleted successfully.',
+        message: t('Note deleted successfully.'),
       });
       setDeletingNote(null);
     },
@@ -328,7 +331,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
-        message: 'Task created successfully.',
+        message: t('Task created successfully.'),
       });
       setTaskFormOpen(false);
       setEditingTask(null);
@@ -351,7 +354,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
-        message: 'Task updated successfully.',
+        message: t('Task updated successfully.'),
       });
       setTaskFormOpen(false);
       setEditingTask(null);
@@ -374,7 +377,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
-        message: 'Task completed successfully.',
+        message: t('Task completed successfully.'),
       });
     },
     onError: (error) => {
@@ -391,7 +394,7 @@ function LeadDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       showNotification({
         severity: 'success',
-        message: 'Task deleted successfully.',
+        message: t('Task deleted successfully.'),
       });
       setDeletingTask(null);
     },
@@ -411,7 +414,7 @@ function LeadDetailPage() {
     const error = normalizeApiError(leadQuery.error);
     return (
       <ErrorState
-        title="Unable to load lead details."
+        title={t('Unable to load lead details.')}
         description={error.message}
         onRetry={() => leadQuery.refetch()}
       />
@@ -439,8 +442,8 @@ function LeadDetailPage() {
   if (!lead) {
     return (
       <EmptyState
-        title="Lead not found"
-        description="The lead you requested is unavailable or may have been removed."
+        title={t('Lead not found')}
+        description={t('The lead you requested is unavailable or may have been removed.')}
       />
     );
   }
@@ -448,19 +451,19 @@ function LeadDetailPage() {
   return (
     <Stack spacing={3} className="crm-lead-detail">
       <PageHeader
-        eyebrow="Lead detail"
+        eyebrow={t('Lead detail')}
         title={lead.title}
-        description="Review contact information, stage, owner, and the customer message in one place."
+        description={t('Review contact information, stage, owner, and the customer message in one place.')}
         actions={
           <Box className="crm-leads-toolbar">
             <Button component={Link} to="/leads" variant="outlined">
-              Back to leads
+              {t('Back to leads')}
             </Button>
             <Button onClick={() => setFormOpen(true)} variant="contained">
-              Edit lead
+              {t('Edit lead')}
             </Button>
             <Button color="error" onClick={() => setConfirmOpen(true)} variant="outlined">
-              Delete
+              {t('Delete')}
             </Button>
           </Box>
         }
@@ -468,9 +471,9 @@ function LeadDetailPage() {
 
       {lead.isDuplicateWarning ? (
         <Alert severity="warning">
-          Duplicate warning detected for this lead. You can still continue working with it.
+          {t('Duplicate warning detected for this lead. You can still continue working with it.')}
           {duplicateData.matchFields?.length
-            ? ` Matched on ${duplicateData.matchFields.join(' and ')}.`
+            ? ` ${t('Matched on')} ${duplicateData.matchFields.join(` ${t('and')} `)}.`
             : ''}
         </Alert>
       ) : null}
@@ -482,38 +485,38 @@ function LeadDetailPage() {
               <Chip color="primary" label={lead.stageName} />
               <Chip variant="outlined" label={lead.status} />
               {lead.isDuplicateWarning ? (
-                <Chip color="warning" label="Duplicate" />
+                <Chip color="warning" label={t('Duplicate')} />
               ) : null}
             </Stack>
             <Box className="crm-lead-detail__fields">
-              <Field label="Contact" value={lead.contact?.fullName || lead.contactName} />
-              <Field label="Email" value={lead.contact?.email || lead.email} />
-              <Field label="Phone" value={lead.contact?.phone || lead.phone} />
-              <Field label="Company" value={lead.contact?.companyName} />
-              <Field label="Source" value={lead.source} />
-              <Field label="Owner" value={lead.ownerName} />
-              <Field label="Estimated cost" value={formatCurrency(lead.estimatedCost)} />
-              <Field label="Service requested" value={lead.serviceRequested} />
+              <Field label={t('Contact')} value={lead.contact?.fullName || lead.contactName} />
+              <Field label={t('Email')} value={lead.contact?.email || lead.email} />
+              <Field label={t('Phone')} value={lead.contact?.phone || lead.phone} />
+              <Field label={t('Company')} value={lead.contact?.companyName} />
+              <Field label={t('Source')} value={lead.source} />
+              <Field label={t('Owner')} value={lead.ownerName} />
+              <Field label={t('Estimated cost')} value={formatCurrency(lead.estimatedCost)} />
+              <Field label={t('Service requested')} value={lead.serviceRequested} />
             </Box>
           </CardContent>
         </Card>
 
         <Card className="crm-lead-detail__card">
           <CardContent className="crm-lead-detail__section">
-            <Typography variant="h6">Lead summary</Typography>
-            <Field label="Created" value={formatDate(lead.createdAtUtc)} />
-            <Field label="Updated" value={formatDate(lead.updatedAtUtc)} />
-            <Field label="Message" value={lead.message} />
+            <Typography variant="h6">{t('Lead summary')}</Typography>
+            <Field label={t('Created')} value={formatDate(lead.createdAtUtc)} />
+            <Field label={t('Updated')} value={formatDate(lead.updatedAtUtc)} />
+            <Field label={t('Message')} value={lead.message} />
           </CardContent>
         </Card>
       </Box>
 
       <Card className="crm-stage-timer-card">
         <CardContent className="crm-stage-timer-card__content">
-          <Typography variant="h6">Stage timer</Typography>
+          <Typography variant="h6">{t('Stage timer')}</Typography>
 
           {stageTimerQuery.isLoading ? (
-            <Typography className="crm-muted-text">Loading stage timing...</Typography>
+            <Typography className="crm-muted-text">{t('Loading stage timing...')}</Typography>
           ) : stageTimerQuery.isError ? (
             <Alert severity="warning">
               {normalizeApiError(stageTimerQuery.error).message}
@@ -522,43 +525,43 @@ function LeadDetailPage() {
             <Box className="crm-stage-timer">
               <Box className="crm-stage-timer__current">
                 <Field
-                  label="Current stage name"
+                  label={t('Current stage name')}
                   value={stageTimerQuery.data.currentStageName}
                 />
                 <Field
-                  label="Entered date"
+                  label={t('Entered date')}
                   value={formatDate(stageTimerQuery.data.enteredAtUtc)}
                 />
                 <Field
-                  label="Days in current stage"
+                  label={t('Days in current stage')}
                   value={String(stageTimerQuery.data.daysInCurrentStage)}
                 />
               </Box>
 
               <Box className="crm-stage-timer__history">
-                <Typography variant="subtitle1">Previous stages</Typography>
+                <Typography variant="subtitle1">{t('Previous stages')}</Typography>
                 {stageTimerQuery.data.previousStages?.length ? (
                   stageTimerQuery.data.previousStages.map((item) => (
                     <Box key={`${item.stageName}-${item.enteredAtUtc}`} className="crm-stage-timer__history-item">
                       <Typography variant="subtitle2">{item.stageName}</Typography>
                       <Typography className="crm-muted-text">
-                        {formatDate(item.enteredAtUtc)} to {formatDate(item.exitedAtUtc)}
+                        {formatDate(item.enteredAtUtc)} {t('to')} {formatDate(item.exitedAtUtc)}
                       </Typography>
-                      <Typography>{item.durationDays} day(s)</Typography>
+                      <Typography>{item.durationDays} {t('day(s)')}</Typography>
                     </Box>
                   ))
                 ) : (
                   <EmptyState
-                    title="No previous stage history"
-                    description="This lead has not moved through any earlier stages yet."
+                    title={t('No previous stage history')}
+                    description={t('This lead has not moved through any earlier stages yet.')}
                   />
                 )}
               </Box>
             </Box>
           ) : (
             <EmptyState
-              title="No stage timing available"
-              description="Timing data will appear here when the backend provides stage history."
+              title={t('No stage timing available')}
+              description={t('Timing data will appear here when the backend provides stage history.')}
             />
           )}
         </CardContent>
@@ -569,9 +572,9 @@ function LeadDetailPage() {
           <CardContent className="crm-lead-detail__section">
             <Box className="crm-lead-detail__section-header">
               <Box>
-                <Typography variant="h6">Notes</Typography>
+                <Typography variant="h6">{t('Notes')}</Typography>
                 <Typography className="crm-muted-text">
-                  Keep the latest customer context and handoff details in one place.
+                  {t('Keep the latest customer context and handoff details in one place.')}
                 </Typography>
               </Box>
               <Button
@@ -581,12 +584,12 @@ function LeadDetailPage() {
                   setNoteFormOpen(true);
                 }}
               >
-                Add note
+                {t('Add note')}
               </Button>
             </Box>
 
             {notesQuery.isLoading ? (
-              <Typography className="crm-muted-text">Loading notes...</Typography>
+              <Typography className="crm-muted-text">{t('Loading notes...')}</Typography>
             ) : notesQuery.isError ? (
               <Alert severity="warning">{normalizeApiError(notesQuery.error).message}</Alert>
             ) : notesQuery.data?.length ? (
@@ -608,14 +611,14 @@ function LeadDetailPage() {
                             setNoteFormOpen(true);
                           }}
                         >
-                          Edit
+                          {t('Edit')}
                         </Button>
                         <Button
                           color="error"
                           variant="outlined"
                           onClick={() => setDeletingNote(note)}
                         >
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </Box>
                     </Box>
@@ -625,8 +628,8 @@ function LeadDetailPage() {
               </Box>
             ) : (
               <EmptyState
-                title="No notes yet"
-                description="Add the first note to capture context for the team."
+                title={t('No notes yet')}
+                description={t('Add the first note to capture context for the team.')}
               />
             )}
           </CardContent>
@@ -634,9 +637,9 @@ function LeadDetailPage() {
 
         <Card className="crm-lead-detail__card">
           <CardContent className="crm-lead-detail__section">
-            <Typography variant="h6">Duplicate warning details</Typography>
+            <Typography variant="h6">{t('Duplicate warning details')}</Typography>
             {duplicatesQuery.isLoading ? (
-              <Typography className="crm-muted-text">Checking duplicate matches...</Typography>
+              <Typography className="crm-muted-text">{t('Checking duplicate matches...')}</Typography>
             ) : duplicatesQuery.isError ? (
               <Alert severity="warning">{normalizeApiError(duplicatesQuery.error).message}</Alert>
             ) : duplicateData.matchedContacts?.length ||
@@ -645,14 +648,14 @@ function LeadDetailPage() {
               <Box className="crm-duplicate-section">
                 <Box className="crm-duplicate-section__chips">
                   {duplicateData.matchFields.map((field) => (
-                    <Chip key={field} label={`Matched on ${field}`} color="warning" />
+                    <Chip key={field} label={`${t('Matched on')} ${field}`} color="warning" />
                   ))}
                 </Box>
 
                 <Divider />
 
                 <Box className="crm-duplicate-section__group">
-                  <Typography variant="subtitle1">Matched contacts</Typography>
+                  <Typography variant="subtitle1">{t('Matched contacts')}</Typography>
                   {duplicateData.matchedContacts.length ? (
                     duplicateData.matchedContacts.map((contact) => (
                       <Box key={contact.id} className="crm-duplicate-item">
@@ -662,12 +665,12 @@ function LeadDetailPage() {
                       </Box>
                     ))
                   ) : (
-                    <Typography className="crm-muted-text">No matched contacts.</Typography>
+                    <Typography className="crm-muted-text">{t('No matched contacts.')}</Typography>
                   )}
                 </Box>
 
                 <Box className="crm-duplicate-section__group">
-                  <Typography variant="subtitle1">Matched leads</Typography>
+                  <Typography variant="subtitle1">{t('Matched leads')}</Typography>
                   {duplicateData.matchedLeads.length ? (
                     duplicateData.matchedLeads.map((matchedLead) => (
                       <Box key={matchedLead.id} className="crm-duplicate-item">
@@ -681,14 +684,14 @@ function LeadDetailPage() {
                       </Box>
                     ))
                   ) : (
-                    <Typography className="crm-muted-text">No matched leads.</Typography>
+                    <Typography className="crm-muted-text">{t('No matched leads.')}</Typography>
                   )}
                 </Box>
               </Box>
             ) : (
               <EmptyState
-                title="No duplicate details"
-                description="This lead currently has no duplicate matches to review."
+                title={t('No duplicate details')}
+                description={t('This lead currently has no duplicate matches to review.')}
               />
             )}
           </CardContent>
@@ -699,9 +702,9 @@ function LeadDetailPage() {
         <CardContent className="crm-lead-detail__section">
           <Box className="crm-lead-detail__section-header">
             <Box>
-              <Typography variant="h6">Related tasks</Typography>
+              <Typography variant="h6">{t('Related tasks')}</Typography>
               <Typography className="crm-muted-text">
-                Keep next steps tied to this lead so the owner always has a clear queue.
+                {t('Keep next steps tied to this lead so the owner always has a clear queue.')}
               </Typography>
             </Box>
             <Button
@@ -717,12 +720,12 @@ function LeadDetailPage() {
                 setTaskFormOpen(true);
               }}
             >
-              Add task
+              {t('Add task')}
             </Button>
           </Box>
 
           {tasksQuery.isLoading ? (
-            <Typography className="crm-muted-text">Loading related tasks...</Typography>
+            <Typography className="crm-muted-text">{t('Loading related tasks...')}</Typography>
           ) : tasksQuery.isError ? (
             <Alert severity="warning">{normalizeApiError(tasksQuery.error).message}</Alert>
           ) : tasksQuery.data?.items?.length ? (
@@ -733,7 +736,7 @@ function LeadDetailPage() {
                     <Box>
                       <Typography variant="subtitle1">{task.title}</Typography>
                       <Typography className="crm-muted-text">
-                        Due {formatDate(task.dueDateUtc)}
+                        {t('Due')} {formatDate(task.dueDateUtc)}
                       </Typography>
                     </Box>
                     <Box className="crm-lead-detail__task-actions">
@@ -742,7 +745,7 @@ function LeadDetailPage() {
                           variant="contained"
                           onClick={() => completeTaskMutation.mutate(task.id)}
                         >
-                          Complete
+                          {t('Complete')}
                         </Button>
                       ) : null}
                       <Button
@@ -752,14 +755,14 @@ function LeadDetailPage() {
                           setTaskFormOpen(true);
                         }}
                       >
-                        Edit
+                        {t('Edit')}
                       </Button>
                       <Button
                         variant="outlined"
                         color="error"
                         onClick={() => setDeletingTask(task)}
                       >
-                        Delete
+                        {t('Delete')}
                       </Button>
                     </Box>
                   </Box>
@@ -774,16 +777,16 @@ function LeadDetailPage() {
                       color={task.isCompleted ? 'success' : 'primary'}
                       variant={task.isCompleted ? 'filled' : 'outlined'}
                     />
-                    <Chip label={task.assignedUserName || 'Unassigned'} variant="outlined" />
-                    {isOverdueTask(task) ? <Chip label="Overdue" color="error" /> : null}
+                    <Chip label={task.assignedUserName || t('Unassigned')} variant="outlined" />
+                    {isOverdueTask(task) ? <Chip label={t('Overdue')} color="error" /> : null}
                   </Box>
                 </Box>
               ))}
             </Box>
           ) : (
             <EmptyState
-              title="No tasks linked to this lead"
-              description="Create a task here to keep the next follow-up action visible."
+              title={t('No tasks linked to this lead')}
+              description={t('Create a task here to keep the next follow-up action visible.')}
             />
           )}
         </CardContent>
@@ -791,10 +794,10 @@ function LeadDetailPage() {
 
       <Card className="crm-lead-detail__card">
         <CardContent className="crm-lead-detail__section">
-          <Typography variant="h6">Activity timeline</Typography>
+          <Typography variant="h6">{t('Activity timeline')}</Typography>
 
           {timelineQuery.isLoading ? (
-            <Typography className="crm-muted-text">Loading activity timeline...</Typography>
+            <Typography className="crm-muted-text">{t('Loading activity timeline...')}</Typography>
           ) : timelineQuery.isError ? (
             <Alert severity="warning">{normalizeApiError(timelineQuery.error).message}</Alert>
           ) : timelineItems.length ? (
@@ -805,8 +808,8 @@ function LeadDetailPage() {
             </Box>
           ) : (
             <EmptyState
-              title="No activity recorded"
-              description="Timeline events will appear here as the lead changes over time."
+              title={t('No activity recorded')}
+              description={t('Timeline events will appear here as the lead changes over time.')}
             />
           )}
         </CardContent>
@@ -891,27 +894,27 @@ function LeadDetailPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete lead?"
-        description="This removes the lead from the CRM list. You can’t undo this action."
-        confirmLabel="Delete lead"
+        title={t('Delete lead?')}
+        description={t("This removes the lead from the CRM list. You can't undo this action.")}
+        confirmLabel={t('Delete lead')}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => deleteLeadMutation.mutate()}
       />
 
       <ConfirmDialog
         open={Boolean(deletingNote)}
-        title="Delete note?"
-        description="This removes the note from the lead history."
-        confirmLabel="Delete note"
+        title={t('Delete note?')}
+        description={t('This removes the note from the lead history.')}
+        confirmLabel={t('Delete note')}
         onCancel={() => setDeletingNote(null)}
         onConfirm={() => deleteNoteMutation.mutate(deletingNote.id)}
       />
 
       <ConfirmDialog
         open={Boolean(deletingTask)}
-        title="Delete task?"
-        description="This removes the task from the lead work queue."
-        confirmLabel="Delete task"
+        title={t('Delete task?')}
+        description={t('This removes the task from the lead work queue.')}
+        confirmLabel={t('Delete task')}
         onCancel={() => setDeletingTask(null)}
         onConfirm={() => deleteTaskMutation.mutate(deletingTask.id)}
       />

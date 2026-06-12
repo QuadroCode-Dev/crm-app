@@ -27,6 +27,7 @@ import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
 import useAuth from '../../shared/hooks/useAuth.js';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
@@ -53,6 +54,7 @@ function formatDate(value) {
 function LeadsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
@@ -117,7 +119,7 @@ function LeadsPage() {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       showNotification({
         severity: 'success',
-        message: 'Lead created successfully.',
+        message: t('Lead created successfully.'),
       });
       setFormOpen(false);
     },
@@ -149,7 +151,7 @@ function LeadsPage() {
       queryClient.invalidateQueries({ queryKey: ['lead', variables.id] });
       showNotification({
         severity: 'success',
-        message: 'Lead updated successfully.',
+        message: t('Lead updated successfully.'),
       });
       setFormOpen(false);
       setEditingLead(null);
@@ -180,7 +182,7 @@ function LeadsPage() {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       showNotification({
         severity: 'success',
-        message: 'Lead deleted successfully.',
+        message: t('Lead deleted successfully.'),
       });
       setDeletingLead(null);
     },
@@ -196,7 +198,7 @@ function LeadsPage() {
     () => [
       {
         field: 'title',
-        headerName: 'Title',
+        headerName: t('Title'),
         flex: 1.35,
         minWidth: 220,
         renderCell: (params) => (
@@ -205,29 +207,29 @@ function LeadsPage() {
           </Button>
         ),
       },
-      { field: 'contactName', headerName: 'Contact', flex: 1, minWidth: 170 },
-      { field: 'email', headerName: 'Email', flex: 1.1, minWidth: 190 },
-      { field: 'phone', headerName: 'Phone', flex: 1, minWidth: 150 },
-      { field: 'source', headerName: 'Source', flex: 0.9, minWidth: 140 },
-      { field: 'stageName', headerName: 'Current stage', flex: 0.9, minWidth: 140 },
-      { field: 'status', headerName: 'Status', flex: 0.8, minWidth: 120 },
+      { field: 'contactName', headerName: t('Contact'), flex: 1, minWidth: 170 },
+      { field: 'email', headerName: t('Email'), flex: 1.1, minWidth: 190 },
+      { field: 'phone', headerName: t('Phone'), flex: 1, minWidth: 150 },
+      { field: 'source', headerName: t('Source'), flex: 0.9, minWidth: 140 },
+      { field: 'stageName', headerName: t('Current stage'), flex: 0.9, minWidth: 140 },
+      { field: 'status', headerName: t('Status'), flex: 0.8, minWidth: 120 },
       {
         field: 'estimatedCost',
-        headerName: 'Estimated cost',
+        headerName: t('Estimated cost'),
         flex: 0.9,
         minWidth: 140,
         valueFormatter: (value) => formatCurrency(value),
       },
       {
         field: 'serviceRequested',
-        headerName: 'Service requested',
+        headerName: t('Service requested'),
         flex: 1.2,
         minWidth: 200,
       },
-      { field: 'ownerName', headerName: 'Owner', flex: 0.9, minWidth: 140 },
+      { field: 'ownerName', headerName: t('Owner'), flex: 0.9, minWidth: 140 },
       {
         field: 'isDuplicateWarning',
-        headerName: 'Duplicate warning',
+        headerName: t('Duplicate warning'),
         flex: 0.8,
         minWidth: 170,
         sortable: false,
@@ -235,30 +237,30 @@ function LeadsPage() {
           params.value ? (
             <Chip
               color="warning"
-              label="Duplicate"
+              label={t('Duplicate')}
               size="small"
               className="crm-leads-duplicate-chip"
             />
           ) : (
-            <Chip label="Clear" size="small" variant="outlined" />
+            <Chip label={t('Clear')} size="small" variant="outlined" />
           ),
       },
       {
         field: 'createdAtUtc',
-        headerName: 'Created date',
+        headerName: t('Created date'),
         flex: 0.9,
         minWidth: 140,
         valueFormatter: (value) => formatDate(value),
       },
       {
         field: 'actions',
-        headerName: 'Actions',
+        headerName: t('Actions'),
         minWidth: 180,
         sortable: false,
         renderCell: (params) => (
           <Stack direction="row" spacing={1}>
             <Button onClick={() => handleEdit(params.row)} size="small" variant="outlined">
-              Edit
+              {t('Edit')}
             </Button>
             <Button
               color="error"
@@ -266,13 +268,13 @@ function LeadsPage() {
               size="small"
               variant="outlined"
             >
-              Delete
+              {t('Delete')}
             </Button>
           </Stack>
         ),
       },
     ],
-    [],
+    [t],
   );
 
   function handleCreate() {
@@ -340,7 +342,7 @@ function LeadsPage() {
     const error = normalizeApiError(leadsQuery.error);
     return (
       <ErrorState
-        title="Unable to load leads."
+        title={t('Unable to load leads.')}
         description={error.message}
         onRetry={() => leadsQuery.refetch()}
       />
@@ -352,13 +354,13 @@ function LeadsPage() {
   return (
     <Stack spacing={3} className="crm-leads-page">
       <PageHeader
-        eyebrow="Lead management"
-        title="Leads"
-        description="Track pipeline-ready leads, filter by source and status, and spot duplicate warnings quickly."
+        eyebrow={t('Lead management')}
+        title={t('Leads')}
+        description={t('Track pipeline-ready leads, filter by source and status, and spot duplicate warnings quickly.')}
         actions={
           <Box className="crm-leads-toolbar">
             <Button onClick={handleCreate} variant="contained">
-              Add lead
+              {t('Add lead')}
             </Button>
           </Box>
         }
@@ -368,21 +370,21 @@ function LeadsPage() {
         <CardContent>
           <Box className="crm-leads-filters">
             <TextField
-              label="Search"
+              label={t('Search')}
               value={query.search}
               onChange={(event) => updateFilters({ search: event.target.value })}
-              placeholder="Title, contact, email, phone"
+              placeholder={t('Title, contact, email, phone')}
               className="crm-leads-filters__search"
             />
             <TextField
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Source"
+              label={t('Source')}
               value={query.source}
               onChange={(event) => updateFilters({ source: event.target.value })}
             >
-              <option value="">All sources</option>
+              <option value="">{t('All sources')}</option>
               {(leadSourcesQuery.data || []).map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.name}
@@ -393,11 +395,11 @@ function LeadsPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Stage"
+              label={t('Stage')}
               value={query.stage}
               onChange={(event) => updateFilters({ stage: event.target.value })}
             >
-              <option value="">All stages</option>
+              <option value="">{t('All stages')}</option>
               {(stagesQuery.data || []).map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.name}
@@ -408,14 +410,14 @@ function LeadsPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Status"
+              label={t('Status')}
               value={query.status}
               onChange={(event) => updateFilters({ status: event.target.value })}
             >
-              <option value="">All statuses</option>
+              <option value="">{t('All statuses')}</option>
               {statusOptions.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {t(option)}
                 </option>
               ))}
             </TextField>
@@ -423,11 +425,11 @@ function LeadsPage() {
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
-              label="Owner"
+              label={t('Owner')}
               value={query.owner}
               onChange={(event) => updateFilters({ owner: event.target.value })}
             >
-              <option value="">All owners</option>
+              <option value="">{t('All owners')}</option>
               {ownerOptions.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.fullName}
@@ -444,7 +446,7 @@ function LeadsPage() {
                   })
                 }
               >
-                Reset
+                {t('Reset')}
               </Button>
             </Box>
           </Box>
@@ -453,8 +455,8 @@ function LeadsPage() {
 
       {rows.length === 0 ? (
         <EmptyState
-          title="No leads match these filters"
-          description="Try broadening your search, or reset the filters to see all available leads."
+          title={t('No leads match these filters')}
+          description={t('Try broadening your search, or reset the filters to see all available leads.')}
         />
       ) : (
         <Card className="crm-leads-table-card">
@@ -505,9 +507,9 @@ function LeadsPage() {
 
       <ConfirmDialog
         open={Boolean(deletingLead)}
-        title="Delete lead?"
-        description="This removes the lead from the CRM list. You can’t undo this action."
-        confirmLabel="Delete lead"
+        title={t('Delete lead?')}
+        description={t("This removes the lead from the CRM list. You can't undo this action.")}
+        confirmLabel={t('Delete lead')}
         onCancel={() => setDeletingLead(null)}
         onConfirm={() => deleteLeadMutation.mutate(deletingLead.id)}
       />

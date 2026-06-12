@@ -20,6 +20,7 @@ import ConfirmDialog from '../../shared/components/feedback/ConfirmDialog.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import ContactFormDialog from './ContactFormDialog.jsx';
 import './contacts.css';
@@ -42,6 +43,7 @@ function ContactDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -59,7 +61,7 @@ function ContactDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['contact', id] });
       showNotification({
         severity: 'success',
-        message: 'Contact updated successfully.',
+        message: t('Contact updated successfully.'),
       });
       setFormOpen(false);
     },
@@ -77,7 +79,7 @@ function ContactDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       showNotification({
         severity: 'success',
-        message: 'Contact deleted successfully.',
+        message: t('Contact deleted successfully.'),
       });
       navigate('/contacts');
     },
@@ -96,7 +98,7 @@ function ContactDetailPage() {
   if (contactQuery.isError) {
     return (
       <ErrorState
-        title="Unable to load contact details."
+        title={t('Unable to load contact details.')}
         description={normalizeApiError(contactQuery.error).message}
         onRetry={() => contactQuery.refetch()}
       />
@@ -108,8 +110,8 @@ function ContactDetailPage() {
   if (!contact) {
     return (
       <EmptyState
-        title="Contact not found"
-        description="The contact you requested is unavailable or may have been removed."
+        title={t('Contact not found')}
+        description={t('The contact you requested is unavailable or may have been removed.')}
       />
     );
   }
@@ -117,19 +119,19 @@ function ContactDetailPage() {
   return (
     <Stack spacing={3} className="crm-contact-detail">
       <PageHeader
-        eyebrow="Contact detail"
+        eyebrow={t('Contact detail')}
         title={contact.fullName}
-        description="Keep contact information current before tying it into new or existing leads."
+        description={t('Keep contact information current before tying it into new or existing leads.')}
         actions={
           <Box className="crm-contact-detail__actions">
             <Button component={Link} to="/contacts" variant="outlined">
-              Back to contacts
+              {t('Back to contacts')}
             </Button>
             <Button onClick={() => setFormOpen(true)} variant="contained">
-              Edit contact
+              {t('Edit contact')}
             </Button>
             <Button color="error" onClick={() => setConfirmOpen(true)} variant="outlined">
-              Delete
+              {t('Delete')}
             </Button>
           </Box>
         }
@@ -138,13 +140,13 @@ function ContactDetailPage() {
       <Card className="crm-card">
         <CardContent className="crm-contact-detail__card-content">
           <Typography className="crm-muted-text">
-            Created {formatDate(contact.createdAtUtc)} and last updated {formatDate(contact.updatedAtUtc)}.
+            {t('Created')} {formatDate(contact.createdAtUtc)} {t('and last updated')} {formatDate(contact.updatedAtUtc)}.
           </Typography>
           <Box className="crm-contact-detail__fields">
-            <ContactField label="Email" value={contact.email} />
-            <ContactField label="Phone" value={contact.phone} />
-            <ContactField label="Company" value={contact.companyName} />
-            <ContactField label="Contact ID" value={contact.id} />
+            <ContactField label={t('Email')} value={contact.email} />
+            <ContactField label={t('Phone')} value={contact.phone} />
+            <ContactField label={t('Company')} value={contact.companyName} />
+            <ContactField label={t('Contact ID')} value={contact.id} />
           </Box>
         </CardContent>
       </Card>
@@ -158,9 +160,9 @@ function ContactDetailPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete contact?"
-        description="This removes the contact from the CRM list. You can’t undo this action."
-        confirmLabel="Delete contact"
+        title={t('Delete contact?')}
+        description={t("This removes the contact from the CRM list. You can't undo this action.")}
+        confirmLabel={t('Delete contact')}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => deleteContactMutation.mutate()}
       />
