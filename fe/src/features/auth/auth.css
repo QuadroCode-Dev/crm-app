@@ -1,0 +1,35 @@
+.crm-auth-layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(36, 88, 230, 0.14),
+    rgba(242, 107, 58, 0.12)
+  );
+}
+
+.crm-auth-layout__stack {
+  gap: 1.5rem;
+}
+
+.crm-login-card,
+.crm-public-card {
+  box-shadow: var(--crm-shadow-card);
+}
+
+.crm-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.crm-login-form__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crm-login-form__actions {
+  display: flex;
+}

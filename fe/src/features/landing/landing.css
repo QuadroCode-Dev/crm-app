@@ -1,0 +1,108 @@
+.crm-public-layout {
+  position: relative;
+  min-height: 100vh;
+  padding: 3rem 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(36, 88, 230, 0.12), transparent 30%),
+    linear-gradient(180deg, #f7fafc 0%, #eef3f8 100%);
+}
+
+.crm-public-layout__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at bottom right, rgba(242, 107, 58, 0.14), transparent 28%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.35), transparent 55%);
+  pointer-events: none;
+}
+
+.crm-public-layout__container {
+  position: relative;
+  z-index: 1;
+}
+
+.crm-public-card {
+  box-shadow: var(--crm-shadow-card);
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.crm-public-card--landing {
+  backdrop-filter: blur(12px);
+}
+
+.crm-public-card__grid {
+  align-items: center;
+}
+
+.crm-public-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.crm-public-card__title {
+  font-size: clamp(2.5rem, 4vw, 4.2rem) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.crm-public-card__description {
+  max-width: 34rem;
+  font-size: 1.05rem !important;
+}
+
+.crm-public-form {
+  padding: 2rem;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.96));
+  border: 1px solid rgba(219, 228, 240, 0.95);
+}
+
+.crm-public-form .MuiFormLabel-root {
+  color: var(--crm-color-text-muted);
+}
+
+.crm-public-form .MuiOutlinedInput-root {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.crm-public-form .MuiButton-root {
+  min-width: 12rem;
+  border-radius: 999px;
+  padding-inline: 1.5rem;
+}
+
+.crm-public-card--success {
+  max-width: 42rem;
+  margin: 4rem auto 0;
+}
+
+.crm-public-card__chip {
+  width: fit-content;
+}
+
+.crm-public-card__tracking {
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--crm-color-border);
+  border-radius: 14px;
+  background: rgba(36, 88, 230, 0.04);
+  color: var(--crm-color-text);
+}
+
+.crm-public-card__button {
+  width: fit-content;
+  border-radius: 999px !important;
+}
+
+@media (max-width: 899px) {
+  .crm-public-layout {
+    padding: 1.5rem 0;
+  }
+
+  .crm-public-form {
+    padding: 1.25rem;
+  }
+}

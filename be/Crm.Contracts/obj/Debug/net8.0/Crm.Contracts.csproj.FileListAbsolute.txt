@@ -1,0 +1,11 @@
+C:\QC\crm-app\crm-app\be\Crm.Contracts\bin\Debug\net8.0\Crm.Contracts.deps.json
+C:\QC\crm-app\crm-app\be\Crm.Contracts\bin\Debug\net8.0\Crm.Contracts.dll
+C:\QC\crm-app\crm-app\be\Crm.Contracts\bin\Debug\net8.0\Crm.Contracts.pdb
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\Crm.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\Crm.Contracts.AssemblyInfoInputs.cache
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\Crm.Contracts.AssemblyInfo.cs
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\Crm.Contracts.csproj.CoreCompileInputs.cache
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\Crm.Contracts.dll
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\refint\Crm.Contracts.dll
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\Crm.Contracts.pdb
+C:\QC\crm-app\crm-app\be\Crm.Contracts\obj\Debug\net8.0\ref\Crm.Contracts.dll

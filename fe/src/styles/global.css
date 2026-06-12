@@ -1,0 +1,47 @@
+:root {
+  --crm-color-primary: #2458e6;
+  --crm-color-secondary: #f26b3a;
+  --crm-color-text: #172033;
+  --crm-color-text-muted: #52607a;
+  --crm-color-border: #dbe4f0;
+  --crm-color-surface: #ffffff;
+  --crm-color-background: #eef3f8;
+  --crm-color-background-accent: rgba(242, 107, 58, 0.08);
+  --crm-shadow-card: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --crm-radius-card: 16px;
+  --crm-sidebar-width: 280px;
+  --crm-transition-fast: 180ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--crm-color-background);
+  color: var(--crm-color-text);
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+.crm-card {
+  box-shadow: var(--crm-shadow-card);
+}
+
+.crm-card-content-padded {
+  padding: 2rem !important;
+}
+
+.crm-eyebrow {
+  color: var(--crm-color-primary);
+}
+
+.crm-muted-text {
+  color: var(--crm-color-text-muted);
+}

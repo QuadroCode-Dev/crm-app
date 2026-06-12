@@ -1,0 +1,225 @@
+.crm-tasks-page {
+  width: 100%;
+}
+
+.crm-tasks-filters-card {
+  overflow: hidden;
+}
+
+.crm-tasks-filters-card .MuiCardContent-root {
+  padding: 1.25rem 1rem 1rem;
+}
+
+.crm-tasks-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.crm-tasks-filters__field .MuiOutlinedInput-root,
+.crm-tasks-filters__checkbox {
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.95));
+  transition: border-color var(--crm-transition-fast), box-shadow var(--crm-transition-fast);
+}
+
+.crm-tasks-filters__field .MuiInputLabel-root {
+  font-size: 0.84rem;
+}
+
+.crm-tasks-filters__checkbox {
+  min-height: 56px;
+  margin-left: 0;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(36, 88, 230, 0.14);
+}
+
+.crm-tasks-filters__checkbox .MuiTypography-root {
+  font-weight: 600;
+  color: var(--crm-color-text);
+}
+
+.crm-tasks-filters__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 56px;
+  grid-column: 4 / 5;
+}
+
+.crm-tasks-filters__reset-button {
+  min-width: 112px;
+  border-radius: 999px !important;
+  border-color: rgba(36, 88, 230, 0.2) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em;
+}
+
+.crm-tasks-table-card {
+  overflow: hidden;
+}
+
+.crm-tasks-table-card .MuiCardContent-root {
+  padding: 1rem;
+}
+
+.crm-tasks-table .MuiDataGrid-root {
+  border: 1px solid rgba(36, 88, 230, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.crm-tasks-table .MuiDataGrid-columnHeaders {
+  border-bottom: 1px solid rgba(36, 88, 230, 0.1);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.crm-tasks-table .MuiDataGrid-columnHeaderTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.crm-tasks-table .MuiDataGrid-row:hover {
+  background: rgba(36, 88, 230, 0.04);
+}
+
+.crm-tasks-table .MuiDataGrid-cell {
+  display: flex;
+  align-items: center;
+ 
+  padding-block: 0.15rem;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.crm-tasks-table .MuiDataGrid-cell:focus,
+.crm-tasks-table .MuiDataGrid-cell:focus-within,
+.crm-tasks-table .MuiDataGrid-columnHeader:focus,
+.crm-tasks-table .MuiDataGrid-columnHeader:focus-within {
+  outline: none;
+}
+
+.crm-tasks-table__title-cell {
+  width: 100%;
+  min-width: 0;
+}
+
+.crm-tasks-table__title-text {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--crm-color-text);
+}
+
+.crm-tasks-table__lead-link {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--crm-color-primary);
+  font-weight: 700;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-tasks-table__lead-link:hover {
+  text-decoration: underline;
+}
+
+.crm-tasks-table__empty-value {
+  color: var(--crm-color-text-muted);
+}
+
+.crm-tasks-table__actions {
+  width: 100%;
+  flex-wrap: nowrap;
+  justify-content: center ;
+  align-items: center;
+}
+
+.crm-tasks-table .MuiTablePagination-root {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.92));
+}
+
+.crm-lead-detail__tasks {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-lead-detail__task-item {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.crm-lead-detail__task-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.crm-lead-detail__task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.crm-lead-detail__task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+@media (max-width: 1200px) {
+  .crm-tasks-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .crm-tasks-filters__actions {
+    grid-column: 3 / 4;
+  }
+}
+
+@media (max-width: 900px) {
+  .crm-tasks-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-tasks-filters__actions {
+    grid-column: 2 / 3;
+  }
+}
+
+@media (max-width: 640px) {
+  .crm-tasks-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .crm-tasks-filters__actions {
+    grid-column: auto;
+    justify-content: stretch;
+  }
+
+  .crm-tasks-filters__reset-button {
+    width: 100%;
+  }
+
+  .crm-lead-detail__task-header {
+    flex-direction: column;
+  }
+
+  .crm-lead-detail__task-actions {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,51 @@
+.crm-page-header {
+  margin-bottom: 1.5rem;
+}
+
+.crm-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.crm-placeholder-page,
+.crm-empty-state,
+.crm-loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.crm-placeholder-page__content,
+.crm-empty-state__content {
+  align-items: flex-start;
+}
+
+.crm-empty-state__card-content {
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+}
+
+.crm-error-state .MuiCardContent-root {
+  padding: 1.5rem !important;
+}
+
+.crm-error-state__alert {
+  width: 100%;
+}
+
+.crm-snackbar .MuiPaper-root {
+  min-width: 18rem;
+  max-width: min(28rem, calc(100vw - 2rem));
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+}
+
+.crm-snackbar__alert {
+  width: 100%;
+}

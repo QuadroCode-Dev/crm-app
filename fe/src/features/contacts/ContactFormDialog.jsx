@@ -1,0 +1,104 @@
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+} from '@mui/material';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Controller, useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import * as yup from 'yup';
+
+const contactSchema = yup.object({
+  fullName: yup.string().trim().required('Full name is required.'),
+  email: yup
+    .string()
+    .trim()
+    .nullable()
+    .transform((value) => (value === '' ? null : value))
+    .email('Enter a valid email address.'),
+  phone: yup.string().trim().nullable(),
+  companyName: yup.string().trim().nullable(),
+});
+
+function ContactFormDialog({ open, contact, onClose, onSubmit }) {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      fullName: '',
+      email: '',
+      phone: '',
+      companyName: '',
+    },
+    resolver: yupResolver(contactSchema),
+  });
+
+  useEffect(() => {
+    reset({
+      fullName: contact?.fullName || '',
+      email: contact?.email || '',
+      phone: contact?.phone || '',
+      companyName: contact?.companyName || '',
+    });
+  }, [contact, reset]);
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{contact ? 'Edit contact' : 'Create contact'}</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          <Controller
+            name="fullName"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Full name"
+                error={Boolean(errors.fullName)}
+                helperText={errors.fullName?.message}
+              />
+            )}
+          />
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Email"
+                type="email"
+                error={Boolean(errors.email)}
+                helperText={errors.email?.message}
+              />
+            )}
+          />
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => <TextField {...field} label="Phone" />}
+          />
+          <Controller
+            name="companyName"
+            control={control}
+            render={({ field }) => <TextField {...field} label="Company name" />}
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : contact ? 'Save contact' : 'Create contact'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+export default ContactFormDialog;

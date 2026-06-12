@@ -1,0 +1,139 @@
+.crm-app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.crm-app-layout__drawer {
+  flex-shrink: 0;
+}
+
+.crm-app-layout__drawer--mobile {
+  width: 0;
+}
+
+.crm-app-layout__drawer-paper {
+  width: var(--crm-sidebar-width);
+  box-sizing: border-box;
+  border-right: 1px solid var(--crm-color-border);
+  background-image: linear-gradient(
+    180deg,
+    rgba(36, 88, 230, 0.06) 0%,
+    rgba(255, 255, 255, 0.95) 40%
+  );
+}
+
+.crm-app-layout__content {
+  flex: 1;
+  min-width: 0;
+  background:
+    radial-gradient(circle at top right, var(--crm-color-background-accent), transparent 24%),
+    var(--crm-color-background);
+}
+
+.crm-app-layout__content-inner {
+  padding: 1rem;
+}
+
+.crm-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.crm-sidebar__brand {
+  padding: 1.5rem;
+}
+
+.crm-sidebar__section {
+  padding: 1rem 0.75rem;
+}
+
+.crm-sidebar__section-title {
+  padding: 0 0.75rem;
+  text-transform: uppercase;
+  color: var(--crm-color-text-muted);
+}
+
+.crm-sidebar__list {
+  margin-top: 0.5rem;
+}
+
+.crm-sidebar__link {
+  margin-bottom: 0.25rem;
+  border-radius: 12px;
+  transition:
+    background-color var(--crm-transition-fast),
+    color var(--crm-transition-fast);
+}
+
+.crm-sidebar__link.active {
+  background: rgba(36, 88, 230, 0.12);
+  color: var(--crm-color-primary);
+}
+
+.crm-topbar {
+  border-bottom: 1px solid var(--crm-color-border);
+  backdrop-filter: blur(18px);
+}
+
+.crm-topbar__toolbar {
+  min-height: 72px !important;
+}
+
+.crm-topbar__content {
+  width: 100%;
+}
+
+.crm-topbar__menu-button {
+  border: 1px solid rgba(36, 88, 230, 0.16) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+}
+
+.crm-topbar__actions {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 900px) {
+  .crm-app-layout__content-inner {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .crm-app-layout__drawer {
+    width: var(--crm-sidebar-width);
+  }
+
+  .crm-topbar {
+    width: calc(100% - var(--crm-sidebar-width));
+    margin-left: var(--crm-sidebar-width);
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .crm-app-layout__content-inner {
+    padding: 1rem 0.875rem 1.5rem;
+  }
+
+  .crm-topbar__toolbar {
+    min-height: 68px !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .crm-topbar__actions {
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .crm-topbar__content {
+    gap: 0.75rem;
+  }
+
+  .crm-topbar__actions .MuiChip-root,
+  .crm-topbar__actions .MuiTypography-root {
+    display: none;
+  }
+}

@@ -1,0 +1,17 @@
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Application.deps.json
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Application.dll
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Application.pdb
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Contracts.dll
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Domain.dll
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Domain.pdb
+C:\QC\crm-app\crm-app\be\Crm.Application\bin\Debug\net8.0\Crm.Contracts.pdb
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.csproj.AssemblyReference.cache
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.AssemblyInfoInputs.cache
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.AssemblyInfo.cs
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.csproj.CoreCompileInputs.cache
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.csproj.CopyComplete
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.dll
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\refint\Crm.Application.dll
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\Crm.Application.pdb
+C:\QC\crm-app\crm-app\be\Crm.Application\obj\Debug\net8.0\ref\Crm.Application.dll
