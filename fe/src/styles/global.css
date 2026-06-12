@@ -13,6 +13,26 @@
   --crm-transition-fast: 180ms ease;
 }
 
+[data-crm-color-scheme='dark'] {
+  --crm-color-primary: #7aa2ff;
+  --crm-color-secondary: #ff9b6f;
+  --crm-color-text: #f3f7ff;
+  --crm-color-text-muted: #aab7cf;
+  --crm-color-border: #28364e;
+  --crm-color-surface: #182235;
+  --crm-color-background: #101624;
+  --crm-color-background-accent: rgba(255, 155, 111, 0.1);
+  --crm-shadow-card: 0 16px 36px rgba(0, 0, 0, 0.32);
+}
+
+[data-crm-color-scheme='dark'] input:-webkit-autofill,
+[data-crm-color-scheme='dark'] input:-webkit-autofill:hover,
+[data-crm-color-scheme='dark'] input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--crm-color-text);
+  box-shadow: 0 0 0 1000px #141d2e inset;
+  caret-color: var(--crm-color-text);
+}
+
 * {
   box-sizing: border-box;
 }
