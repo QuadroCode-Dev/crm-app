@@ -28,13 +28,13 @@
   padding: 1rem;
   border: 1px solid var(--crm-color-border);
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(245, 248, 255, 0.96), rgba(255, 255, 255, 0.92));
+  background: color-mix(in srgb, var(--crm-color-surface) 92%, var(--crm-color-background));
 }
 
 .crm-integrations-page__code-label {
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--crm-color-muted);
+  color: var(--crm-color-text-muted);
 }
 
 .crm-integrations-page__code-block {
@@ -42,8 +42,8 @@
   overflow-x: auto;
   padding: 0.9rem 1rem;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.94);
-  color: #f8fafc;
+  background: color-mix(in srgb, var(--crm-color-background) 88%, #000 12%);
+  color: var(--crm-color-text);
   font-size: 0.95rem;
   line-height: 1.5;
 }

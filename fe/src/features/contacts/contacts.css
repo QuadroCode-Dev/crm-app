@@ -44,7 +44,7 @@
   padding: 1rem;
   border: 1px solid var(--crm-color-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--crm-color-surface) 92%, var(--crm-color-background));
 }
 
 .crm-contact-field__label {
