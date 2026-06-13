@@ -1,12 +1,28 @@
 import {
   Box,
   Button,
-  Card,
-  CardContent,
+  ButtonGroup,
   Chip,
+  IconButton,
   Stack,
   Typography,
 } from '@mui/material';
+import {
+  CaretDown,
+  CurrencyDollar,
+  FunnelSimple,
+  GitBranch,
+  Info,
+  Kanban,
+  ListBullets,
+  MagnifyingGlass,
+  PencilSimple,
+  Plus,
+  PushPinSimple,
+  SortAscending,
+  UserCircle,
+  WarningCircle,
+} from '@phosphor-icons/react';
 import {
   DndContext,
   DragOverlay,
@@ -76,20 +92,27 @@ function StageColumn({ stage, leads, activeStageId, children }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `stage-drop-${stage.id}`,
   });
+  const stageValue = leads.reduce(
+    (total, lead) => total + Number(lead.estimatedCost || 0),
+    0,
+  );
 
   return (
-    <Card
+    <Box
       ref={setNodeRef}
       className={`crm-pipeline-column ${isOver || activeStageId === stage.id ? 'crm-pipeline-column--active' : ''
         }`}
     >
-      <CardContent className="crm-pipeline-column__content">
+      <Box className="crm-pipeline-column__content">
         <Box className="crm-pipeline-column__header">
-          <Box>
-            <Typography className="crm-pipeline-column__eyebrow">{t('Stage')}</Typography>
-            <Typography variant="h6">{stage.name}</Typography>
-          </Box>
-          <Chip label={`${leads.length} ${t('Leads')}`} size="small" />
+          <Typography variant="h6">{stage.name}</Typography>
+          <Typography className="crm-pipeline-column__summary">
+            {new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              maximumFractionDigits: 0,
+            }).format(stageValue)} · {leads.length} {t('deals')}
+          </Typography>
         </Box>
         <Box className="crm-pipeline-column__list">
           {children}
@@ -100,8 +123,8 @@ function StageColumn({ stage, leads, activeStageId, children }) {
             />
           ) : null}
         </Box>
-      </CardContent>
-    </Card>
+      </Box>
+    </Box>
   );
 }
 
@@ -129,17 +152,22 @@ function PipelineCard({ lead }) {
           {lead.title}
         </Link>
         {lead.isDuplicateWarning ? (
-          <Chip
-            color="warning"
-            label={t('Duplicate')}
-            size="small"
-            className="crm-pipeline-card__meta-chip"
-          />
+          <WarningCircle className="crm-pipeline-card__warning" size={22} weight="fill" />
         ) : null}
       </Box>
-      <Box className="crm-pipeline-card__info">
-        <Typography>{lead.contactName}</Typography>
-        <Typography className="crm-muted-text">{lead.serviceRequested}</Typography>
+      <Box className="crm-pipeline-card__meta">
+        <Typography className="crm-pipeline-card__contact">
+          {lead.contactName || lead.companyName || lead.serviceRequested}
+        </Typography>
+        <Chip
+          className="crm-pipeline-card__activity"
+          label=""
+          size="small"
+          title={t('Next activity')}
+        />
+      </Box>
+      <Box className="crm-pipeline-card__value-row">
+        <UserCircle size={18} weight="fill" />
         <Typography className="crm-pipeline-card__value">
           {new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -148,10 +176,91 @@ function PipelineCard({ lead }) {
           }).format(Number(lead.estimatedCost || 0))}
         </Typography>
       </Box>
-      <Box className="crm-pipeline-card__meta">
-        <Chip label={lead.source} size="small" variant="outlined" />
+    </Box>
+  );
+}
+
+function PipelineBoardToolbar({ dealCount, dealValue }) {
+  const { t } = useLanguage();
+
+  return (
+    <Box className="crm-pipeline-toolbar">
+      <Box className="crm-pipeline-toolbar__primary">
+        <ButtonGroup variant="outlined" className="crm-pipeline-view-toggle">
+          <Button className="crm-pipeline-view-toggle__button crm-pipeline-view-toggle__button--active">
+            <Kanban size={20} weight="duotone" />
+          </Button>
+          <Button className="crm-pipeline-view-toggle__button">
+            <ListBullets size={20} weight="duotone" />
+          </Button>
+          <Button className="crm-pipeline-view-toggle__button">
+            <CurrencyDollar size={20} weight="duotone" />
+          </Button>
+        </ButtonGroup>
+        <Button className="crm-pipeline-add-button" startIcon={<Plus size={18} weight="bold" />} variant="contained">
+          {t('Deal')}
+        </Button>
+      </Box>
+
+      <Box className="crm-pipeline-toolbar__secondary">
+        <Typography className="crm-pipeline-toolbar__count">
+          {dealCount} {t('deals')}
+        </Typography>
+        <TooltiplessIcon label={t('Pipeline info')}>
+          <Info size={18} weight="duotone" />
+        </TooltiplessIcon>
+        <Button
+          className="crm-pipeline-toolbar__dropdown"
+          component={Link}
+          endIcon={<CaretDown size={15} weight="bold" />}
+          startIcon={<GitBranch size={18} weight="duotone" />}
+          to="/settings/pipeline"
+          variant="outlined"
+        >
+          {t('Pipeline')}
+        </Button>
+        <IconButton
+          aria-label={t('Manage stages')}
+          className="crm-pipeline-toolbar__icon-button"
+          component={Link}
+          to="/settings/pipeline"
+        >
+          <PencilSimple size={18} weight="bold" />
+        </IconButton>
+        <Button
+          className="crm-pipeline-toolbar__dropdown"
+          endIcon={<CaretDown size={15} weight="bold" />}
+          startIcon={<FunnelSimple size={18} weight="duotone" />}
+          variant="outlined"
+        >
+          {t('Filter')}
+        </Button>
+      </Box>
+
+      <Box className="crm-pipeline-toolbar__tertiary">
+        <Button className="crm-pipeline-pin-button" startIcon={<PushPinSimple size={17} weight="duotone" />}>
+          {t('Pin filters')}
+        </Button>
+        <Typography className="crm-pipeline-toolbar__value">
+          {new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0,
+          }).format(dealValue)}
+        </Typography>
+        <Button className="crm-pipeline-sort-button" startIcon={<SortAscending size={18} weight="bold" />}>
+          {t('Sort by: Next activity')} <CaretDown size={14} weight="bold" />
+        </Button>
       </Box>
     </Box>
+  );
+}
+
+function TooltiplessIcon({ children, label }) {
+  return (
+    <IconButton aria-label={label} className="crm-pipeline-toolbar__plain-icon">
+      {children}
+    </IconButton>
   );
 }
 
@@ -251,6 +360,7 @@ function PipelinePage() {
     [stagesQuery.data],
   );
   const leads = leadsQuery.data?.items || [];
+  const dealValue = leads.reduce((total, lead) => total + Number(lead.estimatedCost || 0), 0);
   const activeLead = leads.find((lead) => lead.id === activeLeadId) || null;
   const leadStageMap = Object.fromEntries(leads.map((lead) => [lead.id, lead.stageId]));
 
@@ -290,19 +400,14 @@ function PipelinePage() {
   }
 
   return (
-    <Stack spacing={3} className="crm-pipeline-page">
+    <Stack spacing={0} className="crm-pipeline-page">
       <PageHeader
-        eyebrow={t('Sales flow')}
-        title={t('Pipeline')}
+        title={t('Deals')}
         description={t('Move leads between stages with drag and drop to reflect how deals are progressing.')}
-        actions={
-          <Box className="crm-leads-toolbar">
-            <Button component={Link} to="/settings/pipeline" variant="outlined">
-              {t('Manage stages')}
-            </Button>
-          </Box>
-        }
+        actions={<Box className="crm-pipeline-search"><MagnifyingGlass size={19} weight="duotone" /><span>{t('Search')}</span></Box>}
       />
+
+      <PipelineBoardToolbar dealCount={leads.length} dealValue={dealValue} />
 
       <DndContext
         sensors={sensors}

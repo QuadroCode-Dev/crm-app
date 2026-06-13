@@ -55,7 +55,7 @@ describe('Pipeline feature', () => {
 
     renderRoute(['/pipeline']);
 
-    expect(await screen.findByRole('heading', { name: 'Pipeline' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Deals' })).toBeInTheDocument();
 
     const qualifiedColumn = screen.getByText('Qualified').closest('.crm-pipeline-column');
     const proposalColumn = screen.getByText('Proposal').closest('.crm-pipeline-column');

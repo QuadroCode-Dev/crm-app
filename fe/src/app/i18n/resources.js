@@ -269,6 +269,14 @@ const commonCopy = {
   "This removes the task from the work queue. You can't undo this action.":
     "This removes the task from the work queue. You can't undo this action.",
   Pipeline: 'Pipeline',
+  Deals: 'Deals',
+  Deal: 'Deal',
+  deals: 'deals',
+  'Pipeline info': 'Pipeline info',
+  Filter: 'Filter',
+  'Pin filters': 'Pin filters',
+  'Next activity': 'Next activity',
+  'Sort by: Next activity': 'Sort by: Next activity',
   'Sales flow': 'Sales flow',
   'Move leads between stages with drag and drop to reflect how deals are progressing.':
     'Move leads between stages with drag and drop to reflect how deals are progressing.',
@@ -809,6 +817,14 @@ const arabicCopy = {
   "This removes the task from the work queue. You can't undo this action.":
     'سيؤدي ذلك إلى إزالة المهمة من قائمة العمل. لا يمكن التراجع عن هذا الإجراء.',
   Pipeline: 'مسار المبيعات',
+  Deals: 'الصفقات',
+  Deal: 'صفقة',
+  deals: 'صفقات',
+  'Pipeline info': 'معلومات المسار',
+  Filter: 'فلتر',
+  'Pin filters': 'تثبيت الفلاتر',
+  'Next activity': 'النشاط التالي',
+  'Sort by: Next activity': 'ترتيب حسب: النشاط التالي',
   'Sales flow': 'تدفق المبيعات',
   'Move leads between stages with drag and drop to reflect how deals are progressing.':
     'انقل العملاء المحتملين بين المراحل بالسحب والإفلات لعكس تقدم الصفقات.',
