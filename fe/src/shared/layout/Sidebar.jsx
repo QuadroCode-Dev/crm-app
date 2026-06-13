@@ -29,6 +29,10 @@ const settingsItems = [
   { labelKey: 'navigation.customization', to: '/settings/customization' },
 ];
 
+const supportItems = [
+  { labelKey: 'navigation.help', to: '/help' },
+];
+
 function SidebarLink({ labelKey, to, onNavigate }) {
   const { t } = useLanguage();
 
@@ -86,6 +90,17 @@ function Sidebar({ onNavigate }) {
         </Typography>
         <List disablePadding className="crm-sidebar__list">
           {settingsItems.map((item) => (
+            <SidebarLink key={item.to} {...item} onNavigate={onNavigate} />
+          ))}
+        </List>
+      </Box>
+      <Divider />
+      <Box className="crm-sidebar__section crm-sidebar__section--support">
+        <Typography variant="caption" className="crm-sidebar__section-title">
+          {t('app.supportLabel')}
+        </Typography>
+        <List disablePadding className="crm-sidebar__list">
+          {supportItems.map((item) => (
             <SidebarLink key={item.to} {...item} onNavigate={onNavigate} />
           ))}
         </List>

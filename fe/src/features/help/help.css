@@ -1,0 +1,66 @@
+.crm-help-page__layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.crm-help-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.crm-help-page__card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.25rem !important;
+}
+
+.crm-help-page__features-card {
+  position: sticky;
+  top: 5.75rem;
+}
+
+.crm-help-page__features-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem !important;
+}
+
+.crm-help-page__feature-button {
+  justify-content: flex-start !important;
+  min-height: 2.25rem;
+  text-align: start !important;
+}
+
+[dir='rtl'] .crm-help-page__feature-button {
+  justify-content: flex-end !important;
+}
+
+.crm-help-page__feature-label {
+  color: var(--crm-color-primary);
+  font-weight: 700 !important;
+  text-transform: uppercase;
+}
+
+.crm-help-page__empty-card {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 899.98px) {
+  .crm-help-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-help-page__features-card {
+    position: static;
+  }
+
+  .crm-help-page__features-content .MuiStack-root {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+  }
+}

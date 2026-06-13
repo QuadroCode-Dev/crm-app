@@ -4,6 +4,7 @@ import LoginPage from '../features/auth/LoginPage.jsx';
 import ProtectedRoute from '../features/auth/ProtectedRoute.jsx';
 import PublicOnlyRoute from '../features/auth/PublicOnlyRoute.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
+import HelpPage from '../features/help/HelpPage.jsx';
 import ContactsPage from '../features/contacts/ContactsPage.jsx';
 import ContactDetailPage from '../features/contacts/ContactDetailPage.jsx';
 import LandingPage from '../features/landing/LandingPage.jsx';
@@ -93,6 +94,10 @@ export const appRoutes = [
           {
             path: '/reports',
             element: <ReportsPage />,
+          },
+          {
+            path: '/help',
+            element: <HelpPage />,
           },
           {
             path: '/settings/pipeline',

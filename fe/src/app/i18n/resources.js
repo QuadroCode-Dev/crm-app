@@ -518,6 +518,30 @@ const commonCopy = {
   Small: 'Small',
   Large: 'Large',
   'Current selection': 'Current selection',
+  Help: 'Help',
+  'A short guide to the main CRM workflows.': 'A short guide to the main CRM workflows.',
+  'All features': 'All features',
+  Features: 'Features',
+  'Search help': 'Search help',
+  'Search by feature or task': 'Search by feature or task',
+  'Start with the dashboard': 'Start with the dashboard',
+  'Use the dashboard to see pipeline totals, overdue tasks, recent activity, and quick shortcuts.':
+    'Use the dashboard to see pipeline totals, overdue tasks, recent activity, and quick shortcuts.',
+  'Manage leads in the pipeline': 'Manage leads in the pipeline',
+  'Open Pipeline to move leads between stages. Open Leads when you need filters, details, notes, and linked tasks.':
+    'Open Pipeline to move leads between stages. Open Leads when you need filters, details, notes, and linked tasks.',
+  'Keep follow-up work visible': 'Keep follow-up work visible',
+  'Use Tasks to assign next steps, track due dates, and complete follow-ups before they become overdue.':
+    'Use Tasks to assign next steps, track due dates, and complete follow-ups before they become overdue.',
+  'Review performance': 'Review performance',
+  'Use Reports to monitor lead sources, pipeline health, stage aging, and task volume.':
+    'Use Reports to monitor lead sources, pipeline health, stage aging, and task volume.',
+  'Adjust workspace settings': 'Adjust workspace settings',
+  'Use Settings to update stages, automation rules, integrations, branding, theme, and interface size.':
+    'Use Settings to update stages, automation rules, integrations, branding, theme, and interface size.',
+  'No help topics found': 'No help topics found',
+  'Try a different search term or choose another feature.':
+    'Try a different search term or choose another feature.',
 };
 
 const arabicCopy = {
@@ -1034,6 +1058,30 @@ const arabicCopy = {
   Small: 'صغير',
   Large: 'كبير',
   'Current selection': 'الاختيار الحالي',
+  Help: 'المساعدة',
+  'A short guide to the main CRM workflows.': 'دليل مختصر لأهم خطوات العمل في CRM.',
+  'All features': 'كل الميزات',
+  Features: 'الميزات',
+  'Search help': 'البحث في المساعدة',
+  'Search by feature or task': 'ابحث حسب الميزة أو المهمة',
+  'Start with the dashboard': 'ابدأ من لوحة التحكم',
+  'Use the dashboard to see pipeline totals, overdue tasks, recent activity, and quick shortcuts.':
+    'استخدم لوحة التحكم لمراجعة أرقام المسار والمهام المتأخرة والنشاط الأخير والاختصارات السريعة.',
+  'Manage leads in the pipeline': 'إدارة العملاء المحتملين في المسار',
+  'Open Pipeline to move leads between stages. Open Leads when you need filters, details, notes, and linked tasks.':
+    'افتح مسار المبيعات لنقل العملاء بين المراحل. وافتح العملاء المحتملين عند الحاجة إلى الفلاتر والتفاصيل والملاحظات والمهام المرتبطة.',
+  'Keep follow-up work visible': 'اجعل المتابعة واضحة',
+  'Use Tasks to assign next steps, track due dates, and complete follow-ups before they become overdue.':
+    'استخدم المهام لإسناد الخطوات التالية وتتبع تواريخ الاستحقاق وإنهاء المتابعات قبل أن تتأخر.',
+  'Review performance': 'مراجعة الأداء',
+  'Use Reports to monitor lead sources, pipeline health, stage aging, and task volume.':
+    'استخدم التقارير لمراقبة مصادر العملاء وصحة المسار ومدة المراحل وحجم المهام.',
+  'Adjust workspace settings': 'ضبط إعدادات مساحة العمل',
+  'Use Settings to update stages, automation rules, integrations, branding, theme, and interface size.':
+    'استخدم الإعدادات لتحديث المراحل وقواعد الأتمتة والتكاملات والهوية البصرية والسمة وحجم الواجهة.',
+  'No help topics found': 'لم يتم العثور على مواضيع مساعدة',
+  'Try a different search term or choose another feature.':
+    'جرّب عبارة بحث مختلفة أو اختر ميزة أخرى.',
 };
 
 export const resources = {
@@ -1045,6 +1093,7 @@ export const resources = {
       appNameFallback: 'CRM',
       workspaceLabel: 'Workspace',
       settingsLabel: 'Settings',
+      supportLabel: 'Support',
       salesWorkspace: 'Sales workspace',
       shellBadge: 'MVP shell',
       signedIn: 'Signed in',
@@ -1065,6 +1114,7 @@ export const resources = {
       automationRules: 'Automation rules',
       integrations: 'Integrations',
       customization: 'Customization',
+      help: 'Help',
     },
     copy: commonCopy,
   },
@@ -1076,6 +1126,7 @@ export const resources = {
       appNameFallback: 'CRM',
       workspaceLabel: 'مساحة العمل',
       settingsLabel: 'الإعدادات',
+      supportLabel: 'الدعم',
       salesWorkspace: 'مساحة المبيعات',
       shellBadge: 'نسخة MVP',
       signedIn: 'تم تسجيل الدخول',
@@ -1096,6 +1147,7 @@ export const resources = {
       automationRules: 'قواعد الأتمتة',
       integrations: 'التكاملات',
       customization: 'التخصيص',
+      help: 'المساعدة',
     },
     copy: arabicCopy,
   },
