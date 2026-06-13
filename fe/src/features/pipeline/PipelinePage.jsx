@@ -100,7 +100,7 @@ function StageColumn({ stage, leads, activeStageId, children }) {
   return (
     <Box
       ref={setNodeRef}
-      className={`crm-pipeline-column ${isOver || activeStageId === stage.id ? 'crm-pipeline-column--active' : ''
+      className={`crm-pipeline-column ${isOver ? 'crm-pipeline-column--hovered' : ''} ${activeStageId && activeStageId === stage.id ? 'crm-pipeline-column--source' : ''
         }`}
     >
       <Box className="crm-pipeline-column__content">
@@ -423,6 +423,7 @@ function PipelinePage() {
             onStageChange: ({ leadId, stageId }) =>
               stageChangeMutation.mutate({ leadId, stageId }),
           });
+          setActiveLeadId(null);
         }}
         onDragCancel={() => setActiveLeadId(null)}
       >
