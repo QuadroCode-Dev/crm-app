@@ -1,0 +1,15 @@
+# Node / frontend
+fe/node_modules/
+fe/dist/
+fe/.vite/
+fe/coverage/
+
+# .NET / backend
+be/**/bin/
+be/**/obj/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
