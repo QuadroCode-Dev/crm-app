@@ -5,7 +5,6 @@ import {
   AppBar,
   Box,
   Button,
-  Chip,
   IconButton,
   MenuItem,
   Select,
@@ -76,7 +75,6 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
             alignItems="center"
             className="crm-topbar__actions"
           >
-            <Chip color="secondary" label={t('app.shellBadge')} variant="filled" />
             <Select
               aria-label={t('app.language')}
               className="crm-topbar__language-select"

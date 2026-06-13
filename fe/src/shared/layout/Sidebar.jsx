@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { NavLink } from 'react-router-dom';
+import packageJson from '../../../package.json';
 import useLanguage from '../hooks/useLanguage.js';
 import usePlatformCustomization from '../hooks/usePlatformCustomization.js';
 import './layout.css';
@@ -88,6 +89,14 @@ function Sidebar({ onNavigate }) {
             <SidebarLink key={item.to} {...item} onNavigate={onNavigate} />
           ))}
         </List>
+      </Box>
+      <Box className="crm-sidebar__footer">
+        <Typography className="crm-sidebar__footer-text">
+          Developed by - QuadroCode
+        </Typography>
+        <Typography className="crm-sidebar__footer-text">
+          Version {packageJson.version}
+        </Typography>
       </Box>
     </Box>
   );
