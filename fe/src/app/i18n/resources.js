@@ -491,6 +491,33 @@ const commonCopy = {
   'This route is wired into the CRM shell and waiting for feature work in a later task.':
     'This route is wired into the CRM shell and waiting for feature work in a later task.',
   'Contact ID': 'Contact ID',
+  Customization: 'Customization',
+  'Platform customization': 'Platform customization',
+  'Adjust the client logo, theme, typography, and interface density for this CRM workspace.':
+    'Adjust the client logo, theme, typography, and interface density for this CRM workspace.',
+  'Client logo': 'Client logo',
+  'Upload a client logo for the sidebar brand area. The default logo is used until a custom logo is selected.':
+    'Upload a client logo for the sidebar brand area. The default logo is used until a custom logo is selected.',
+  'Platform logo': 'Platform logo',
+  'Your sales pipeline, simplified.': 'Your sales pipeline, simplified.',
+  'Platform logo preview': 'Platform logo preview',
+  'Upload logo': 'Upload logo',
+  'Use default logo': 'Use default logo',
+  'Theme and font': 'Theme and font',
+  'Choose a visual preset. Each theme applies its matching font family automatically.':
+    'Choose a visual preset. Each theme applies its matching font family automatically.',
+  'Professional Blue': 'Professional Blue',
+  'Emerald Business': 'Emerald Business',
+  'Modern Purple': 'Modern Purple',
+  'Dark Enterprise': 'Dark Enterprise',
+  Selected: 'Selected',
+  Font: 'Font',
+  'Font size': 'Font size',
+  'Set the default interface text scale for this browser.':
+    'Set the default interface text scale for this browser.',
+  Small: 'Small',
+  Large: 'Large',
+  'Current selection': 'Current selection',
 };
 
 const arabicCopy = {
@@ -980,6 +1007,33 @@ const arabicCopy = {
   'This route is wired into the CRM shell and waiting for feature work in a later task.':
     'هذا المسار متصل بواجهة CRM وينتظر عمل الميزة في مهمة لاحقة.',
   'Contact ID': 'معرف جهة الاتصال',
+  Customization: 'التخصيص',
+  'Platform customization': 'تخصيص المنصة',
+  'Adjust the client logo, theme, typography, and interface density for this CRM workspace.':
+    'اضبط شعار العميل والسمة والخط وكثافة الواجهة لمساحة عمل CRM هذه.',
+  'Client logo': 'شعار العميل',
+  'Upload a client logo for the sidebar brand area. The default logo is used until a custom logo is selected.':
+    'ارفع شعار العميل لمنطقة العلامة في القائمة الجانبية. سيتم استخدام الشعار الافتراضي حتى اختيار شعار مخصص.',
+  'Platform logo': 'شعار المنصة',
+  'Your sales pipeline, simplified.': 'مسار مبيعاتك، ببساطة.',
+  'Platform logo preview': 'معاينة شعار المنصة',
+  'Upload logo': 'رفع شعار',
+  'Use default logo': 'استخدام الشعار الافتراضي',
+  'Theme and font': 'السمة والخط',
+  'Choose a visual preset. Each theme applies its matching font family automatically.':
+    'اختر نمطا بصريا. كل سمة تطبق عائلة الخط المناسبة تلقائيا.',
+  'Professional Blue': 'الأزرق الاحترافي',
+  'Emerald Business': 'الأخضر العملي',
+  'Modern Purple': 'البنفسجي الحديث',
+  'Dark Enterprise': 'المؤسسي الداكن',
+  Selected: 'محدد',
+  Font: 'الخط',
+  'Font size': 'حجم الخط',
+  'Set the default interface text scale for this browser.':
+    'حدد مقياس نص الواجهة الافتراضي لهذا المتصفح.',
+  Small: 'صغير',
+  Large: 'كبير',
+  'Current selection': 'الاختيار الحالي',
 };
 
 export const resources = {
@@ -1010,6 +1064,7 @@ export const resources = {
       pipelineStages: 'Pipeline stages',
       automationRules: 'Automation rules',
       integrations: 'Integrations',
+      customization: 'Customization',
     },
     copy: commonCopy,
   },
@@ -1040,6 +1095,7 @@ export const resources = {
       pipelineStages: 'مراحل المسار',
       automationRules: 'قواعد الأتمتة',
       integrations: 'التكاملات',
+      customization: 'التخصيص',
     },
     copy: arabicCopy,
   },

@@ -6,46 +6,178 @@ import {
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const COLOR_MODE_STORAGE_KEY = 'crm.preferences.colorMode';
+const CUSTOMIZATION_STORAGE_KEY = 'crm.preferences.customization';
+export const DEFAULT_LOGO_SRC = '/assets/default-logo.png';
 
 const ColorModeContext = createContext(null);
+const PlatformCustomizationContext = createContext(null);
 
-function getStoredColorMode() {
+export const themePresets = {
+  professionalBlue: {
+    id: 'professionalBlue',
+    name: 'Professional Blue',
+    fontLabel: 'Inter',
+    fontFamily: '"Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    mode: 'light',
+    colors: {
+      primary: '#2563EB',
+      primaryHover: '#1D4ED8',
+      secondary: '#0F172A',
+      accent: '#38BDF8',
+      background: '#F8FAFC',
+      surface: '#FFFFFF',
+      success: '#22C55E',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      textPrimary: '#0F172A',
+      textSecondary: '#64748B',
+    },
+  },
+  emeraldBusiness: {
+    id: 'emeraldBusiness',
+    name: 'Emerald Business',
+    fontLabel: 'IBM Plex Sans',
+    fontFamily: '"IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    mode: 'light',
+    colors: {
+      primary: '#10B981',
+      primaryHover: '#059669',
+      secondary: '#064E3B',
+      accent: '#34D399',
+      background: '#F8FAFC',
+      surface: '#FFFFFF',
+      success: '#22C55E',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      textPrimary: '#111827',
+      textSecondary: '#6B7280',
+    },
+  },
+  modernPurple: {
+    id: 'modernPurple',
+    name: 'Modern Purple',
+    fontLabel: 'Plus Jakarta Sans',
+    fontFamily: '"Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    mode: 'light',
+    colors: {
+      primary: '#7C3AED',
+      primaryHover: '#6D28D9',
+      secondary: '#312E81',
+      accent: '#A78BFA',
+      background: '#FAFAFC',
+      surface: '#FFFFFF',
+      success: '#22C55E',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      textPrimary: '#111827',
+      textSecondary: '#6B7280',
+    },
+  },
+  darkEnterprise: {
+    id: 'darkEnterprise',
+    name: 'Dark Enterprise',
+    fontLabel: 'Manrope',
+    fontFamily: '"Manrope", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    mode: 'dark',
+    colors: {
+      primary: '#06B6D4',
+      primaryHover: '#0891B2',
+      secondary: '#111827',
+      accent: '#22D3EE',
+      background: '#0F172A',
+      surface: '#1E293B',
+      success: '#22C55E',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      textPrimary: '#F8FAFC',
+      textSecondary: '#CBD5E1',
+    },
+  },
+};
+
+export const themeOptions = [
+  themePresets.professionalBlue,
+  themePresets.modernPurple,
+  themePresets.emeraldBusiness,
+  themePresets.darkEnterprise,
+];
+
+export const fontSizeOptions = [
+  { id: 'small', label: 'Small', scale: 0.94 },
+  { id: 'medium', label: 'Medium', scale: 1 },
+  { id: 'large', label: 'Large', scale: 1.08 },
+];
+
+function getStoredCustomization() {
   if (typeof window === 'undefined') {
-    return 'light';
+    return {
+      themeId: themePresets.professionalBlue.id,
+      fontSize: 'medium',
+      logoSrc: DEFAULT_LOGO_SRC,
+    };
   }
 
-  const storedMode = window.localStorage.getItem(COLOR_MODE_STORAGE_KEY);
-  return storedMode === 'dark' ? 'dark' : 'light';
+  try {
+    const storedValue = JSON.parse(window.localStorage.getItem(CUSTOMIZATION_STORAGE_KEY));
+
+    return {
+      themeId: themePresets[storedValue?.themeId]
+        ? storedValue.themeId
+        : themePresets.professionalBlue.id,
+      fontSize: fontSizeOptions.some((option) => option.id === storedValue?.fontSize)
+        ? storedValue.fontSize
+        : 'medium',
+      logoSrc: storedValue?.logoSrc || DEFAULT_LOGO_SRC,
+    };
+  } catch {
+    return {
+      themeId: themePresets.professionalBlue.id,
+      fontSize: 'medium',
+      logoSrc: DEFAULT_LOGO_SRC,
+    };
+  }
 }
 
-function createCrmTheme(mode, direction) {
-  const isDark = mode === 'dark';
+function createCrmTheme(themePreset, fontSizeOption, direction) {
+  const isDark = themePreset.mode === 'dark';
+  const { colors } = themePreset;
+  const baseFontSize = 14 * fontSizeOption.scale;
 
   return createTheme({
     direction,
     palette: {
-      mode,
+      mode: themePreset.mode,
       primary: {
-        main: isDark ? '#7aa2ff' : '#2458e6',
+        main: colors.primary,
+        dark: colors.primaryHover,
       },
       secondary: {
-        main: isDark ? '#ff9b6f' : '#f26b3a',
+        main: colors.secondary,
+      },
+      success: {
+        main: colors.success,
+      },
+      warning: {
+        main: colors.warning,
+      },
+      error: {
+        main: colors.danger,
       },
       background: {
-        default: isDark ? '#101624' : '#eef3f8',
-        paper: isDark ? '#182235' : '#ffffff',
+        default: colors.background,
+        paper: colors.surface,
       },
       text: {
-        primary: isDark ? '#f3f7ff' : '#172033',
-        secondary: isDark ? '#aab7cf' : '#52607a',
+        primary: colors.textPrimary,
+        secondary: colors.textSecondary,
       },
     },
     shape: {
       borderRadius: 16,
     },
     typography: {
-      fontFamily: '"Segoe UI", "Helvetica Neue", sans-serif',
+      fontFamily: themePreset.fontFamily,
+      fontSize: baseFontSize,
       h4: {
         fontWeight: 700,
       },
@@ -71,9 +203,9 @@ function createCrmTheme(mode, direction) {
       MuiInputLabel: {
         styleOverrides: {
           root: {
-            color: isDark ? '#c8d4ea' : '#52607a',
+            color: colors.textSecondary,
             '&.Mui-focused': {
-              color: isDark ? '#9db9ff' : '#2458e6',
+              color: colors.primary,
             },
           },
         },
@@ -81,16 +213,16 @@ function createCrmTheme(mode, direction) {
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            backgroundColor: isDark ? '#141d2e' : '#ffffff',
-            color: isDark ? '#f3f7ff' : '#172033',
+            backgroundColor: isDark ? '#111827' : colors.surface,
+            color: colors.textPrimary,
             '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: isDark ? '#34445f' : '#dbe4f0',
+              borderColor: isDark ? '#334155' : '#dbe4f0',
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: isDark ? '#5976a8' : '#9eb2d4',
+              borderColor: colors.accent,
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: isDark ? '#7aa2ff' : '#2458e6',
+              borderColor: colors.primary,
             },
             '&.Mui-disabled': {
               backgroundColor: isDark ? '#111827' : '#f4f7fb',
@@ -99,7 +231,7 @@ function createCrmTheme(mode, direction) {
           },
           input: {
             '&::placeholder': {
-              color: isDark ? '#9aa8bf' : '#7a879b',
+              color: colors.textSecondary,
               opacity: 1,
             },
             '&::-webkit-calendar-picker-indicator': {
@@ -112,7 +244,7 @@ function createCrmTheme(mode, direction) {
       MuiSelect: {
         styleOverrides: {
           icon: {
-            color: isDark ? '#d7e2f5' : '#52607a',
+            color: colors.textSecondary,
           },
         },
       },
@@ -120,14 +252,14 @@ function createCrmTheme(mode, direction) {
         styleOverrides: {
           paper: {
             backgroundImage: 'none',
-            backgroundColor: isDark ? '#182235' : '#ffffff',
+            backgroundColor: colors.surface,
           },
         },
       },
       MuiCheckbox: {
         styleOverrides: {
           root: {
-            color: isDark ? '#9db9ff' : '#52607a',
+            color: colors.primary,
           },
         },
       },
@@ -135,35 +267,125 @@ function createCrmTheme(mode, direction) {
   });
 }
 
+function applyCssVariables(themePreset, fontSizeOption) {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const { colors } = themePreset;
+  const rootStyle = document.documentElement.style;
+
+  rootStyle.setProperty('--crm-color-primary', colors.primary);
+  rootStyle.setProperty('--crm-color-primary-hover', colors.primaryHover);
+  rootStyle.setProperty('--crm-color-secondary', colors.secondary);
+  rootStyle.setProperty('--crm-color-accent', colors.accent);
+  rootStyle.setProperty('--crm-color-text', colors.textPrimary);
+  rootStyle.setProperty('--crm-color-text-muted', colors.textSecondary);
+  rootStyle.setProperty('--crm-color-border', themePreset.mode === 'dark' ? '#334155' : '#dbe4f0');
+  rootStyle.setProperty('--crm-color-surface', colors.surface);
+  rootStyle.setProperty('--crm-color-background', colors.background);
+  rootStyle.setProperty(
+    '--crm-color-background-accent',
+    themePreset.mode === 'dark' ? 'rgba(34, 211, 238, 0.1)' : 'rgba(56, 189, 248, 0.1)',
+  );
+  rootStyle.setProperty('--crm-color-success', colors.success);
+  rootStyle.setProperty('--crm-color-warning', colors.warning);
+  rootStyle.setProperty('--crm-color-danger', colors.danger);
+  rootStyle.setProperty('--crm-font-family', themePreset.fontFamily);
+  rootStyle.setProperty('--crm-font-size-scale', String(fontSizeOption.scale));
+  rootStyle.setProperty('--crm-root-font-size', `${100 * fontSizeOption.scale}%`);
+}
+
 function ThemeProvider({ children }) {
   const { direction } = useLanguage();
-  const [mode, setMode] = useState(getStoredColorMode);
-  const theme = useMemo(() => createCrmTheme(mode, direction), [direction, mode]);
+  const [customization, setCustomization] = useState(getStoredCustomization);
+  const themePreset = themePresets[customization.themeId] || themePresets.professionalBlue;
+  const fontSizeOption =
+    fontSizeOptions.find((option) => option.id === customization.fontSize) || fontSizeOptions[1];
+  const theme = useMemo(
+    () => createCrmTheme(themePreset, fontSizeOption, direction),
+    [direction, fontSizeOption, themePreset],
+  );
 
   useEffect(() => {
-    document.documentElement.dataset.crmColorScheme = mode;
-    window.localStorage.setItem(COLOR_MODE_STORAGE_KEY, mode);
-  }, [mode]);
+    document.documentElement.dataset.crmColorScheme = themePreset.mode;
+    document.documentElement.dataset.crmTheme = themePreset.id;
+    document.documentElement.dataset.crmFontSize = fontSizeOption.id;
+    applyCssVariables(themePreset, fontSizeOption);
+    window.localStorage.setItem(CUSTOMIZATION_STORAGE_KEY, JSON.stringify(customization));
+  }, [customization, fontSizeOption, themePreset]);
 
   const colorModeValue = useMemo(
     () => ({
-      mode,
+      mode: themePreset.mode,
       setMode(nextMode) {
-        setMode(nextMode === 'dark' ? 'dark' : 'light');
+        setCustomization((currentValue) => ({
+          ...currentValue,
+          themeId:
+            nextMode === 'dark'
+              ? themePresets.darkEnterprise.id
+              : themePresets.professionalBlue.id,
+        }));
       },
       toggleMode() {
-        setMode((currentMode) => (currentMode === 'dark' ? 'light' : 'dark'));
+        setCustomization((currentValue) => ({
+          ...currentValue,
+          themeId:
+            themePresets[currentValue.themeId]?.mode === 'dark'
+              ? themePresets.professionalBlue.id
+              : themePresets.darkEnterprise.id,
+        }));
       },
     }),
-    [mode],
+    [themePreset.mode],
+  );
+
+  const customizationValue = useMemo(
+    () => ({
+      ...customization,
+      activeTheme: themePreset,
+      activeFontSize: fontSizeOption,
+      themeOptions,
+      fontSizeOptions,
+      defaultLogoSrc: DEFAULT_LOGO_SRC,
+      setTheme(themeId) {
+        setCustomization((currentValue) => ({
+          ...currentValue,
+          themeId: themePresets[themeId] ? themeId : currentValue.themeId,
+        }));
+      },
+      setFontSize(fontSize) {
+        setCustomization((currentValue) => ({
+          ...currentValue,
+          fontSize: fontSizeOptions.some((option) => option.id === fontSize)
+            ? fontSize
+            : currentValue.fontSize,
+        }));
+      },
+      setLogoSrc(logoSrc) {
+        setCustomization((currentValue) => ({
+          ...currentValue,
+          logoSrc: logoSrc || DEFAULT_LOGO_SRC,
+        }));
+      },
+      resetLogo() {
+        setCustomization((currentValue) => ({
+          ...currentValue,
+          logoSrc: DEFAULT_LOGO_SRC,
+        }));
+      },
+    }),
+    [customization, fontSizeOption, themePreset],
   );
 
   return (
     <ColorModeContext.Provider value={colorModeValue}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
+      <PlatformCustomizationContext.Provider value={customizationValue}>
+        <MuiThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </MuiThemeProvider>
+      </PlatformCustomizationContext.Provider>
     </ColorModeContext.Provider>
   );
 }
@@ -173,6 +395,16 @@ export function useColorMode() {
 
   if (!context) {
     throw new Error('useColorMode must be used within ThemeProvider');
+  }
+
+  return context;
+}
+
+export function usePlatformCustomization() {
+  const context = useContext(PlatformCustomizationContext);
+
+  if (!context) {
+    throw new Error('usePlatformCustomization must be used within ThemeProvider');
   }
 
   return context;

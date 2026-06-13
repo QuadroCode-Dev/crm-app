@@ -1,0 +1,104 @@
+.crm-customization-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.crm-customization-page__section {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.crm-customization-page__logo-panel {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+.crm-customization-page__logo-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(22rem, 100%);
+  min-height: 7rem;
+  padding: 1rem;
+  border: 1px solid var(--crm-color-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--crm-color-surface) 88%, var(--crm-color-background));
+}
+
+.crm-customization-page__logo-image {
+  display: block;
+  max-width: 100%;
+  max-height: 5rem;
+  object-fit: contain;
+}
+
+.crm-customization-page__file-input {
+  display: none;
+}
+
+.crm-customization-page__theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.crm-customization-page__theme-card {
+  overflow: hidden;
+}
+
+.crm-customization-page__theme-action {
+  height: 100%;
+}
+
+.crm-customization-page__theme-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-height: 13rem;
+}
+
+.crm-customization-page__theme-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.crm-customization-page__theme-preview {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.crm-customization-page__swatch {
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.crm-customization-page__font-size-toggle {
+  align-self: start;
+  flex-wrap: wrap;
+}
+
+.crm-customization-page__summary {
+  padding: 1rem;
+  border: 1px solid var(--crm-color-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--crm-color-surface) 86%, transparent);
+}
+
+@media (max-width: 1200px) {
+  .crm-customization-page__theme-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .crm-customization-page__theme-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

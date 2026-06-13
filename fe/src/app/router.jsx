@@ -14,6 +14,7 @@ import LeadDetailPage from '../features/leads/LeadDetailPage.jsx';
 import PipelinePage from '../features/pipeline/PipelinePage.jsx';
 import ReportsPage from '../features/reports/ReportsPage.jsx';
 import SettingsAutomationPage from '../features/settings/SettingsAutomationPage.jsx';
+import SettingsCustomizationPage from '../features/settings/SettingsCustomizationPage.jsx';
 import SettingsIntegrationsPage from '../features/settings/SettingsIntegrationsPage.jsx';
 import SettingsPipelinePage from '../features/settings/SettingsPipelinePage.jsx';
 import TasksPage from '../features/tasks/TasksPage.jsx';
@@ -104,6 +105,10 @@ export const appRoutes = [
           {
             path: '/settings/integrations',
             element: <SettingsIntegrationsPage />,
+          },
+          {
+            path: '/settings/customization',
+            element: <SettingsCustomizationPage />,
           },
         ],
       },

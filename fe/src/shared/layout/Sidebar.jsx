@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import useLanguage from '../hooks/useLanguage.js';
+import usePlatformCustomization from '../hooks/usePlatformCustomization.js';
 import './layout.css';
 
 const navItems = [
@@ -24,6 +25,7 @@ const settingsItems = [
   { labelKey: 'navigation.pipelineStages', to: '/settings/pipeline' },
   { labelKey: 'navigation.automationRules', to: '/settings/automation' },
   { labelKey: 'navigation.integrations', to: '/settings/integrations' },
+  { labelKey: 'navigation.customization', to: '/settings/customization' },
 ];
 
 function SidebarLink({ labelKey, to, onNavigate }) {
@@ -48,16 +50,21 @@ function SidebarLink({ labelKey, to, onNavigate }) {
 
 function Sidebar({ onNavigate }) {
   const { direction, t } = useLanguage();
+  const { logoSrc } = usePlatformCustomization();
 
   return (
     <Box className="crm-sidebar" dir={direction}>
       <Stack spacing={1} className="crm-sidebar__brand">
-        <Typography variant="overline" className="crm-eyebrow">
-          {t('app.brandEyebrow')}
-        </Typography>
-        <Typography variant="h5">{t('app.brandName')}</Typography>
-        <Typography variant="body2" className="crm-muted-text">
-          {t('app.brandDescription')}
+        <Box className="crm-sidebar__logo-frame">
+          <Box
+            alt={t('Platform logo')}
+            className="crm-sidebar__logo"
+            component="img"
+            src={logoSrc}
+          />
+        </Box>
+        <Typography className="crm-sidebar__tagline">
+          {t('Your sales pipeline, simplified.')}
         </Typography>
       </Stack>
       <Divider />

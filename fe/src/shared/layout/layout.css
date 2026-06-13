@@ -58,8 +58,41 @@
 }
 
 .crm-sidebar__brand {
-  padding: 1.5rem;
-  align-items: stretch;
+  padding: 1rem 1.25rem 1.1rem;
+  align-items: flex-start;
+}
+
+.crm-sidebar__logo-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9.5rem;
+  height: 4.25rem;
+  border-radius: 10px;
+}
+
+[dir='rtl'] .crm-sidebar__logo-frame {
+  align-self: flex-end;
+}
+
+.crm-sidebar__logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.crm-sidebar__tagline {
+  max-width: 12.5rem;
+  color: var(--crm-color-text-muted);
+  font-size: 0.78rem !important;
+  line-height: 1.45 !important;
+  text-align: start;
+}
+
+[dir='rtl'] .crm-sidebar__tagline {
+  align-self: flex-end;
 }
 
 .crm-sidebar__section {
