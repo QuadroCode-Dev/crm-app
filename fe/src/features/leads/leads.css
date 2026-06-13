@@ -90,7 +90,7 @@
   padding: 1rem;
   border: 1px solid var(--crm-color-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--crm-color-surface) 92%, var(--crm-color-background));
 }
 
 .crm-lead-detail__field-label {
@@ -121,7 +121,7 @@
   padding: 1rem;
   border: 1px solid var(--crm-color-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--crm-color-surface) 92%, var(--crm-color-background));
 }
 
 .crm-note-item__actions,
@@ -139,7 +139,7 @@
   padding: 1rem;
   border: 1px solid var(--crm-color-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
+  background: color-mix(in srgb, var(--crm-color-surface) 90%, var(--crm-color-background));
 }
 
 .crm-activity-item__icon {
@@ -149,7 +149,7 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: rgba(251, 113, 133, 0.12);
+  background: color-mix(in srgb, var(--crm-color-accent) 14%, transparent);
   color: var(--crm-color-accent);
 }
 
