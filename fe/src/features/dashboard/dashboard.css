@@ -2,36 +2,65 @@
   width: 100%;
 }
 
-.crm-dashboard-summary-card,
-.crm-dashboard-panel {
-  box-shadow: var(--crm-shadow-card);
-}
-
-.crm-dashboard-summary-card__label {
-  color: var(--crm-color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.78rem !important;
-  font-weight: 700 !important;
-}
-
-.crm-dashboard-panel .MuiCardContent-root {
-  height: 100%;
-}
-
-.crm-dashboard-panel .MuiButton-root {
-  justify-content: flex-start;
-  border-radius: 14px;
-  text-transform: none;
-  font-weight: 700;
-}
-
-.crm-dashboard-activity-item,
-.crm-dashboard-task-item {
+.crm-dashboard-shell {
   display: grid;
-  gap: 0.9rem;
-  padding: 1rem;
-  border: 1px solid var(--crm-color-border);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--crm-color-surface) 92%, var(--crm-color-background));
+  gap: 1rem;
+}
+
+.crm-dashboard-card-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.crm-dashboard-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--crm-color-accent) 18%, transparent), transparent 42%),
+    radial-gradient(circle at bottom left, color-mix(in srgb, var(--crm-color-primary) 14%, transparent), transparent 38%);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.crm-dashboard-card-glow > * {
+  position: relative;
+  z-index: 1;
+}
+
+.crm-dashboard-metric-value {
+  font-size: clamp(1.7rem, 2vw, 2.35rem);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.crm-dashboard-progress-track {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-color-surface) 58%, var(--crm-color-background));
+}
+
+.crm-dashboard-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--crm-color-primary) 82%, white),
+    color-mix(in srgb, var(--crm-color-accent) 76%, white)
+  );
+}
+
+.crm-dashboard-quick-action {
+  text-decoration: none;
+}
+
+.crm-dashboard-table-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.crm-dashboard-table-link:hover {
+  text-decoration: underline;
 }

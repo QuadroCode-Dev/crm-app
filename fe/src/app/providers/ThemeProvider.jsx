@@ -274,6 +274,23 @@ function applyCssVariables(themePreset, fontSizeOption) {
 
   const { colors } = themePreset;
   const rootStyle = document.documentElement.style;
+  const surfaceBlend =
+    themePreset.mode === 'dark'
+      ? `color-mix(in srgb, ${colors.surface} 88%, ${colors.background})`
+      : `color-mix(in srgb, ${colors.surface} 96%, ${colors.background})`;
+  const mutedBlend =
+    themePreset.mode === 'dark'
+      ? `color-mix(in srgb, ${colors.surface} 78%, ${colors.background})`
+      : `color-mix(in srgb, ${colors.surface} 84%, ${colors.background})`;
+  const accentBlend =
+    themePreset.mode === 'dark'
+      ? `color-mix(in srgb, ${colors.primary} 22%, ${colors.surface})`
+      : `color-mix(in srgb, ${colors.primary} 12%, ${colors.surface})`;
+  const sidebarBlend =
+    themePreset.mode === 'dark'
+      ? `color-mix(in srgb, ${colors.surface} 86%, ${colors.background})`
+      : `color-mix(in srgb, ${colors.surface} 94%, ${colors.background})`;
+  const primaryForeground = themePreset.mode === 'dark' ? '#04131a' : '#ffffff';
 
   rootStyle.setProperty('--crm-color-primary', colors.primary);
   rootStyle.setProperty('--crm-color-primary-hover', colors.primaryHover);
@@ -294,6 +311,37 @@ function applyCssVariables(themePreset, fontSizeOption) {
   rootStyle.setProperty('--crm-font-family', themePreset.fontFamily);
   rootStyle.setProperty('--crm-font-size-scale', String(fontSizeOption.scale));
   rootStyle.setProperty('--crm-root-font-size', `${100 * fontSizeOption.scale}%`);
+  rootStyle.setProperty('--background', colors.background);
+  rootStyle.setProperty('--foreground', colors.textPrimary);
+  rootStyle.setProperty('--card', colors.surface);
+  rootStyle.setProperty('--card-foreground', colors.textPrimary);
+  rootStyle.setProperty('--popover', colors.surface);
+  rootStyle.setProperty('--popover-foreground', colors.textPrimary);
+  rootStyle.setProperty('--primary', colors.primary);
+  rootStyle.setProperty('--primary-foreground', primaryForeground);
+  rootStyle.setProperty('--secondary', surfaceBlend);
+  rootStyle.setProperty('--secondary-foreground', colors.textPrimary);
+  rootStyle.setProperty('--muted', mutedBlend);
+  rootStyle.setProperty('--muted-foreground', colors.textSecondary);
+  rootStyle.setProperty('--accent', accentBlend);
+  rootStyle.setProperty('--accent-foreground', colors.textPrimary);
+  rootStyle.setProperty('--destructive', colors.danger);
+  rootStyle.setProperty('--border', themePreset.mode === 'dark' ? '#334155' : '#dbe4f0');
+  rootStyle.setProperty('--input', themePreset.mode === 'dark' ? '#243247' : '#dbe4f0');
+  rootStyle.setProperty('--ring', colors.accent);
+  rootStyle.setProperty('--chart-1', colors.primary);
+  rootStyle.setProperty('--chart-2', colors.accent);
+  rootStyle.setProperty('--chart-3', colors.success);
+  rootStyle.setProperty('--chart-4', colors.warning);
+  rootStyle.setProperty('--chart-5', colors.secondary);
+  rootStyle.setProperty('--sidebar', sidebarBlend);
+  rootStyle.setProperty('--sidebar-foreground', colors.textPrimary);
+  rootStyle.setProperty('--sidebar-primary', colors.primary);
+  rootStyle.setProperty('--sidebar-primary-foreground', primaryForeground);
+  rootStyle.setProperty('--sidebar-accent', accentBlend);
+  rootStyle.setProperty('--sidebar-accent-foreground', colors.textPrimary);
+  rootStyle.setProperty('--sidebar-border', themePreset.mode === 'dark' ? '#334155' : '#dbe4f0');
+  rootStyle.setProperty('--sidebar-ring', colors.accent);
 }
 
 function ThemeProvider({ children }) {
@@ -311,6 +359,8 @@ function ThemeProvider({ children }) {
     document.documentElement.dataset.crmColorScheme = themePreset.mode;
     document.documentElement.dataset.crmTheme = themePreset.id;
     document.documentElement.dataset.crmFontSize = fontSizeOption.id;
+    document.documentElement.classList.toggle('dark', themePreset.mode === 'dark');
+    document.documentElement.style.colorScheme = themePreset.mode;
     applyCssVariables(themePreset, fontSizeOption);
     window.localStorage.setItem(CUSTOMIZATION_STORAGE_KEY, JSON.stringify(customization));
   }, [customization, fontSizeOption, themePreset]);
