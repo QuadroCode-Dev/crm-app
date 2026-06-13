@@ -19,6 +19,10 @@
   --crm-font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
   --crm-root-font-size: 100%;
   --crm-font-size-scale: 1;
+  --crm-scrollbar-track: color-mix(in srgb, var(--crm-color-surface) 58%, var(--crm-color-background));
+  --crm-scrollbar-thumb: color-mix(in srgb, var(--crm-color-primary) 40%, var(--crm-color-border));
+  --crm-scrollbar-thumb-hover: color-mix(in srgb, var(--crm-color-primary) 58%, var(--crm-color-border));
+  --crm-scrollbar-corner: var(--crm-scrollbar-track);
 }
 
 [data-crm-color-scheme='dark'] {
@@ -31,6 +35,10 @@
   --crm-color-background: #101624;
   --crm-color-background-accent: rgba(255, 155, 111, 0.1);
   --crm-shadow-card: 0 16px 36px rgba(0, 0, 0, 0.32);
+  --crm-scrollbar-track: color-mix(in srgb, var(--crm-color-surface) 62%, var(--crm-color-background));
+  --crm-scrollbar-thumb: color-mix(in srgb, var(--crm-color-primary) 32%, var(--crm-color-border));
+  --crm-scrollbar-thumb-hover: color-mix(in srgb, var(--crm-color-primary) 48%, var(--crm-color-border));
+  --crm-scrollbar-corner: var(--crm-scrollbar-track);
 }
 
 [data-crm-color-scheme='dark'] input:-webkit-autofill,
@@ -49,6 +57,43 @@ html,
 body,
 #root {
   min-height: 100%;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--crm-scrollbar-thumb) var(--crm-scrollbar-track);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--crm-scrollbar-thumb) var(--crm-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--crm-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--crm-scrollbar-thumb);
+  border: 2px solid var(--crm-scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--crm-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--crm-scrollbar-corner);
+}
+
+*::-webkit-scrollbar-button {
+  background: var(--crm-scrollbar-track);
 }
 
 body {
