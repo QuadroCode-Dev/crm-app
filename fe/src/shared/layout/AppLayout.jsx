@@ -1,6 +1,7 @@
-import { Box, Drawer, Toolbar, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Drawer, useMediaQuery, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { PageHeaderProvider } from '../components/PageHeaderContext.jsx';
 import useLanguage from '../hooks/useLanguage.js';
 import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
@@ -59,11 +60,12 @@ function AppLayout() {
         </Drawer>
       )}
       <Box component="section" className="crm-app-layout__content">
-        <Topbar onToggleMenu={handleToggleMenu} showMenuButton={!isDesktop} />
-        <Toolbar />
-        <Box className="crm-app-layout__content-inner">
-          <Outlet />
-        </Box>
+        <PageHeaderProvider>
+          <Topbar onToggleMenu={handleToggleMenu} showMenuButton={!isDesktop} />
+          <Box className="crm-app-layout__content-inner">
+            <Outlet />
+          </Box>
+        </PageHeaderProvider>
       </Box>
     </Box>
   );

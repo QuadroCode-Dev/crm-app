@@ -1,29 +1,27 @@
-import { Stack, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { usePageHeaderDispatch } from './PageHeaderContext.jsx';
 import './shared-components.css';
 
-function PageHeader({ eyebrow, title, description, actions = null }) {
-  return (
-    <Stack
-      direction={{ xs: 'column', md: 'row' }}
-      justifyContent="space-between"
-      alignItems={{ xs: 'flex-start', md: 'center' }}
-      spacing={2}
-      className="crm-page-header"
-    >
-      <Stack spacing={0.75}>
-        {eyebrow ? (
-          <Typography variant="overline" className="crm-eyebrow">
-            {eyebrow}
-          </Typography>
-        ) : null}
-        <Typography variant="h4">{title}</Typography>
-        {description ? (
-          <Typography className="crm-muted-text">{description}</Typography>
-        ) : null}
-      </Stack>
-      {actions}
-    </Stack>
-  );
+function PageHeader({ title, description, actions = null }) {
+  const { setPageHeader } = usePageHeaderDispatch();
+
+  useEffect(() => {
+    setPageHeader({
+      actions,
+      description: description || '',
+      title: title || '',
+    });
+
+    return () => {
+      setPageHeader({
+        actions: null,
+        description: '',
+        title: '',
+      });
+    };
+  }, [actions, description, setPageHeader, title]);
+
+  return null;
 }
 
 export default PageHeader;

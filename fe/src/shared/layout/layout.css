@@ -135,7 +135,7 @@
 }
 
 .crm-topbar__toolbar {
-  min-height: 72px !important;
+  min-height: 76px !important;
 }
 
 .crm-topbar__content {
@@ -153,11 +153,28 @@
   min-width: 0;
 }
 
-.crm-topbar__identity .MuiTypography-root {
+.crm-topbar__title,
+.crm-topbar__description {
   overflow: hidden;
   text-align: start;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.crm-topbar__title {
+  font-size: 1.28rem !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+}
+
+.crm-topbar__description {
+  color: var(--crm-color-text-muted);
+  font-size: 0.86rem !important;
+  line-height: 1.35 !important;
+}
+
+.crm-topbar__page-actions {
+  flex: 0 0 auto;
 }
 
 .crm-topbar__menu-button {
@@ -187,7 +204,7 @@
 
 @media (min-width: 900px) {
   .crm-app-layout__content-inner {
-    padding: 2rem;
+    padding: 1.25rem 1.5rem 1.5rem;
   }
 }
 
@@ -195,29 +212,15 @@
   .crm-app-layout__drawer {
     width: var(--crm-sidebar-width);
   }
-
-  .crm-topbar {
-    right: 0;
-    left: var(--crm-sidebar-width);
-    width: auto;
-    margin: 0;
-  }
-
-  [dir='rtl'] .crm-topbar {
-    left: 0;
-    right: var(--crm-sidebar-width);
-    width: auto;
-    margin: 0;
-  }
 }
 
 @media (max-width: 1199.98px) {
   .crm-app-layout__content-inner {
-    padding: 1rem 0.875rem 1.5rem;
+    padding: 0.875rem 0.875rem 1.25rem;
   }
 
   .crm-topbar__toolbar {
-    min-height: 68px !important;
+    min-height: 70px !important;
     padding-inline-start: 0.75rem !important;
     padding-inline-end: 0.75rem !important;
   }
@@ -234,6 +237,11 @@
 @media (max-width: 767.98px) {
   .crm-topbar__content {
     gap: 0.75rem;
+  }
+
+  .crm-topbar__description,
+  .crm-topbar__page-actions {
+    display: none;
   }
 
   .crm-topbar__actions .MuiChip-root,

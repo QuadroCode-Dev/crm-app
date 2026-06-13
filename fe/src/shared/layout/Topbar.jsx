@@ -17,6 +17,7 @@ import {
 import useColorMode from '../hooks/useColorMode.js';
 import useAuth from '../hooks/useAuth.js';
 import useLanguage from '../hooks/useLanguage.js';
+import { usePageHeader } from '../components/PageHeaderContext.jsx';
 import './layout.css';
 
 function Topbar({ onToggleMenu, showMenuButton = false }) {
@@ -24,10 +25,13 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
   const { mode, toggleMode } = useColorMode();
   const appName = import.meta.env.VITE_APP_NAME || t('app.appNameFallback');
   const { logout, user } = useAuth();
+  const pageHeader = usePageHeader();
   const colorModeLabel = mode === 'dark' ? t('app.switchToLight') : t('app.switchToDark');
+  const title = pageHeader.title || appName;
+  const description = pageHeader.description;
 
   return (
-    <AppBar color="transparent" dir={direction} elevation={0} position="fixed" className="crm-topbar">
+    <AppBar color="transparent" dir={direction} elevation={0} position="sticky" className="crm-topbar">
       <Toolbar className="crm-topbar__toolbar">
         <Stack
           direction="row"
@@ -53,12 +57,19 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
               </IconButton>
             ) : null}
             <Box>
-              <Typography variant="body2" className="crm-muted-text">
-                {t('app.salesWorkspace')}
+              <Typography variant="h5" className="crm-topbar__title">
+                {title}
               </Typography>
-              <Typography variant="h6">{appName}</Typography>
+              {description ? (
+                <Typography className="crm-topbar__description">
+                  {description}
+                </Typography>
+              ) : null}
             </Box>
           </Stack>
+          {pageHeader.actions ? (
+            <Box className="crm-topbar__page-actions">{pageHeader.actions}</Box>
+          ) : null}
           <Stack
             direction="row"
             spacing={1.5}
