@@ -140,6 +140,7 @@
 .crm-pipeline-column {
   --pipeline-lane-bg: color-mix(in srgb, var(--crm-color-background) 88%, var(--crm-color-surface));
   --pipeline-lane-header: color-mix(in srgb, var(--crm-color-surface) 78%, var(--crm-color-background));
+  --pipeline-lane-glow: color-mix(in srgb, var(--crm-color-primary) 24%, transparent);
   display: flex;
   min-height: 100%;
   position: relative;
@@ -152,6 +153,23 @@
 
 .crm-pipeline-column:last-child {
   border-start-end-radius: 0.45rem;
+}
+
+.crm-pipeline-column--source .crm-pipeline-column__content::before {
+  background: color-mix(in srgb, var(--crm-color-primary) 10%, var(--pipeline-lane-bg));
+}
+
+.crm-pipeline-column--hovered {
+  box-shadow: none;
+}
+
+.crm-pipeline-column--hovered .crm-pipeline-column__content::before {
+  background: color-mix(in srgb, var(--crm-color-primary) 18%, var(--pipeline-lane-bg));
+}
+
+.crm-pipeline-column--hovered .crm-pipeline-column__header {
+  background: color-mix(in srgb, var(--crm-color-primary) 18%, var(--pipeline-lane-header));
+  box-shadow: none;
 }
 
 
@@ -293,7 +311,12 @@
   padding: 0.48rem 0.62rem 0.45rem;
   cursor: grab;
   box-shadow: none;
-  transition: border-color 160ms ease, background-color 160ms ease;
+  user-select: none;
+  touch-action: none;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .crm-pipeline-card:hover {
@@ -373,6 +396,8 @@
 
 .crm-pipeline-overlay {
   width: min(100%, 18rem);
+  pointer-events: none;
+  will-change: transform;
 }
 
 .crm-stage-settings-list {
