@@ -81,9 +81,8 @@ function StageColumn({ stage, leads, activeStageId, children }) {
   return (
     <Card
       ref={setNodeRef}
-      className={`crm-pipeline-column ${
-        isOver || activeStageId === stage.id ? 'crm-pipeline-column--active' : ''
-      }`}
+      className={`crm-pipeline-column ${isOver || activeStageId === stage.id ? 'crm-pipeline-column--active' : ''
+        }`}
     >
       <CardContent className="crm-pipeline-column__content">
         <Box className="crm-pipeline-column__header">
@@ -192,10 +191,10 @@ function PipelinePage() {
           items: current.items.map((lead) =>
             lead.id === leadId
               ? {
-                  ...lead,
-                  stageId,
-                  stageName: nextStage?.name || lead.stageName,
-                }
+                ...lead,
+                stageId,
+                stageName: nextStage?.name || lead.stageName,
+              }
               : lead,
           ),
         };
@@ -305,10 +304,6 @@ function PipelinePage() {
           </Box>
         }
       />
-
-      <Alert severity="info">
-        {t('Drag a lead card into another stage to update the pipeline immediately.')}
-      </Alert>
 
       <DndContext
         sensors={sensors}
