@@ -51,7 +51,7 @@ import TaskFormDialog from '../tasks/TaskFormDialog.jsx';
 import './leads.css';
 import '../pipeline/pipeline.css';
 import '../tasks/tasks.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AddCommentOutlinedIcon from '@mui/icons-material/AddCommentOutlined';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
@@ -64,6 +64,9 @@ import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import PublishedWithChangesOutlinedIcon from '@mui/icons-material/PublishedWithChangesOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+
+const PREVIOUS_STAGES_PAGE_SIZE = 3;
+const ACTIVITY_TIMELINE_PAGE_SIZE = 3;
 
 const activityIconMap = {
   LeadCreated: CreateOutlinedIcon,
@@ -161,6 +164,12 @@ function LeadDetailPage() {
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
+  const [visiblePreviousStagesCount, setVisiblePreviousStagesCount] = useState(
+    PREVIOUS_STAGES_PAGE_SIZE,
+  );
+  const [visibleTimelineCount, setVisibleTimelineCount] = useState(
+    ACTIVITY_TIMELINE_PAGE_SIZE,
+  );
   const leadQuery = useQuery({
     queryKey: ['lead', id],
     queryFn: () => getLeadById(id),
@@ -427,9 +436,20 @@ function LeadDetailPage() {
     matchedLeads: [],
     matchFields: [],
   };
+  const previousStages = stageTimerQuery.data?.previousStages || [];
+  const visiblePreviousStages = previousStages.slice(0, visiblePreviousStagesCount);
+  const hasMorePreviousStages = visiblePreviousStages.length < previousStages.length;
+  const canSeeLessPreviousStages =
+    previousStages.length > PREVIOUS_STAGES_PAGE_SIZE &&
+    visiblePreviousStagesCount > PREVIOUS_STAGES_PAGE_SIZE;
   const timelineItems = [...(timelineQuery.data || [])].sort(
     (a, b) => dayjs(b.createdAtUtc).valueOf() - dayjs(a.createdAtUtc).valueOf(),
   );
+  const visibleTimelineItems = timelineItems.slice(0, visibleTimelineCount);
+  const hasMoreTimelineItems = visibleTimelineItems.length < timelineItems.length;
+  const canSeeLessTimelineItems =
+    timelineItems.length > ACTIVITY_TIMELINE_PAGE_SIZE &&
+    visibleTimelineCount > ACTIVITY_TIMELINE_PAGE_SIZE;
   const ownerOptions = user
     ? [
         {
@@ -438,6 +458,14 @@ function LeadDetailPage() {
         },
       ]
     : [];
+
+  useEffect(() => {
+    setVisiblePreviousStagesCount(PREVIOUS_STAGES_PAGE_SIZE);
+  }, [id, previousStages.length]);
+
+  useEffect(() => {
+    setVisibleTimelineCount(ACTIVITY_TIMELINE_PAGE_SIZE);
+  }, [id, timelineItems.length]);
 
   if (!lead) {
     return (
@@ -540,8 +568,8 @@ function LeadDetailPage() {
 
               <Box className="crm-stage-timer__history">
                 <Typography variant="subtitle1">{t('Previous stages')}</Typography>
-                {stageTimerQuery.data.previousStages?.length ? (
-                  stageTimerQuery.data.previousStages.map((item) => (
+                {previousStages.length ? (
+                  visiblePreviousStages.map((item) => (
                     <Box key={`${item.stageName}-${item.enteredAtUtc}`} className="crm-stage-timer__history-item">
                       <Typography variant="subtitle2">{item.stageName}</Typography>
                       <Typography className="crm-muted-text">
@@ -556,6 +584,35 @@ function LeadDetailPage() {
                     description={t('This lead has not moved through any earlier stages yet.')}
                   />
                 )}
+                {previousStages.length ? (
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    {hasMorePreviousStages ? (
+                      <Button
+                        variant="text"
+                        onClick={() =>
+                          setVisiblePreviousStagesCount((currentCount) =>
+                            Math.min(
+                              currentCount + PREVIOUS_STAGES_PAGE_SIZE,
+                              previousStages.length,
+                            ),
+                          )
+                        }
+                      >
+                        {t('See more...')}
+                      </Button>
+                    ) : null}
+                    {canSeeLessPreviousStages ? (
+                      <Button
+                        variant="text"
+                        onClick={() =>
+                          setVisiblePreviousStagesCount(PREVIOUS_STAGES_PAGE_SIZE)
+                        }
+                      >
+                        {t('See less')}
+                      </Button>
+                    ) : null}
+                  </Stack>
+                ) : null}
               </Box>
             </Box>
           ) : (
@@ -802,9 +859,31 @@ function LeadDetailPage() {
             <Alert severity="warning">{normalizeApiError(timelineQuery.error).message}</Alert>
           ) : timelineItems.length ? (
             <Box className="crm-activity-list">
-              {timelineItems.map((item) => (
+              {visibleTimelineItems.map((item) => (
                 <TimelineItem key={item.id} item={item} />
               ))}
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {hasMoreTimelineItems ? (
+                  <Button
+                    variant="text"
+                    onClick={() =>
+                      setVisibleTimelineCount((currentCount) =>
+                        Math.min(currentCount + ACTIVITY_TIMELINE_PAGE_SIZE, timelineItems.length),
+                      )
+                    }
+                  >
+                    {t('See more...')}
+                  </Button>
+                ) : null}
+                {canSeeLessTimelineItems ? (
+                  <Button
+                    variant="text"
+                    onClick={() => setVisibleTimelineCount(ACTIVITY_TIMELINE_PAGE_SIZE)}
+                  >
+                    {t('See less')}
+                  </Button>
+                ) : null}
+              </Stack>
             </Box>
           ) : (
             <EmptyState
