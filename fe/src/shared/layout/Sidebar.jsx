@@ -2,11 +2,25 @@ import {
   Box,
   Divider,
   List,
+  ListItemIcon,
   ListItemButton,
   ListItemText,
   Stack,
   Typography,
 } from '@mui/material';
+import {
+  ChartBar,
+  GearSix,
+  GitBranch,
+  Handshake,
+  House,
+  Lifebuoy,
+  Lightning,
+  Palette,
+  PlugsConnected,
+  SquaresFour,
+  Users,
+} from '@phosphor-icons/react';
 import { NavLink } from 'react-router-dom';
 import packageJson from '../../../package.json';
 import useLanguage from '../hooks/useLanguage.js';
@@ -14,26 +28,26 @@ import usePlatformCustomization from '../hooks/usePlatformCustomization.js';
 import './layout.css';
 
 const navItems = [
-  { labelKey: 'navigation.dashboard', to: '/dashboard' },
-  { labelKey: 'navigation.pipeline', to: '/pipeline' },
-  { labelKey: 'navigation.leads', to: '/leads' },
-  { labelKey: 'navigation.contacts', to: '/contacts' },
-  { labelKey: 'navigation.tasks', to: '/tasks' },
-  { labelKey: 'navigation.reports', to: '/reports' },
+  { icon: House, labelKey: 'navigation.dashboard', to: '/dashboard' },
+  { icon: GitBranch, labelKey: 'navigation.pipeline', to: '/pipeline' },
+  { icon: Handshake, labelKey: 'navigation.leads', to: '/leads' },
+  { icon: Users, labelKey: 'navigation.contacts', to: '/contacts' },
+  { icon: SquaresFour, labelKey: 'navigation.tasks', to: '/tasks' },
+  { icon: ChartBar, labelKey: 'navigation.reports', to: '/reports' },
 ];
 
 const settingsItems = [
-  { labelKey: 'navigation.pipelineStages', to: '/settings/pipeline' },
-  { labelKey: 'navigation.automationRules', to: '/settings/automation' },
-  { labelKey: 'navigation.integrations', to: '/settings/integrations' },
-  { labelKey: 'navigation.customization', to: '/settings/customization' },
+  { icon: GearSix, labelKey: 'navigation.pipelineStages', to: '/settings/pipeline' },
+  { icon: Lightning, labelKey: 'navigation.automationRules', to: '/settings/automation' },
+  { icon: PlugsConnected, labelKey: 'navigation.integrations', to: '/settings/integrations' },
+  { icon: Palette, labelKey: 'navigation.customization', to: '/settings/customization' },
 ];
 
 const supportItems = [
-  { labelKey: 'navigation.help', to: '/help' },
+  { icon: Lifebuoy, labelKey: 'navigation.help', to: '/help' },
 ];
 
-function SidebarLink({ labelKey, to, onNavigate }) {
+function SidebarLink({ icon: Icon, labelKey, to, onNavigate }) {
   const { t } = useLanguage();
 
   return (
@@ -43,6 +57,11 @@ function SidebarLink({ labelKey, to, onNavigate }) {
       className="crm-sidebar__link"
       onClick={onNavigate}
     >
+      {Icon ? (
+        <ListItemIcon className="crm-sidebar__link-icon">
+          <Icon size={19} weight="duotone" />
+        </ListItemIcon>
+      ) : null}
       <ListItemText
         primary={t(labelKey)}
         primaryTypographyProps={{

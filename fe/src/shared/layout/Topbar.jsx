@@ -1,6 +1,3 @@
-import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
-import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
-import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Box,
@@ -13,6 +10,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { List, Moon, SignOut, Sun, UserCircle } from '@phosphor-icons/react';
 import useColorMode from '../hooks/useColorMode.js';
 import useAuth from '../hooks/useAuth.js';
 import useLanguage from '../hooks/useLanguage.js';
@@ -52,7 +50,7 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
                 color="primary"
                 onClick={onToggleMenu}
               >
-                <MenuIcon />
+                <List size={22} weight="bold" />
               </IconButton>
             ) : null}
             <Box>
@@ -95,13 +93,21 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
                 color="primary"
                 onClick={toggleMode}
               >
-                {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+                {mode === 'dark' ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
               </IconButton>
             </Tooltip>
-            <Typography variant="body2" className="crm-muted-text">
-              {user?.fullName || user?.name || user?.email || t('app.signedIn')}
-            </Typography>
-            <Button color="primary" onClick={logout} variant="outlined">
+            <Stack direction="row" spacing={0.75} alignItems="center" className="crm-topbar__user">
+              <UserCircle size={20} weight="duotone" />
+              <Typography variant="body2" className="crm-muted-text">
+                {user?.fullName || user?.name || user?.email || t('app.signedIn')}
+              </Typography>
+            </Stack>
+            <Button
+              color="primary"
+              onClick={logout}
+              startIcon={<SignOut size={17} weight="bold" />}
+              variant="outlined"
+            >
               {t('app.logout')}
             </Button>
           </Stack>

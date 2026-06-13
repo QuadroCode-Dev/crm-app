@@ -112,10 +112,16 @@
 .crm-sidebar__link {
   margin-bottom: 0.25rem;
   border-radius: 12px;
+  gap: 0.75rem;
   text-align: start;
   transition:
     background-color var(--crm-transition-fast),
     color var(--crm-transition-fast);
+}
+
+.crm-sidebar__link-icon {
+  min-width: 1.25rem !important;
+  color: currentColor !important;
 }
 
 .crm-sidebar__link-text {
@@ -213,6 +219,11 @@
 
 .crm-topbar__mode-button {
   border: 1px solid color-mix(in srgb, var(--crm-color-primary) 18%, transparent) !important;
+}
+
+.crm-topbar__user {
+  color: var(--crm-color-text-muted);
+  min-width: 0;
 }
 
 @media (min-width: 900px) {
