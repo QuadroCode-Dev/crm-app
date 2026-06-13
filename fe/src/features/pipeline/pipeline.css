@@ -138,12 +138,17 @@
 }
 
 .crm-pipeline-column {
-  --pipeline-lane-bg: color-mix(in srgb, var(--crm-color-background) 88%, var(--crm-color-surface));
-  --pipeline-lane-header: color-mix(in srgb, var(--crm-color-surface) 78%, var(--crm-color-background));
+  --pipeline-lane-bg: color-mix(in srgb, var(--crm-color-primary) 4%, var(--crm-color-background));
+  --pipeline-lane-header: color-mix(in srgb, var(--crm-color-primary) 12%, var(--crm-color-surface));
   display: flex;
   min-height: 100%;
   position: relative;
   transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+[data-crm-color-scheme='dark'] .crm-pipeline-column {
+  --pipeline-lane-bg: color-mix(in srgb, var(--crm-color-background) 88%, var(--crm-color-surface));
+  --pipeline-lane-header: color-mix(in srgb, var(--crm-color-surface) 78%, var(--crm-color-background));
 }
 
 .crm-pipeline-column:first-child {
@@ -183,6 +188,9 @@
   margin-inline: 0 -1rem;
   padding: 0.8rem 1rem 0.55rem 1rem;
   background: var(--pipeline-lane-header);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--crm-color-primary) 14%, var(--crm-color-border)),
+    0 1px 0 color-mix(in srgb, var(--crm-color-surface) 72%, transparent);
   clip-path: polygon(
     0 0,
     calc(100% - 0.5rem) 0,
@@ -191,6 +199,10 @@
     0 100%,
     0.5rem 50%
   );
+}
+
+[data-crm-color-scheme='dark'] .crm-pipeline-column__header {
+  box-shadow: none;
 }
 
 .crm-pipeline-column:first-child .crm-pipeline-column__header {
