@@ -22,9 +22,9 @@ public sealed class ServicesController : ControllerBase
         var services = await _dbContext.Services
             .AsNoTracking()
             .Where(x => x.IsActive)
-            .OrderBy(x => x.Name)
             .Select(x => x.Name)
             .Distinct()
+            .OrderBy(x => x)
             .ToListAsync(cancellationToken);
 
         return Ok(services);
