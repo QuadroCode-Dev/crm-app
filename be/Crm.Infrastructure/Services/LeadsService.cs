@@ -74,9 +74,7 @@ public sealed class LeadsService : ILeadsService
         ValidateLead(request.Title);
 
         var status = ParseStatus(request.Status) ?? LeadStatus.Open;
-        var contact = await _dbContext.Contacts
-            .FirstOrDefaultAsync(x => x.Id == request.ContactId, cancellationToken)
-            ?? throw new KeyNotFoundException("Contact not found.");
+        var contact = await ResolveCreateContactAsync(request, userId, cancellationToken);
 
         var leadSource = await _dbContext.LeadSources
             .AsNoTracking()
@@ -436,6 +434,35 @@ public sealed class LeadsService : ILeadsService
         return await _dbContext.Users
             .FirstOrDefaultAsync(x => x.Id == ownerUserId.Value && x.IsActive, cancellationToken)
             ?? throw new KeyNotFoundException("Owner user not found.");
+    }
+
+    private async Task<Contact> ResolveCreateContactAsync(
+        CreateLeadRequest request,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (request.ContactId != Guid.Empty)
+        {
+            return await _dbContext.Contacts
+                .FirstOrDefaultAsync(x => x.Id == request.ContactId, cancellationToken)
+                ?? throw new KeyNotFoundException("Contact not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContactName))
+        {
+            throw new ArgumentException("Contact is required.");
+        }
+
+        var contact = new Contact
+        {
+            Id = Guid.NewGuid(),
+            FullName = request.ContactName.Trim(),
+            CreatedByUserId = userId
+        };
+
+        _dbContext.Contacts.Add(contact);
+
+        return contact;
     }
 
     private static void ValidateLead(string title)

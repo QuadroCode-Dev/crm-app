@@ -365,6 +365,56 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Crm.Domain.Entities.Service", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Services", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("88888888-8888-8888-8888-888888888881"),
+                            Code = "hair_transplant",
+                            IsActive = true,
+                            Name = "Hair Transplant"
+                        },
+                        new
+                        {
+                            Id = new Guid("88888888-8888-8888-8888-888888888882"),
+                            Code = "plastic_surgery",
+                            IsActive = true,
+                            Name = "Plastic Surgery"
+                        },
+                        new
+                        {
+                            Id = new Guid("88888888-8888-8888-8888-888888888883"),
+                            Code = "rhinoplasty",
+                            IsActive = true,
+                            Name = "Rhinoplasty"
+                        });
+                });
+
             modelBuilder.Entity("Crm.Domain.Entities.LeadStageHistory", b =>
                 {
                     b.Property<Guid>("Id")

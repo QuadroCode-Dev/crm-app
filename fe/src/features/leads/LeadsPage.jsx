@@ -12,7 +12,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getContacts } from '../../api/contactsApi.js';
 import { getLeadSources } from '../../api/leadSourcesApi.js';
 import {
   createLead,
@@ -30,10 +29,11 @@ import useAuth from '../../shared/hooks/useAuth.js';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
+import { getServices } from '../../api/servicesApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
 import './leads.css';
 
-const statusOptions = ['New', 'Open', 'Won', 'Lost'];
+const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
 
 function formatCurrency(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
@@ -78,11 +78,6 @@ function LeadsPage() {
     placeholderData: (previousData) => previousData,
   });
 
-  const contactsQuery = useQuery({
-    queryKey: ['contacts', { page: 1, pageSize: 100 }],
-    queryFn: () => getContacts({ page: 1, pageSize: 100 }),
-  });
-
   const leadSourcesQuery = useQuery({
     queryKey: ['lead-sources'],
     queryFn: getLeadSources,
@@ -91,6 +86,11 @@ function LeadsPage() {
   const stagesQuery = useQuery({
     queryKey: ['pipeline-stages'],
     queryFn: getPipelineStages,
+  });
+
+  const servicesQuery = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
   });
 
   const ownerOptions = user
@@ -491,10 +491,10 @@ function LeadsPage() {
       )}
 
       <LeadFormDialog
-        contacts={contactsQuery.data?.items || []}
         lead={editingLead}
         open={formOpen}
         ownerOptions={ownerOptions}
+        serviceOptions={servicesQuery.data || []}
         sourceOptions={leadSourcesQuery.data || []}
         stageOptions={stagesQuery.data || []}
         statusOptions={statusOptions}

@@ -468,12 +468,27 @@ export const handlers = [
     const body = await request.json();
     const stageId = body.stageId || body.currentPipelineStageId;
     const sourceId = body.source || body.sourceId || body.leadSourceId;
-    const contact = getContactRecord(body.contactId);
+    let contact = getContactRecord(body.contactId);
+
+    if (!contact && body.contactName) {
+      contact = {
+        id: createId('contact'),
+        fullName: body.contactName,
+        email: '',
+        phone: '',
+        companyName: '',
+        createdAtUtc: dayjs().toISOString(),
+        updatedAtUtc: dayjs().toISOString(),
+      };
+      state.contacts.unshift(contact);
+    }
+
     const stage = state.pipelineStages.find((item) => item.id === stageId);
     const owner = state.users.find((item) => item.id === body.ownerUserId);
     const createdLead = {
       id: createId('lead'),
       ...body,
+      contactId: contact?.id || body.contactId || '',
       contactName: contact?.fullName || '',
       email: contact?.email || '',
       phone: contact?.phone || '',
@@ -764,6 +779,13 @@ export const handlers = [
     }
 
     return HttpResponse.json(getLeadSources());
+  }),
+  http.get(`${apiBaseUrl}/api/services`, ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    return HttpResponse.json(state.services || []);
   }),
   http.post(`${apiBaseUrl}/api/pipeline/stages`, async ({ request }) => {
     if (!isAuthorized(request)) {

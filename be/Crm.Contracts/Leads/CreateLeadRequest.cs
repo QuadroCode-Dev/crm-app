@@ -4,6 +4,8 @@ public sealed class CreateLeadRequest
 {
     public Guid ContactId { get; set; }
 
+    public string? ContactName { get; set; }
+
     public Guid LeadSourceId { get; set; }
 
     public Guid CurrentPipelineStageId { get; set; }

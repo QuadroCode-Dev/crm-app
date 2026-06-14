@@ -45,6 +45,7 @@ import useAuth from '../../shared/hooks/useAuth.js';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
+import { getServices } from '../../api/servicesApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
 import NoteFormDialog from './NoteFormDialog.jsx';
 import TaskFormDialog from '../tasks/TaskFormDialog.jsx';
@@ -186,6 +187,10 @@ function LeadDetailPage() {
   const stagesQuery = useQuery({
     queryKey: ['pipeline-stages'],
     queryFn: getPipelineStages,
+  });
+  const servicesQuery = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
   });
   const stageTimerQuery = useQuery({
     queryKey: ['lead-stage-timer', id],
@@ -896,13 +901,13 @@ function LeadDetailPage() {
       </Card>
 
       <LeadFormDialog
-        contacts={contactsQuery.data?.items || []}
         lead={lead}
         open={formOpen}
         ownerOptions={ownerOptions}
+        serviceOptions={servicesQuery.data || []}
         sourceOptions={leadSourcesQuery.data || []}
         stageOptions={stagesQuery.data || []}
-        statusOptions={['New', 'Open', 'Won', 'Lost']}
+        statusOptions={['Open', 'Won', 'Lost', 'Archived']}
         onClose={() => setFormOpen(false)}
         onSubmit={(values) =>
           updateLeadMutation.mutateAsync({

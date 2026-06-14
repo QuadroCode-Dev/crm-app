@@ -40,6 +40,7 @@ function toLeadQuery(params) {
 
 function toLeadPayload(payload) {
   const {
+    contactName,
     source,
     sourceId,
     stageId,
@@ -47,17 +48,34 @@ function toLeadPayload(payload) {
     ...rest
   } = payload;
 
-  return {
+  return removeEmptyGuidValues({
     ...rest,
+    contactName: contactName || undefined,
     leadSourceId: payload.leadSourceId || sourceId || source,
     currentPipelineStageId: payload.currentPipelineStageId || stageId || stage,
-  };
+  });
 }
 
 function toStagePayload(payload) {
-  return {
+  return removeEmptyGuidValues({
     pipelineStageId: payload.pipelineStageId || payload.stageId,
-  };
+  });
+}
+
+function removeEmptyGuidValues(payload) {
+  const guidFields = [
+    'contactId',
+    'leadSourceId',
+    'currentPipelineStageId',
+    'ownerUserId',
+    'pipelineStageId',
+  ];
+
+  return Object.fromEntries(
+    Object.entries(payload).filter(
+      ([key, value]) => !(guidFields.includes(key) && value === ''),
+    ),
+  );
 }
 
 export function getLeads(params = {}) {

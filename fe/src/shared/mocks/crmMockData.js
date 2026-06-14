@@ -60,6 +60,12 @@ export const mockPipelineStages = [
   { id: 'stage-5', name: 'Won', order: 5, isActive: true },
 ];
 
+export const mockServices = [
+  'Hair Transplant',
+  'Plastic Surgery',
+  'Rhinoplasty',
+];
+
 export const mockLeads = [
   {
     id: 'lead-1',
@@ -407,6 +413,7 @@ export const baseMockState = {
   users: mockUsers,
   contacts: mockContacts,
   pipelineStages: mockPipelineStages,
+  services: mockServices,
   leads: mockLeads,
   notes: mockNotes,
   tasks: mockTasks,

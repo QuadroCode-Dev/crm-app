@@ -16,6 +16,7 @@ public class CrmDbContext : DbContext
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadSource> LeadSources => Set<LeadSource>();
+    public DbSet<Service> Services => Set<Service>();
     public DbSet<PipelineStage> PipelineStages => Set<PipelineStage>();
     public DbSet<LeadStageHistory> LeadStageHistories => Set<LeadStageHistory>();
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
@@ -32,6 +33,7 @@ public class CrmDbContext : DbContext
         ApplySoftDeleteQueryFilters(modelBuilder);
 
         SeedLeadSources(modelBuilder);
+        SeedServices(modelBuilder);
         SeedPipelineStages(modelBuilder);
     }
 
@@ -104,6 +106,33 @@ public class CrmDbContext : DbContext
                 Name = "Email",
                 Code = "email",
                 IsSystem = false,
+                IsActive = true
+            }
+        );
+    }
+
+    private static void SeedServices(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Service>().HasData(
+            new Service
+            {
+                Id = Guid.Parse("88888888-8888-8888-8888-888888888881"),
+                Name = "Hair Transplant",
+                Code = "hair_transplant",
+                IsActive = true
+            },
+            new Service
+            {
+                Id = Guid.Parse("88888888-8888-8888-8888-888888888882"),
+                Name = "Plastic Surgery",
+                Code = "plastic_surgery",
+                IsActive = true
+            },
+            new Service
+            {
+                Id = Guid.Parse("88888888-8888-8888-8888-888888888883"),
+                Name = "Rhinoplasty",
+                Code = "rhinoplasty",
                 IsActive = true
             }
         );

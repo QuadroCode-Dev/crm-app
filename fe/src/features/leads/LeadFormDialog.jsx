@@ -13,10 +13,16 @@ import { useEffect } from 'react';
 import * as yup from 'yup';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 
+const titleOptions = [
+  'Mr.',
+  'Mrs.',
+];
+
 function createLeadSchema(t) {
   return yup.object({
     title: yup.string().trim().required(t('Title is required.')),
-    contactId: yup.string().required(t('Contact is required.')),
+    contactId: yup.string().nullable(),
+    contactName: yup.string().trim().required(t('Contact is required.')),
     source: yup.string().trim().required(t('Source is required.')),
     stageId: yup.string().required(t('Pipeline stage is required.')),
     ownerUserId: yup.string().required(t('Owner is required.')),
@@ -32,17 +38,17 @@ function createLeadSchema(t) {
 }
 
 function LeadFormDialog({
-  contacts,
   lead,
   open,
   ownerOptions,
+  serviceOptions = [],
   sourceOptions,
   stageOptions,
   statusOptions,
   onClose,
   onSubmit,
 }) {
-  const { t } = useLanguage();
+  const { direction, t } = useLanguage();
   const {
     control,
     handleSubmit,
@@ -52,25 +58,31 @@ function LeadFormDialog({
     defaultValues: {
       title: '',
       contactId: '',
+      contactName: '',
       source: '',
       stageId: '',
       ownerUserId: '',
-      status: '',
+      status: 'Open',
       estimatedCost: '',
       serviceRequested: '',
       message: '',
     },
     resolver: yupResolver(createLeadSchema(t)),
   });
+  const availableTitleOptions =
+    lead?.title && !titleOptions.includes(lead.title)
+      ? [lead.title, ...titleOptions]
+      : titleOptions;
 
   useEffect(() => {
     reset({
       title: lead?.title || '',
       contactId: lead?.contactId || '',
+      contactName: lead?.contact?.fullName || lead?.contactName || '',
       source: lead?.sourceId || lead?.leadSourceId || lead?.source || '',
       stageId: lead?.stageId || '',
       ownerUserId: lead?.ownerUserId || '',
-      status: lead?.status || '',
+      status: lead?.status || 'Open',
       estimatedCost: lead?.estimatedCost ?? '',
       serviceRequested: lead?.serviceRequested || '',
       message: lead?.message || '',
@@ -88,32 +100,32 @@ function LeadFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
+                select
+                SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
                 label={t('Title')}
                 error={Boolean(errors.title)}
                 helperText={errors.title?.message}
-              />
+              >
+                <option value="">{t('Select a title')}</option>
+                {availableTitleOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {t(option)}
+                  </option>
+                ))}
+              </TextField>
             )}
           />
           <Controller
-            name="contactId"
+            name="contactName"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
-                select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
                 label={t('Contact')}
-                error={Boolean(errors.contactId)}
-                helperText={errors.contactId?.message}
-              >
-                <option value="">{t('Select a contact')}</option>
-                {contacts.map((contact) => (
-                  <option key={contact.id} value={contact.id}>
-                    {contact.fullName}
-                  </option>
-                ))}
-              </TextField>
+                error={Boolean(errors.contactName)}
+                helperText={errors.contactName?.message}
+              />
             )}
           />
           <Controller
@@ -211,6 +223,29 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 label={t('Estimated cost')}
+                type="number"
+                InputLabelProps={{ dir: direction }}
+                inputProps={{
+                  dir: 'ltr',
+                  min: 0,
+                  step: '0.01',
+                  inputMode: 'decimal',
+                  style: {
+                    textAlign: direction === 'rtl' ? 'right' : 'left',
+                  },
+                }}
+                onChange={(event) => {
+                  const { value } = event.target;
+
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    field.onChange(value);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (['e', 'E', '+', '-'].includes(event.key)) {
+                    event.preventDefault();
+                  }
+                }}
                 error={Boolean(errors.estimatedCost)}
                 helperText={errors.estimatedCost?.message}
               />
@@ -219,7 +254,22 @@ function LeadFormDialog({
           <Controller
             name="serviceRequested"
             control={control}
-            render={({ field }) => <TextField {...field} label={t('Service requested')} />}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                select
+                SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
+                label={t('Service requested')}
+              >
+                <option value="">{t('Select a service')}</option>
+                {serviceOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {t(option)}
+                  </option>
+                ))}
+              </TextField>
+            )}
           />
           <Controller
             name="message"

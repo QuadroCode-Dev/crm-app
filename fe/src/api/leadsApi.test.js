@@ -4,7 +4,13 @@ import { setupServer } from 'msw/node';
 import { clearAuthSession, setAuthSession } from '../features/auth/authSession.js';
 import { normalizeApiError } from './normalizeApiError.js';
 import { getLeadsBySourceReport, getPipelineSummaryReport } from './reportsApi.js';
-import { getLeadStageTimer, getLeadTimeline, getLeads, updateLeadStage } from './leadsApi.js';
+import {
+  createLead,
+  getLeadStageTimer,
+  getLeadTimeline,
+  getLeads,
+  updateLeadStage,
+} from './leadsApi.js';
 import { handlers, resetMockState } from '../shared/mocks/handlers.js';
 import { mockAccessToken, mockAuthUser } from '../shared/mocks/authMockData.js';
 
@@ -102,6 +108,55 @@ describe('leadsApi', () => {
     expect(stageTimer.daysInCurrentStage).toBe(0);
     expect(stageTimer.previousStages.at(-1)).toMatchObject({
       stageName: 'Qualified',
+    });
+  });
+
+  it('omits empty GUID fields when creating a lead from a typed contact name', async () => {
+    setAuthSession({
+      accessToken: mockAccessToken,
+      user: mockAuthUser,
+    });
+
+    let requestBody;
+
+    server.use(
+      http.post(`${apiBaseUrl}/api/leads`, async ({ request }) => {
+        requestBody = await request.json();
+
+        return HttpResponse.json(
+          {
+            id: 'lead-created',
+            ...requestBody,
+            contactFullName: requestBody.contactName,
+            leadSourceName: 'Manual',
+            currentPipelineStageName: 'Incoming',
+          },
+          {
+            status: 201,
+          },
+        );
+      }),
+    );
+
+    await createLead({
+      title: 'Mr.',
+      contactId: '',
+      contactName: 'Test Contact',
+      source: 'source-id',
+      stageId: 'stage-id',
+      ownerUserId: mockAuthUser.id,
+      status: 'Open',
+      estimatedCost: 1200,
+      serviceRequested: 'Hair Transplant',
+      message: '',
+    });
+
+    expect(requestBody).not.toHaveProperty('contactId');
+    expect(requestBody).toMatchObject({
+      contactName: 'Test Contact',
+      leadSourceId: 'source-id',
+      currentPipelineStageId: 'stage-id',
+      ownerUserId: mockAuthUser.id,
     });
   });
 
