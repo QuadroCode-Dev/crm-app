@@ -203,6 +203,24 @@ describe('Auth flow', () => {
     expect(window.localStorage.getItem('crm.auth.refreshToken')).toBe(mockRefreshToken);
   });
 
+  it('completes a successful login flow when Arabic is selected', async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem('crm.preferences.language', 'ar');
+
+    renderRoute(['/login']);
+
+    expect(await screen.findByRole('heading', { name: 'تسجيل الدخول' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'اللغة' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('البريد الإلكتروني'), mockAuthCredentials.email);
+    await user.type(screen.getByLabelText('كلمة المرور'), mockAuthCredentials.password);
+    await user.click(screen.getByRole('button', { name: 'دخول' }));
+
+    expect(await screen.findByRole('button', { name: 'تسجيل الخروج' })).toBeInTheDocument();
+    expect(window.localStorage.getItem('crm.auth.accessToken')).toBe(mockAccessToken);
+    expect(window.localStorage.getItem('crm.auth.refreshToken')).toBe(mockRefreshToken);
+  });
+
   it('shows an error when login fails', async () => {
     const user = userEvent.setup();
     loginShouldFail = true;

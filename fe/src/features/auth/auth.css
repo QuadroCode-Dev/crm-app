@@ -24,6 +24,19 @@
   gap: 1.5rem;
 }
 
+.crm-login-form__language {
+  display: flex;
+  justify-content: flex-end;
+}
+
+[dir='rtl'] .crm-login-form__language {
+  justify-content: flex-start;
+}
+
+.crm-login-form__language .MuiSelect-select {
+  min-width: 7.5rem;
+}
+
 .crm-login-form__header {
   display: flex;
   flex-direction: column;

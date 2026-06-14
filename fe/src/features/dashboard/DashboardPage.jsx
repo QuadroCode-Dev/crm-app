@@ -641,11 +641,14 @@ function DashboardPage() {
     pipelineSummaryQuery.error ||
     tasksSummaryQuery.error;
 
-  const leads = leadsQuery.data?.items || [];
-  const tasks = tasksQuery.data?.items || [];
-  const leadsBySource = leadsBySourceQuery.data || [];
-  const pipelineSummary = pipelineSummaryQuery.data || [];
-  const tasksSummary = tasksSummaryQuery.data || {};
+  const leads = useMemo(() => leadsQuery.data?.items || [], [leadsQuery.data?.items]);
+  const tasks = useMemo(() => tasksQuery.data?.items || [], [tasksQuery.data?.items]);
+  const leadsBySource = useMemo(() => leadsBySourceQuery.data || [], [leadsBySourceQuery.data]);
+  const pipelineSummary = useMemo(
+    () => pipelineSummaryQuery.data || [],
+    [pipelineSummaryQuery.data],
+  );
+  const tasksSummary = useMemo(() => tasksSummaryQuery.data || {}, [tasksSummaryQuery.data]);
 
   const dashboardModel = useMemo(() => {
     const newLeads = leads.filter((lead) => lead.status?.toLowerCase() === 'new').length;

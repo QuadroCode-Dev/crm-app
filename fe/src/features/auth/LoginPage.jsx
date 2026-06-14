@@ -1,4 +1,15 @@
-import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -27,7 +38,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-  const { t } = useLanguage();
+  const { language, languageOptions, setLanguage, t } = useLanguage();
   const redirectTo = location.state?.from?.pathname || '/dashboard';
   const {
     control,
@@ -58,6 +69,20 @@ function LoginPage() {
     <Card className="crm-login-card">
       <CardContent className="crm-card-content-padded">
         <Stack component="form" className="crm-login-form" onSubmit={handleSubmit(onSubmit)}>
+          <Box className="crm-login-form__language">
+            <Select
+              inputProps={{ 'aria-label': t('app.language') }}
+              onChange={(event) => setLanguage(event.target.value)}
+              size="small"
+              value={language}
+            >
+              {languageOptions.map((option) => (
+                <MenuItem key={option.code} value={option.code}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
           <Stack spacing={1} className="crm-login-form__header">
             <Typography variant="overline" className="crm-eyebrow">
               {t('Authentication')}
@@ -80,6 +105,7 @@ function LoginPage() {
                 error={Boolean(errors.email)}
                 fullWidth
                 helperText={errors.email?.message}
+                inputProps={{ dir: 'ltr' }}
                 label={t('Email')}
                 type="email"
               />
@@ -95,6 +121,7 @@ function LoginPage() {
                 error={Boolean(errors.password)}
                 fullWidth
                 helperText={errors.password?.message}
+                inputProps={{ dir: 'ltr' }}
                 label={t('Password')}
                 type="password"
               />

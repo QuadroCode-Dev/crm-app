@@ -415,6 +415,19 @@ function LeadDetailPage() {
     },
   });
 
+  const previousStages = stageTimerQuery.data?.previousStages || [];
+  const timelineItems = [...(timelineQuery.data || [])].sort(
+    (a, b) => dayjs(b.createdAtUtc).valueOf() - dayjs(a.createdAtUtc).valueOf(),
+  );
+
+  useEffect(() => {
+    setVisiblePreviousStagesCount(PREVIOUS_STAGES_PAGE_SIZE);
+  }, [id, previousStages.length]);
+
+  useEffect(() => {
+    setVisibleTimelineCount(ACTIVITY_TIMELINE_PAGE_SIZE);
+  }, [id, timelineItems.length]);
+
   if (leadQuery.isLoading) {
     return <LoadingState />;
   }
@@ -436,15 +449,11 @@ function LeadDetailPage() {
     matchedLeads: [],
     matchFields: [],
   };
-  const previousStages = stageTimerQuery.data?.previousStages || [];
   const visiblePreviousStages = previousStages.slice(0, visiblePreviousStagesCount);
   const hasMorePreviousStages = visiblePreviousStages.length < previousStages.length;
   const canSeeLessPreviousStages =
     previousStages.length > PREVIOUS_STAGES_PAGE_SIZE &&
     visiblePreviousStagesCount > PREVIOUS_STAGES_PAGE_SIZE;
-  const timelineItems = [...(timelineQuery.data || [])].sort(
-    (a, b) => dayjs(b.createdAtUtc).valueOf() - dayjs(a.createdAtUtc).valueOf(),
-  );
   const visibleTimelineItems = timelineItems.slice(0, visibleTimelineCount);
   const hasMoreTimelineItems = visibleTimelineItems.length < timelineItems.length;
   const canSeeLessTimelineItems =
@@ -458,14 +467,6 @@ function LeadDetailPage() {
         },
       ]
     : [];
-
-  useEffect(() => {
-    setVisiblePreviousStagesCount(PREVIOUS_STAGES_PAGE_SIZE);
-  }, [id, previousStages.length]);
-
-  useEffect(() => {
-    setVisibleTimelineCount(ACTIVITY_TIMELINE_PAGE_SIZE);
-  }, [id, timelineItems.length]);
 
   if (!lead) {
     return (

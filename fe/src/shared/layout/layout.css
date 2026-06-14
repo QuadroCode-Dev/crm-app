@@ -226,6 +226,16 @@
   min-width: 0;
 }
 
+.crm-topbar__logout-button .MuiButton-startIcon {
+  margin-inline-end: 0.35rem;
+  margin-inline-start: -0.1rem;
+}
+
+.crm-topbar__logout-button .MuiButton-endIcon {
+  margin-inline-start: 0.35rem;
+  margin-inline-end: -0.1rem;
+}
+
 @media (min-width: 900px) {
   .crm-app-layout__content-inner {
     padding: 1.25rem 1.5rem 1.5rem;

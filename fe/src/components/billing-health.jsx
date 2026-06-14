@@ -31,7 +31,7 @@ export function BillingHealth() {
 						<EmptyMedia variant="icon">
 							<CircleCheckIcon aria-hidden="true" />
 						</EmptyMedia>
-						<EmptyTitle>You're caught up.</EmptyTitle>
+						<EmptyTitle>You&apos;re caught up.</EmptyTitle>
 						<EmptyDescription className="text-xs">
 							Balances and payouts look fine. nothing overdue in this snapshot.
 						</EmptyDescription>

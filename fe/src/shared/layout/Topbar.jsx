@@ -26,6 +26,7 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
   const colorModeLabel = mode === 'dark' ? t('app.switchToLight') : t('app.switchToDark');
   const title = pageHeader.title || appName;
   const description = pageHeader.description;
+  const logoutIcon = <SignOut size={17} weight="bold" />;
 
   return (
     <AppBar color="transparent" dir={direction} elevation={0} position="sticky" className="crm-topbar">
@@ -103,9 +104,11 @@ function Topbar({ onToggleMenu, showMenuButton = false }) {
               </Typography>
             </Stack>
             <Button
+              className="crm-topbar__logout-button"
               color="primary"
+              endIcon={direction === 'rtl' ? logoutIcon : null}
               onClick={logout}
-              startIcon={<SignOut size={17} weight="bold" />}
+              startIcon={direction === 'rtl' ? null : logoutIcon}
               variant="outlined"
             >
               {t('app.logout')}
