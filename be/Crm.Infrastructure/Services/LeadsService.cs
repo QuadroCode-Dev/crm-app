@@ -170,6 +170,10 @@ public sealed class LeadsService : ILeadsService
         var owner = await ValidateOwnerAsync(request.OwnerUserId, cancellationToken);
         var status = ParseStatus(request.Status) ?? LeadStatus.Open;
 
+        contact.FullName = NormalizeRequired(request.ContactName, contact.FullName);
+        contact.Email = NormalizeOptional(request.ContactEmail);
+        contact.Phone = NormalizeOptional(request.ContactPhone);
+
         lead.ContactId = contact.Id;
         lead.LeadSourceId = request.LeadSourceId;
         lead.OwnerUserId = owner?.Id;
@@ -457,6 +461,8 @@ public sealed class LeadsService : ILeadsService
         {
             Id = Guid.NewGuid(),
             FullName = request.ContactName.Trim(),
+            Email = NormalizeOptional(request.ContactEmail),
+            Phone = NormalizeOptional(request.ContactPhone),
             CreatedByUserId = userId
         };
 
@@ -471,6 +477,11 @@ public sealed class LeadsService : ILeadsService
         {
             throw new ArgumentException("Title is required.");
         }
+    }
+
+    private static string NormalizeRequired(string? value, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
     }
 
     private static LeadStatus? ParseStatus(string? status)

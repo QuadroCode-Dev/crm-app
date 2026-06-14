@@ -474,8 +474,8 @@ export const handlers = [
       contact = {
         id: createId('contact'),
         fullName: body.contactName,
-        email: '',
-        phone: '',
+        email: body.contactEmail || '',
+        phone: body.contactPhone || '',
         companyName: '',
         createdAtUtc: dayjs().toISOString(),
         updatedAtUtc: dayjs().toISOString(),
@@ -540,6 +540,13 @@ export const handlers = [
     const owner = state.users.find(
       (item) => item.id === (body.ownerUserId || existingLead.ownerUserId),
     );
+
+    if (contact) {
+      contact.fullName = body.contactName || contact.fullName;
+      contact.email = body.contactEmail ?? contact.email;
+      contact.phone = body.contactPhone ?? contact.phone;
+      contact.updatedAtUtc = dayjs().toISOString();
+    }
 
     state.leads[leadIndex] = {
       ...existingLead,

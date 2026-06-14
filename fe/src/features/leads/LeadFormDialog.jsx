@@ -1,5 +1,6 @@
 import {
   Button,
+  Box,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,11 +19,78 @@ const titleOptions = [
   'Mrs.',
 ];
 
+const phonePrefixOptions = [
+  { code: 'LB', label: 'Lebanon', prefix: '+961' },
+  { code: 'US', label: 'United States', prefix: '+1' },
+  { code: 'GB', label: 'United Kingdom', prefix: '+44' },
+  { code: 'TR', label: 'Turkey', prefix: '+90' },
+  { code: 'AE', label: 'United Arab Emirates', prefix: '+971' },
+  { code: 'SA', label: 'Saudi Arabia', prefix: '+966' },
+  { code: 'QA', label: 'Qatar', prefix: '+974' },
+  { code: 'KW', label: 'Kuwait', prefix: '+965' },
+  { code: 'FR', label: 'France', prefix: '+33' },
+  { code: 'DE', label: 'Germany', prefix: '+49' },
+];
+
+function sanitizePhoneNumber(value) {
+  return String(value || '').replace(/[^\d+]/g, '');
+}
+
+function parseInternationalPhone(value, fallbackPrefix = '+961') {
+  const sanitized = sanitizePhoneNumber(value).replace(/^00/, '+');
+
+  if (!sanitized) {
+    return {
+      prefix: fallbackPrefix,
+      number: '',
+    };
+  }
+
+  const matchedOption = [...phonePrefixOptions]
+    .sort((left, right) => right.prefix.length - left.prefix.length)
+    .find((option) => sanitized.startsWith(option.prefix));
+
+  if (matchedOption) {
+    return {
+      prefix: matchedOption.prefix,
+      number: sanitized.slice(matchedOption.prefix.length).replace(/^0+/, ''),
+    };
+  }
+
+  return {
+    prefix: fallbackPrefix,
+    number: sanitized.replace(/^\+/, '').replace(/^0+/, ''),
+  };
+}
+
+function buildInternationalPhone(prefix, number) {
+  const parsed = parseInternationalPhone(number, prefix || '+961');
+  const localNumber = parsed.number || sanitizePhoneNumber(number).replace(/^\+/, '').replace(/^0+/, '');
+
+  return localNumber ? `${parsed.prefix}${localNumber}` : '';
+}
+
 function createLeadSchema(t) {
   return yup.object({
     title: yup.string().trim().required(t('Title is required.')),
     contactId: yup.string().nullable(),
     contactName: yup.string().trim().required(t('Contact is required.')),
+    contactEmail: yup
+      .string()
+      .trim()
+      .transform((value) => (value === '' ? null : value))
+      .email(t('Enter a valid email address.'))
+      .nullable(),
+    phonePrefix: yup.string().trim().required(t('International code is required.')),
+    phoneNumber: yup
+      .string()
+      .trim()
+      .nullable()
+      .test(
+        'valid-phone-number',
+        t('Enter a valid phone number.'),
+        (value) => !value || /^\+?[\d\s().-]{6,20}$/.test(value),
+      ),
     source: yup.string().trim().required(t('Source is required.')),
     stageId: yup.string().required(t('Pipeline stage is required.')),
     ownerUserId: yup.string().required(t('Owner is required.')),
@@ -49,16 +117,40 @@ function LeadFormDialog({
   onSubmit,
 }) {
   const { direction, t } = useLanguage();
+  const isRtl = direction === 'rtl';
+  const labelProps = {
+    dir: direction,
+  };
+  const selectProps = {
+    native: true,
+    inputProps: {
+      dir: direction,
+      style: {
+        textAlign: isRtl ? 'right' : 'left',
+      },
+    },
+  };
+  const textInputProps = {
+    dir: direction,
+    style: {
+      textAlign: isRtl ? 'right' : 'left',
+    },
+  };
   const {
     control,
+    getValues,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
       title: '',
       contactId: '',
       contactName: '',
+      contactEmail: '',
+      phonePrefix: '+961',
+      phoneNumber: '',
       source: '',
       stageId: '',
       ownerUserId: '',
@@ -75,10 +167,18 @@ function LeadFormDialog({
       : titleOptions;
 
   useEffect(() => {
+    const parsedPhone = parseInternationalPhone(
+      lead?.contact?.phone || lead?.phone || '',
+      '+961',
+    );
+
     reset({
       title: lead?.title || '',
       contactId: lead?.contactId || '',
       contactName: lead?.contact?.fullName || lead?.contactName || '',
+      contactEmail: lead?.contact?.email || lead?.email || '',
+      phonePrefix: parsedPhone.prefix,
+      phoneNumber: parsedPhone.number,
       source: lead?.sourceId || lead?.leadSourceId || lead?.source || '',
       stageId: lead?.stageId || '',
       ownerUserId: lead?.ownerUserId || '',
@@ -89,11 +189,46 @@ function LeadFormDialog({
     });
   }, [lead, reset]);
 
+  function normalizePhoneField(value, currentPrefix) {
+    const parsedPhone = parseInternationalPhone(value, currentPrefix);
+
+    setValue('phonePrefix', parsedPhone.prefix, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue('phoneNumber', parsedPhone.number, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
+  function handleFormSubmit(values) {
+    const contactPhone = buildInternationalPhone(values.phonePrefix, values.phoneNumber);
+    const payload = { ...values };
+    delete payload.phonePrefix;
+    delete payload.phoneNumber;
+
+    return onSubmit({
+      ...payload,
+      contactEmail: values.contactEmail || '',
+      contactPhone,
+    });
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      PaperProps={{
+        className: 'crm-lead-form-dialog',
+        dir: direction,
+      }}
+    >
       <DialogTitle>{lead ? t('Edit lead') : t('Create lead')}</DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
+        <Stack className="crm-lead-form" dir={direction} spacing={2} sx={{ pt: 1 }}>
           <Controller
             name="title"
             control={control}
@@ -101,8 +236,8 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
+                SelectProps={selectProps}
+                InputLabelProps={{ ...labelProps, shrink: true }}
                 label={t('Title')}
                 error={Boolean(errors.title)}
                 helperText={errors.title?.message}
@@ -123,11 +258,83 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 label={t('Contact')}
+                InputLabelProps={labelProps}
+                inputProps={textInputProps}
                 error={Boolean(errors.contactName)}
                 helperText={errors.contactName?.message}
               />
             )}
           />
+          <Box className="crm-lead-form__contact-row">
+            <Controller
+              name="contactEmail"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label={t('Email')}
+                  type="email"
+                  InputLabelProps={labelProps}
+                  inputProps={textInputProps}
+                  error={Boolean(errors.contactEmail)}
+                  helperText={errors.contactEmail?.message}
+                />
+              )}
+            />
+            <Box className="crm-lead-form__phone-row">
+              <Controller
+                name="phonePrefix"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    select
+                    SelectProps={{
+                      native: true,
+                      inputProps: {
+                        dir: 'ltr',
+                      },
+                    }}
+                    InputLabelProps={{ ...labelProps, shrink: true }}
+                    label={t('Code')}
+                    error={Boolean(errors.phonePrefix)}
+                    helperText={errors.phonePrefix?.message}
+                  >
+                    {phonePrefixOptions.map((option) => (
+                      <option key={option.code} value={option.prefix}>
+                        {option.prefix}
+                      </option>
+                    ))}
+                  </TextField>
+                )}
+              />
+              <Controller
+                name="phoneNumber"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label={t('Phone')}
+                    InputLabelProps={labelProps}
+                    inputProps={{
+                      dir: 'ltr',
+                      inputMode: 'tel',
+                      style: {
+                        textAlign: isRtl ? 'right' : 'left',
+                      },
+                    }}
+                    onBlur={(event) => {
+                      field.onBlur();
+                      normalizePhoneField(event.target.value, getValues('phonePrefix'));
+                    }}
+                    onChange={(event) => field.onChange(event.target.value)}
+                    error={Boolean(errors.phoneNumber)}
+                    helperText={errors.phoneNumber?.message}
+                  />
+                )}
+              />
+            </Box>
+          </Box>
           <Controller
             name="source"
             control={control}
@@ -135,8 +342,8 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
+                SelectProps={selectProps}
+                InputLabelProps={{ ...labelProps, shrink: true }}
                 label={t('Source')}
                 error={Boolean(errors.source)}
                 helperText={errors.source?.message}
@@ -157,8 +364,8 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
+                SelectProps={selectProps}
+                InputLabelProps={{ ...labelProps, shrink: true }}
                 label={t('Pipeline stage')}
                 error={Boolean(errors.stageId)}
                 helperText={errors.stageId?.message}
@@ -179,8 +386,8 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
+                SelectProps={selectProps}
+                InputLabelProps={{ ...labelProps, shrink: true }}
                 label={t('Owner')}
                 error={Boolean(errors.ownerUserId)}
                 helperText={errors.ownerUserId?.message}
@@ -201,8 +408,8 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
+                SelectProps={selectProps}
+                InputLabelProps={{ ...labelProps, shrink: true }}
                 label={t('Status')}
                 error={Boolean(errors.status)}
                 helperText={errors.status?.message}
@@ -224,14 +431,14 @@ function LeadFormDialog({
                 {...field}
                 label={t('Estimated cost')}
                 type="number"
-                InputLabelProps={{ dir: direction }}
+                InputLabelProps={labelProps}
                 inputProps={{
                   dir: 'ltr',
                   min: 0,
                   step: '0.01',
                   inputMode: 'decimal',
                   style: {
-                    textAlign: direction === 'rtl' ? 'right' : 'left',
+                    textAlign: isRtl ? 'right' : 'left',
                   },
                 }}
                 onChange={(event) => {
@@ -258,8 +465,8 @@ function LeadFormDialog({
               <TextField
                 {...field}
                 select
-                SelectProps={{ native: true }}
-                InputLabelProps={{ shrink: true }}
+                SelectProps={selectProps}
+                InputLabelProps={{ ...labelProps, shrink: true }}
                 label={t('Service requested')}
               >
                 <option value="">{t('Select a service')}</option>
@@ -275,14 +482,21 @@ function LeadFormDialog({
             name="message"
             control={control}
             render={({ field }) => (
-              <TextField {...field} label={t('Message')} multiline minRows={3} />
+              <TextField
+                {...field}
+                label={t('Message')}
+                InputLabelProps={labelProps}
+                inputProps={textInputProps}
+                multiline
+                minRows={3}
+              />
             )}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>{t('Cancel')}</Button>
-        <Button onClick={handleSubmit(onSubmit)} variant="contained" disabled={isSubmitting}>
+        <Button onClick={handleSubmit(handleFormSubmit)} variant="contained" disabled={isSubmitting}>
           {isSubmitting ? t('Saving...') : lead ? t('Save lead') : t('Create lead')}
         </Button>
       </DialogActions>

@@ -142,6 +142,8 @@ describe('leadsApi', () => {
       title: 'Mr.',
       contactId: '',
       contactName: 'Test Contact',
+      contactEmail: 'test@example.com',
+      contactPhone: '+96170123456',
       source: 'source-id',
       stageId: 'stage-id',
       ownerUserId: mockAuthUser.id,
@@ -154,6 +156,8 @@ describe('leadsApi', () => {
     expect(requestBody).not.toHaveProperty('contactId');
     expect(requestBody).toMatchObject({
       contactName: 'Test Contact',
+      contactEmail: 'test@example.com',
+      contactPhone: '+96170123456',
       leadSourceId: 'source-id',
       currentPipelineStageId: 'stage-id',
       ownerUserId: mockAuthUser.id,

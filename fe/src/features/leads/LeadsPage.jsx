@@ -4,10 +4,14 @@ import {
   Card,
   CardContent,
   Chip,
+  IconButton,
   Stack,
   TextField,
+  Tooltip,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
@@ -49,6 +53,14 @@ function formatCurrency(value) {
 
 function formatDate(value) {
   return value ? dayjs(value).format('MMM D, YYYY') : '-';
+}
+
+function renderCompactCell(value) {
+  return (
+    <Tooltip title={value || ''}>
+      <span className="crm-leads-cell-text">{value || '-'}</span>
+    </Tooltip>
+  );
 }
 
 function LeadsPage() {
@@ -199,40 +211,96 @@ function LeadsPage() {
       {
         field: 'title',
         headerName: t('Title'),
-        flex: 1.35,
-        minWidth: 220,
+        flex: 0.65,
+        minWidth: 0,
         renderCell: (params) => (
-          <Button component={Link} to={`/leads/${params.row.id}`} variant="text">
+          <Button
+            className="crm-leads-title-link"
+            component={Link}
+            to={`/leads/${params.row.id}`}
+            variant="text"
+          >
             {params.value}
           </Button>
         ),
       },
-      { field: 'contactName', headerName: t('Contact'), flex: 1, minWidth: 170 },
-      { field: 'email', headerName: t('Email'), flex: 1.1, minWidth: 190 },
-      { field: 'phone', headerName: t('Phone'), flex: 1, minWidth: 150 },
-      { field: 'source', headerName: t('Source'), flex: 0.9, minWidth: 140 },
-      { field: 'stageName', headerName: t('Current stage'), flex: 0.9, minWidth: 140 },
-      { field: 'status', headerName: t('Status'), flex: 0.8, minWidth: 120 },
+      {
+        field: 'contactName',
+        headerName: t('Contact'),
+        flex: 0.95,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'email',
+        headerName: t('Email'),
+        flex: 1.05,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'phone',
+        headerName: t('Phone'),
+        flex: 0.75,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'source',
+        headerName: t('Source'),
+        flex: 0.7,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'stageName',
+        headerName: t('Current stage'),
+        flex: 0.72,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'stageRotting',
+        headerName: t('Stage Rotting'),
+        flex: 0.72,
+        minWidth: 0,
+        sortable: false,
+        filterable: false,
+        renderCell: () => renderCompactCell('-'),
+      },
+      {
+        field: 'status',
+        headerName: t('Status'),
+        flex: 0.58,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
       {
         field: 'estimatedCost',
         headerName: t('Estimated cost'),
-        flex: 0.9,
-        minWidth: 140,
+        flex: 0.78,
+        minWidth: 0,
         valueFormatter: (value) => formatCurrency(value),
       },
       {
         field: 'serviceRequested',
         headerName: t('Service requested'),
-        flex: 1.2,
-        minWidth: 200,
+        flex: 0.85,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
       },
-      { field: 'ownerName', headerName: t('Owner'), flex: 0.9, minWidth: 140 },
+      {
+        field: 'ownerName',
+        headerName: t('Owner'),
+        flex: 0.82,
+        minWidth: 0,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
       {
         field: 'isDuplicateWarning',
         headerName: t('Duplicate warning'),
-        flex: 0.8,
-        minWidth: 170,
-        sortable: false,
+        flex: 0.7,
+        minWidth: 0,
         renderCell: (params) =>
           params.value ? (
             <Chip
@@ -248,28 +316,41 @@ function LeadsPage() {
       {
         field: 'createdAtUtc',
         headerName: t('Created date'),
-        flex: 0.9,
-        minWidth: 140,
+        flex: 0.75,
+        minWidth: 0,
         valueFormatter: (value) => formatDate(value),
       },
       {
         field: 'actions',
         headerName: t('Actions'),
-        minWidth: 180,
+        flex: 0.55,
+        minWidth: 0,
         sortable: false,
+        filterable: false,
+        hideable: false,
+        disableColumnMenu: true,
         renderCell: (params) => (
-          <Stack direction="row" spacing={1}>
-            <Button onClick={() => handleEdit(params.row)} size="small" variant="outlined">
-              {t('Edit')}
-            </Button>
-            <Button
-              color="error"
-              onClick={() => setDeletingLead(params.row)}
-              size="small"
-              variant="outlined"
-            >
-              {t('Delete')}
-            </Button>
+          <Stack className="crm-leads-row-actions" direction="row" spacing={0.5}>
+            <Tooltip title={t('Edit')}>
+              <IconButton
+                aria-label={t('Edit')}
+                color="primary"
+                onClick={() => handleEdit(params.row)}
+                size="small"
+              >
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t('Delete')}>
+              <IconButton
+                aria-label={t('Delete')}
+                color="error"
+                onClick={() => setDeletingLead(params.row)}
+                size="small"
+              >
+                <DeleteOutlineOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Stack>
         ),
       },
@@ -465,7 +546,8 @@ function LeadsPage() {
               <DataGrid
                 autoHeight
                 columns={columns}
-                disableColumnMenu
+                columnHeaderHeight={44}
+                disableColumnReorder={false}
                 disableRowSelectionOnClick
                 disableVirtualization
                 loading={leadsQuery.isFetching}
@@ -478,6 +560,7 @@ function LeadsPage() {
                 }}
                 rowCount={leadsQuery.data?.total || 0}
                 rows={rows}
+                rowHeight={44}
                 onPaginationModelChange={(model) =>
                   updateFilters({
                     page: model.page + 1,

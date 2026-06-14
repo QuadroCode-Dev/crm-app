@@ -12,6 +12,60 @@
   align-items: center;
 }
 
+.crm-lead-form__contact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.crm-lead-form__phone-row {
+  display: grid;
+  grid-template-columns: minmax(112px, 0.42fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.crm-lead-form-dialog[dir='rtl'] .MuiDialogTitle-root,
+.crm-lead-form-dialog[dir='rtl'] .MuiDialogActions-root {
+  text-align: right;
+  direction: rtl;
+}
+
+.crm-lead-form-dialog[dir='rtl'] .MuiDialogActions-root {
+  justify-content: flex-start;
+}
+
+.crm-lead-form[dir='rtl'] .MuiFormLabel-root {
+  left: auto;
+  right: 1.75rem;
+  transform: translate(-14px, 16px) scale(1);
+  transform-origin: top right;
+}
+
+.crm-lead-form[dir='rtl'] .MuiInputLabel-shrink {
+  transform: translate(-14px, -9px) scale(0.75);
+}
+
+.crm-lead-form[dir='rtl'] .MuiInputBase-input,
+.crm-lead-form[dir='rtl'] .MuiFormHelperText-root {
+  text-align: right;
+}
+
+.crm-lead-form[dir='rtl'] .MuiNativeSelect-select.MuiNativeSelect-outlined {
+  padding-right: 0.875rem;
+  padding-left: 2rem;
+  text-align: right;
+}
+
+.crm-lead-form[dir='rtl'] .MuiNativeSelect-icon {
+  right: auto;
+  left: 0.4375rem;
+}
+
+.crm-lead-form[dir='rtl'] .crm-lead-form__contact-row,
+.crm-lead-form[dir='rtl'] .crm-lead-form__phone-row {
+  direction: rtl;
+}
+
 .crm-leads-filters {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -46,6 +100,58 @@
 .crm-leads-table .MuiDataGrid-root {
   border: 0;
   background: var(--crm-color-surface);
+  font-size: 0.75rem;
+  min-width: 0;
+}
+
+.crm-leads-table .MuiDataGrid-columnHeaders,
+.crm-leads-table .MuiDataGrid-cell {
+  min-width: 0;
+}
+
+.crm-leads-table .MuiDataGrid-columnHeaderTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-leads-table .MuiDataGrid-cell {
+  padding-inline: 0.35rem;
+}
+
+.crm-leads-table .MuiDataGrid-virtualScroller {
+  overflow-x: hidden;
+}
+
+.crm-leads-cell-text,
+.crm-leads-title-link {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-leads-title-link.MuiButton-root {
+  justify-content: flex-start;
+  padding-inline: 0;
+  font-size: 0.72rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.crm-leads-row-actions {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.crm-leads-row-actions .MuiIconButton-root {
+  width: 28px;
+  height: 28px;
+  padding: 0.25rem;
 }
 
 .crm-leads-duplicate-chip {
@@ -159,14 +265,11 @@
   gap: 0.5rem;
 }
 
-.crm-leads-table .MuiStack-root{
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
 @media (min-width: 900px) {
+  .crm-lead-form__contact-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
   .crm-leads-filters {
     grid-template-columns: minmax(240px, 2fr) repeat(4, minmax(140px, 1fr)) auto;
     align-items: end;

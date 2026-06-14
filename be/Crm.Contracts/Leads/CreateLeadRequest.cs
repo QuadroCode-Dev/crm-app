@@ -6,6 +6,10 @@ public sealed class CreateLeadRequest
 
     public string? ContactName { get; set; }
 
+    public string? ContactEmail { get; set; }
+
+    public string? ContactPhone { get; set; }
+
     public Guid LeadSourceId { get; set; }
 
     public Guid CurrentPipelineStageId { get; set; }
