@@ -7,6 +7,46 @@
   gap: 1rem;
 }
 
+.crm-dashboard-target-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-dashboard-target-main,
+.crm-dashboard-target-rail {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.crm-dashboard-period-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.crm-dashboard-period-controls button {
+  min-height: 2.35rem;
+  border: 1px solid var(--crm-color-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-color-surface) 88%, transparent);
+  color: var(--crm-color-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 0 0.95rem;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.crm-dashboard-period-controls button:hover,
+.crm-dashboard-period-controls__active {
+  border-color: color-mix(in srgb, var(--crm-color-primary) 44%, var(--crm-color-border)) !important;
+  background: color-mix(in srgb, var(--crm-color-primary) 16%, var(--crm-color-surface)) !important;
+  color: var(--crm-color-primary) !important;
+}
+
 .crm-dashboard-card-glow {
   position: relative;
   overflow: hidden;
@@ -52,8 +92,88 @@
   );
 }
 
+.crm-dashboard-funnel-row {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--crm-color-text-muted);
+  font-size: 0.86rem;
+}
+
+.crm-dashboard-funnel-row strong {
+  color: var(--crm-color-text);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.crm-dashboard-funnel-row__bar {
+  height: 0.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crm-color-primary) 8%, var(--crm-color-surface));
+}
+
+.crm-dashboard-funnel-row__bar > div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--crm-color-primary) 88%, white),
+    color-mix(in srgb, var(--crm-color-accent) 74%, white)
+  );
+}
+
 .crm-dashboard-quick-action {
   text-decoration: none;
+}
+
+.crm-dashboard-priority-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--crm-color-border);
+  color: var(--crm-color-text-muted);
+  font-size: 0.9rem;
+  padding-bottom: 0.85rem;
+}
+
+.crm-dashboard-priority-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.crm-dashboard-priority-row strong {
+  color: var(--crm-color-text);
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.crm-dashboard-priority-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.crm-dashboard-snapshot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--crm-color-text-muted);
+  font-size: 0.9rem;
+}
+
+.crm-dashboard-snapshot-row strong {
+  color: var(--crm-color-text);
+  font-weight: 700;
+  text-align: end;
 }
 
 .crm-dashboard-table-link {
@@ -63,4 +183,43 @@
 
 .crm-dashboard-table-link:hover {
   text-decoration: underline;
+}
+
+.crm-dashboard-velocity-item {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-height: 8.5rem;
+  border: 1px solid var(--crm-color-border);
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--crm-color-surface) 82%, transparent);
+  padding: 1rem;
+}
+
+.crm-dashboard-velocity-item span,
+.crm-dashboard-velocity-item small {
+  color: var(--crm-color-text-muted);
+}
+
+.crm-dashboard-velocity-item strong {
+  color: var(--crm-color-text);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+@media (min-width: 1400px) {
+  .crm-dashboard-target-layout {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .crm-dashboard-period-controls {
+    justify-content: flex-start;
+  }
+
+  .crm-dashboard-funnel-row {
+    grid-template-columns: 1fr;
+  }
 }
