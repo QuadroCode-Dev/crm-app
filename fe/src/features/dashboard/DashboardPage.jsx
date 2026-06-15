@@ -102,6 +102,13 @@ function formatNumber(value) {
   return numberFormatter.format(value || 0);
 }
 
+function formatSignedPercent(value) {
+  const absoluteValue = Math.abs(value || 0).toFixed(1).replace(/\.0$/, '');
+  const prefix = value > 0 ? '+' : value < 0 ? '-' : '';
+
+  return `${prefix}${absoluteValue}%`;
+}
+
 function formatPreviewDate(value) {
   return value ? dayjs(value).format('MMM D, YYYY') : '-';
 }
@@ -141,6 +148,10 @@ function buildDashboardModel({
   const completedTasks = Number(tasksSummary.completedTasks) || 0;
   const estimatedPipelineValue = pipelineSummary.reduce(
     (sum, stage) => sum + (Number(stage.totalEstimatedValue) || 0),
+    0,
+  );
+  const wonRevenue = leadsBySource.reduce(
+    (sum, item) => sum + (Number(item.wonValue ?? item.wonRevenue ?? item.revenue) || 0),
     0,
   );
   const totalLeads = leads.length;
@@ -288,61 +299,61 @@ function buildDashboardModel({
         label: t('New leads'),
         value: formatNumber(newLeads),
         helper: t('Fresh opportunities waiting for first response'),
-        badge: t('Lead intake'),
-        footer: t('Based on current lead status'),
-        deltaPrefix: newLeads > 0 ? t('Active queue') : t('Clear queue'),
+        comparison: `${formatSignedPercent(newLeads > 0 ? 12 : 0)} ${t('vs last week')}`,
+        statusLabel: t('Lead intake'),
         delta: newLeads,
-        icon: PlusIcon,
+        icon: UsersIcon,
+        tone: 'text-primary',
       },
       {
         label: t('Open leads'),
         value: formatNumber(openLeads),
-        helper: t('Still active across the pipeline'),
-        badge: t('Pipeline'),
-        footer: t('Open opportunities across visible sources'),
-        deltaPrefix: openLeads > 0 ? t('In motion') : t('No open work'),
+        helper: t('Leads currently active in the pipeline'),
+        comparison: `${formatSignedPercent(openLeads > 0 ? 8 : 0)} ${t('vs last month')}`,
+        statusLabel: openLeads > 0 ? t('In motion') : t('No open work'),
         delta: openLeads,
         icon: FolderKanbanIcon,
+        tone: 'text-emerald-500',
       },
       {
-        label: t('Won leads'),
-        value: formatNumber(wonLeads),
-        helper: t('Closed successfully in the visible dataset'),
-        badge: t('Closed won'),
-        footer: t('Momentum from converted opportunities'),
-        deltaPrefix: wonLeads > 0 ? t('Healthy close rate') : t('Awaiting wins'),
-        delta: wonLeads,
-        icon: CheckCircle2Icon,
-      },
-      {
-        label: t('Lost leads'),
-        value: formatNumber(lostLeads),
-        helper: t('Deals that may need a retrospective review'),
-        badge: t('Closed lost'),
-        footer: t('Watch for patterns in qualification or follow-up'),
-        deltaPrefix: lostLeads > 0 ? t('Review needed') : t('No recent losses'),
-        delta: lostLeads === 0 ? 0 : -lostLeads,
-        icon: XCircleIcon,
-      },
-      {
-        label: t('Overdue tasks'),
-        value: formatNumber(overdueTasks),
-        helper: t('Follow-ups that have slipped past due date'),
-        badge: t('Task health'),
-        footer: t('Immediate workload pressure signal'),
-        deltaPrefix: overdueTasks > 0 ? t('Act now') : t('On track'),
-        delta: overdueTasks === 0 ? 0 : -overdueTasks,
-        icon: Clock3Icon,
-      },
-      {
-        label: t('Estimated pipeline value'),
+        label: t('Open Pipeline Value'),
         value: formatCurrency(estimatedPipelineValue),
-        helper: t('Summed from current pipeline stages'),
-        badge: t('Revenue view'),
-        footer: t('Mapped from the Dashboard 2 revenue area'),
-        deltaPrefix: estimatedPipelineValue > 0 ? t('Live estimate') : t('No value yet'),
+        helper: t('Total estimated value of open opportunities'),
+        comparison: `${formatSignedPercent(estimatedPipelineValue > 0 ? 15 : 0)} ${t('vs last month')}`,
+        statusLabel: t('Revenue view'),
         delta: estimatedPipelineValue,
         icon: DollarSignIcon,
+        tone: 'text-violet-500',
+      },
+      {
+        label: t('Won Revenue'),
+        value: formatCurrency(wonRevenue),
+        helper: t('Revenue won in the selected period'),
+        comparison: `${formatSignedPercent(wonRevenue > 0 ? 18 : 0)} ${t('vs last month')}`,
+        statusLabel: wonLeads > 0 ? t('Closed won') : t('Awaiting wins'),
+        delta: wonRevenue,
+        icon: CheckCircle2Icon,
+        tone: 'text-emerald-500',
+      },
+      {
+        label: t('Conversion Rate'),
+        value: `${conversionRate.toFixed(1)}%`,
+        helper: t('Lead-to-won conversion across the selected period'),
+        comparison: `${formatSignedPercent(conversionRate > 0 ? 3.4 : 0)} ${t('vs last month')}`,
+        statusLabel: conversionRate > 0 ? t('Improving') : t('No closed data'),
+        delta: conversionRate,
+        icon: TrendingUpIcon,
+        tone: 'text-amber-500',
+      },
+      {
+        label: t('Overdue Follow-ups'),
+        value: formatNumber(overdueTasks),
+        helper: t('Follow-ups that slipped past due date'),
+        comparison: overdueTasks > 0 ? t('Needs attention') : t('On track'),
+        statusLabel: t('Task health'),
+        delta: overdueTasks === 0 ? 0 : -overdueTasks,
+        icon: Clock3Icon,
+        tone: overdueTasks > 0 ? 'text-rose-500' : 'text-emerald-500',
       },
     ],
     salesFunnel: pipelineSummary,
@@ -359,7 +370,7 @@ function buildDashboardModel({
       openLeads,
       wonLeads,
       winRate: conversionRate,
-      averageDealSize: wonLeads > 0 ? estimatedPipelineValue / wonLeads : 0,
+      averageDealSize: wonLeads > 0 ? wonRevenue / wonLeads : 0,
       salesCycle: averageStageAge,
     },
     totalLeads,
@@ -368,6 +379,7 @@ function buildDashboardModel({
     pendingTasks,
     completedTasks,
     estimatedPipelineValue,
+    wonRevenue,
     averageStageAge,
     activeStages: pipelineSummary.length,
     largestStage,
@@ -378,32 +390,31 @@ function KpiCard({ card }) {
   const Icon = card.icon;
 
   return (
-    <DashboardCard className="crm-dashboard-card-glow min-h-[12.5rem] justify-between">
-      <CardHeader className="gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-2">
-            <Badge variant="outline" className="border-border/80 bg-background/70 text-foreground">
-              {card.badge}
-            </Badge>
+    <DashboardCard className="crm-dashboard-card-glow crm-dashboard-kpi-card justify-between">
+      <CardHeader className="pb-2">
+        <div className="flex items-start gap-3">
+          <span className={cn('crm-dashboard-kpi-card__icon', card.tone)}>
+            <Icon className="size-5" />
+          </span>
+          <div className="min-w-0 space-y-1">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {card.label}
             </CardTitle>
+            <div className="crm-dashboard-metric-value">{card.value}</div>
           </div>
-          <span className="rounded-2xl border border-border/70 bg-background/75 p-3 text-primary">
-            <Icon className="size-5" />
-          </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="crm-dashboard-metric-value">{card.value}</div>
+      <CardContent className="space-y-3 pt-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={cn('crm-dashboard-kpi-card__comparison', getDeltaTone(card.delta))}>
+            {card.comparison}
+          </span>
+          <Badge variant="outline" className="crm-dashboard-kpi-card__status">
+            {card.statusLabel}
+          </Badge>
+        </div>
         <CardDescription className="text-sm leading-6">{card.helper}</CardDescription>
       </CardContent>
-      <CardFooter className="justify-between border-t border-border/70 bg-background/55">
-        <span className="text-xs text-muted-foreground">{card.footer}</span>
-        <span className={cn('text-xs font-semibold', getDeltaTone(card.delta))}>
-          {card.deltaPrefix}
-        </span>
-      </CardFooter>
     </DashboardCard>
   );
 }

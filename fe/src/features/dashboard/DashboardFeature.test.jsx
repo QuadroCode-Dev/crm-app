@@ -59,8 +59,10 @@ describe('Dashboard feature', () => {
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('New leads')).toBeInTheDocument();
     expect(screen.getByText('Open leads')).toBeInTheDocument();
-    expect(screen.getByText('Won leads')).toBeInTheDocument();
-    expect(screen.getByText('Estimated pipeline value')).toBeInTheDocument();
+    expect(screen.getByText('Open Pipeline Value')).toBeInTheDocument();
+    expect(screen.getByText('Won Revenue')).toBeInTheDocument();
+    expect(screen.getByText('Conversion Rate')).toBeInTheDocument();
+    expect(screen.getByText('Overdue Follow-ups')).toBeInTheDocument();
   });
 
   it('renders quick actions with the expected destinations', async () => {
