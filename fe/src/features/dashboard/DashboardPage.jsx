@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 import {
   AlertTriangleIcon,
   ArrowRightIcon,
@@ -90,6 +90,14 @@ const FALLBACK_LOST_REASONS = [
   { label: 'Chose competitor', count: 4, percent: 13 },
 ];
 
+const SALES_FUNNEL_STAGE_ORDER = [
+  'New Lead',
+  'Contacted',
+  'Qualified',
+  'Proposal Sent',
+  'Won',
+];
+
 function formatCurrency(value) {
   return currencyFormatter.format(value || 0);
 }
@@ -131,6 +139,57 @@ function getTaskBadgeClass(isOverdue) {
     : 'border-transparent bg-[color-mix(in_srgb,var(--crm-color-primary)_14%,transparent)] text-primary';
 }
 
+function buildSalesFunnelRows(pipelineSummary) {
+  if (pipelineSummary.length === 0) {
+    return [];
+  }
+
+  const stageMap = new Map(
+    pipelineSummary.map((stage) => [
+      (stage.stageName ?? stage.stage)?.toLowerCase(),
+      {
+        stageName: stage.stageName ?? stage.stage,
+        leadCount: Number(stage.leadCount ?? stage.count) || 0,
+      },
+    ]),
+  );
+  const orderedStageNames = [
+    ...SALES_FUNNEL_STAGE_ORDER,
+    ...pipelineSummary
+      .map((stage) => stage.stageName ?? stage.stage)
+      .filter((stageName) => {
+        return (
+          stageName &&
+          !SALES_FUNNEL_STAGE_ORDER.some(
+            (orderedStageName) => orderedStageName.toLowerCase() === stageName.toLowerCase(),
+          )
+        );
+      }),
+  ];
+
+  const rows = orderedStageNames.map((stageName) => {
+    const stage = stageMap.get(stageName.toLowerCase());
+
+    return {
+      stageName,
+      leadCount: stage?.leadCount || 0,
+    };
+  });
+
+  return rows.map((stage, index) => {
+    const nextStage = rows[index + 1];
+    const conversionToNext =
+      nextStage && stage.leadCount > 0 ? (nextStage.leadCount / stage.leadCount) * 100 : null;
+
+    return {
+      ...stage,
+      nextStageName: nextStage?.stageName || null,
+      conversionToNext,
+      dropOffCount: nextStage ? Math.max(stage.leadCount - nextStage.leadCount, 0) : 0,
+    };
+  });
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
@@ -147,7 +206,7 @@ function buildDashboardModel({
   const pendingTasks = Number(tasksSummary.pendingTasks) || 0;
   const completedTasks = Number(tasksSummary.completedTasks) || 0;
   const estimatedPipelineValue = pipelineSummary.reduce(
-    (sum, stage) => sum + (Number(stage.totalEstimatedValue) || 0),
+    (sum, stage) => sum + (Number(stage.totalEstimatedValue ?? stage.value) || 0),
     0,
   );
   const wonRevenue = leadsBySource.reduce(
@@ -202,10 +261,11 @@ function buildDashboardModel({
     .sort((left, right) => (Number(right.totalLeads) || 0) - (Number(left.totalLeads) || 0))
     .slice(0, 4);
   const pipelineValueChartData = pipelineSummary.map((stage) => ({
-    stageName: stage.stageName,
-    value: Number(stage.totalEstimatedValue) || 0,
-    leadCount: Number(stage.leadCount) || 0,
+    stageName: stage.stageName ?? stage.stage,
+    value: Number(stage.totalEstimatedValue ?? stage.value) || 0,
+    leadCount: Number(stage.leadCount ?? stage.count) || 0,
   }));
+  const salesFunnelRows = buildSalesFunnelRows(pipelineSummary);
   const leadsNeedingAttention = leads.filter((lead) => {
     const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
 
@@ -356,7 +416,7 @@ function buildDashboardModel({
         tone: overdueTasks > 0 ? 'text-rose-500' : 'text-emerald-500',
       },
     ],
-    salesFunnel: pipelineSummary,
+    salesFunnel: salesFunnelRows,
     recentLeadActivity,
     upcomingTasks,
     leadSources,
@@ -499,6 +559,14 @@ function QuickActionsCard({ t }) {
 }
 
 function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
+  const hasValueData = chartData.some((item) => Number(item.value) > 0);
+  const highestValueStage = chartData.reduce((current, item) => {
+    if (!current || Number(item.value) > Number(current.value)) {
+      return item;
+    }
+
+    return current;
+  }, null);
   const chartConfig = {
     value: {
       label: t('Estimated value'),
@@ -510,33 +578,22 @@ function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
     <DashboardCard className="min-h-[24rem]">
       <CardHeader className="gap-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-2">
-            <Badge variant="outline" className="border-border/80 bg-background/70 text-foreground">
-              {t('Pipeline value chart')}
-            </Badge>
-            <CardTitle className="text-2xl font-semibold">
-              {formatCurrency(estimatedPipelineValue)}
-            </CardTitle>
+          <div>
+            <CardTitle>{t('Pipeline Value by Stage')}</CardTitle>
             <CardDescription>
-              {t('Dashboard 2 revenue space adapted to stage-by-stage pipeline value.')}
+              {t('Where estimated deal value is sitting across pipeline stages')}
             </CardDescription>
           </div>
           <CardAction className="static">
-            <RouterLink
-              to="/pipeline"
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'rounded-full')}
-            >
-              {t('Open pipeline')}
-              <ArrowRightIcon className="size-4" />
-            </RouterLink>
+            <Badge variant="outline">{t('This Month')}</Badge>
           </CardAction>
         </div>
       </CardHeader>
       <CardContent className="pt-2">
-        {chartData.length === 0 ? (
+        {!hasValueData ? (
           <EmptyState
-            title={t('No pipeline data yet')}
-            description={t('Stage totals will appear here as leads start moving through the CRM.')}
+            title={t('No pipeline value yet')}
+            description={t('Estimated deal value by stage will appear here once pipeline value is available.')}
           />
         ) : (
           <ChartContainer
@@ -544,7 +601,7 @@ function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
             config={chartConfig}
             initialDimension={{ width: 720, height: 280 }}
           >
-            <BarChart data={chartData} margin={{ left: 8, right: 8, top: 12 }}>
+            <BarChart data={chartData} margin={{ left: 8, right: 8, top: 26, bottom: 8 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 axisLine={false}
@@ -579,11 +636,29 @@ function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
                 dataKey="value"
                 fill="var(--color-value)"
                 radius={[14, 14, 4, 4]}
-              />
+              >
+                <LabelList
+                  dataKey="value"
+                  position="top"
+                  formatter={(value) => formatCompactCurrency(Number(value) || 0)}
+                  className="fill-foreground text-[0.72rem] font-semibold"
+                />
+              </Bar>
             </BarChart>
           </ChartContainer>
         )}
       </CardContent>
+      <CardFooter className="justify-between border-t border-border/70 bg-background/55">
+        <span className="text-xs text-muted-foreground">
+          {t('Total Pipeline Value')}{' '}
+          <strong className="text-primary">{formatCurrency(estimatedPipelineValue)}</strong>
+        </span>
+        {highestValueStage && Number(highestValueStage.value) > 0 ? (
+          <span className="text-xs text-muted-foreground">
+            {t('Highest value')}: {highestValueStage.stageName}
+          </span>
+        ) : null}
+      </CardFooter>
     </DashboardCard>
   );
 }
@@ -600,48 +675,103 @@ function DashboardPeriodControls({ t }) {
   );
 }
 
-function SalesFunnelCard({ funnelRows, totalLeads, t }) {
+function SalesFunnelCard({ funnelRows, t }) {
   const maxLeadCount = Math.max(...funnelRows.map((stage) => Number(stage.leadCount) || 0), 1);
+  const transitionRows = funnelRows.filter((stage) => stage.conversionToNext !== null);
+  const bottleneckStage = transitionRows.reduce((current, stage) => {
+    if (!current || stage.conversionToNext < current.conversionToNext) {
+      return stage;
+    }
+
+    return current;
+  }, null);
+  const overallConversion =
+    funnelRows.length > 1 && funnelRows[0].leadCount > 0
+      ? (funnelRows.at(-1).leadCount / funnelRows[0].leadCount) * 100
+      : 0;
 
   return (
-    <DashboardCard className="min-h-[18rem]">
+    <DashboardCard className="min-h-[20rem]">
       <CardHeader className="gap-2">
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle>{t('Sales Funnel')}</CardTitle>
-            <CardDescription>{t('Where leads are moving or getting stuck')}</CardDescription>
+            <CardDescription>
+              {t('Lead volume by stage and conversion into the next step')}
+            </CardDescription>
           </div>
           <Badge variant="outline">{t('This Month')}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         {funnelRows.length === 0 ? (
           <EmptyState
             title={t('No funnel data yet')}
             description={t('Pipeline stages will appear here once leads are assigned to stages.')}
           />
         ) : (
-          funnelRows.map((stage) => {
-            const leadCount = Number(stage.leadCount) || 0;
-            const stageShare = totalLeads > 0 ? Math.round((leadCount / totalLeads) * 100) : 0;
-            const width = Math.max(8, Math.round((leadCount / maxLeadCount) * 100));
+          <div className="crm-dashboard-funnel">
+            {funnelRows.map((stage) => {
+              const width = Math.max(8, Math.round((stage.leadCount / maxLeadCount) * 100));
+              const conversion =
+                stage.conversionToNext === null
+                  ? null
+                  : `${stage.conversionToNext.toFixed(1).replace(/\.0$/, '')}%`;
+              const isBottleneck =
+                bottleneckStage?.stageName === stage.stageName && transitionRows.length > 1;
 
-            return (
-              <div key={stage.stageName} className="crm-dashboard-funnel-row">
-                <span>{stage.stageName}</span>
-                <div className="crm-dashboard-funnel-row__bar">
-                  <div style={{ width: `${width}%` }} />
+              return (
+                <div
+                  key={stage.stageName}
+                  className={cn(
+                    'crm-dashboard-funnel-row',
+                    isBottleneck && 'crm-dashboard-funnel-row--bottleneck',
+                  )}
+                >
+                  <div className="crm-dashboard-funnel-row__label">
+                    <span>{stage.stageName}</span>
+                    <strong>{formatNumber(stage.leadCount)}</strong>
+                  </div>
+                  <div
+                    className="crm-dashboard-funnel-row__bar"
+                    aria-label={`${stage.stageName} ${formatNumber(stage.leadCount)} ${t('leads')}`}
+                  >
+                    <div style={{ width: `${width}%` }} />
+                  </div>
+                  <div className="crm-dashboard-funnel-row__conversion">
+                    {stage.nextStageName ? (
+                      <>
+                        <span>
+                          {stage.stageName} {'->'} {stage.nextStageName}
+                        </span>
+                        <strong>{conversion}</strong>
+                      </>
+                    ) : (
+                      <>
+                        <span>{t('Final won stage')}</span>
+                        <strong>{formatNumber(stage.leadCount)}</strong>
+                      </>
+                    )}
+                    {isBottleneck ? (
+                      <Badge variant="outline" className="crm-dashboard-funnel-row__badge">
+                        {t('Bottleneck')}
+                      </Badge>
+                    ) : null}
+                  </div>
                 </div>
-                <strong>{formatNumber(leadCount)} ({stageShare}%)</strong>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </CardContent>
       <CardFooter className="justify-between border-t border-border/70 bg-background/55">
-        <span className="text-xs text-muted-foreground">{t('Overall conversion rate')}</span>
+        <span className="text-xs text-muted-foreground">
+          {bottleneckStage
+            ? `${t('Largest drop-off')}: ${bottleneckStage.stageName} ${t('to')} ${bottleneckStage.nextStageName}`
+            : t('Overall conversion rate')}
+        </span>
         <strong className="text-xs text-emerald-500">
-          {totalLeads > 0 ? `${Math.round(((funnelRows.at(-1)?.leadCount || 0) / totalLeads) * 100)}%` : '0%'}
+          {`${overallConversion.toFixed(1).replace(/\.0$/, '')}%`}
         </strong>
       </CardFooter>
     </DashboardCard>
@@ -1270,7 +1400,6 @@ function DashboardPage() {
             <section className="grid gap-4 xl:grid-cols-3">
               <SalesFunnelCard
                 funnelRows={dashboardModel.salesFunnel}
-                totalLeads={dashboardModel.totalLeads}
                 t={t}
               />
               <LeadSourcesCard leadSources={dashboardModel.leadSources} t={t} />

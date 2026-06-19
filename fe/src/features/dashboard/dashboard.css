@@ -122,14 +122,36 @@
 
 .crm-dashboard-funnel-row {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(7rem, 8.5rem) minmax(8rem, 1fr) minmax(8.5rem, auto);
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
   color: var(--crm-color-text-muted);
   font-size: 0.86rem;
 }
 
-.crm-dashboard-funnel-row strong {
+.crm-dashboard-funnel-row--bottleneck {
+  color: color-mix(in srgb, var(--crm-color-warning) 72%, var(--crm-color-text-muted));
+}
+
+.crm-dashboard-funnel-row__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.crm-dashboard-funnel-row__label span {
+  overflow: hidden;
+  color: var(--crm-color-text);
+  font-weight: 720;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-dashboard-funnel-row__label strong,
+.crm-dashboard-funnel-row__conversion strong {
   color: var(--crm-color-text);
   font-size: 0.82rem;
   white-space: nowrap;
@@ -150,6 +172,34 @@
     color-mix(in srgb, var(--crm-color-primary) 88%, white),
     color-mix(in srgb, var(--crm-color-accent) 74%, white)
   );
+}
+
+.crm-dashboard-funnel {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.crm-dashboard-funnel-row__conversion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  color: var(--crm-color-text-muted);
+  font-size: 0.78rem;
+}
+
+.crm-dashboard-funnel-row__conversion span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-dashboard-funnel-row__badge {
+  grid-column: 1 / -1;
+  justify-self: start;
+  border-color: color-mix(in srgb, var(--crm-color-warning) 45%, var(--crm-color-border));
+  color: var(--crm-color-warning);
 }
 
 .crm-dashboard-quick-action {
@@ -249,5 +299,13 @@
 
   .crm-dashboard-funnel-row {
     grid-template-columns: 1fr;
+  }
+
+  .crm-dashboard-funnel-row__conversion {
+    grid-template-columns: 1fr auto;
+  }
+
+  .crm-dashboard-funnel-row__conversion span {
+    white-space: normal;
   }
 }
