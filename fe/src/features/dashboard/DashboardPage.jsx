@@ -190,6 +190,37 @@ function buildSalesFunnelRows(pipelineSummary) {
   });
 }
 
+function buildLeadSourceRows(leadsBySource) {
+  return [...leadsBySource]
+    .map((source) => {
+      const totalLeads = Number(source.totalLeads ?? source.leads) || 0;
+      const wonLeads = Number(source.wonLeads ?? source.won) || 0;
+      const revenue =
+        Number(source.wonValue ?? source.wonRevenue ?? source.revenue ?? source.estimatedValue) || 0;
+      const conversionRate = totalLeads > 0 ? (wonLeads / totalLeads) * 100 : 0;
+
+      return {
+        source: source.source || source.sourceName || 'Unspecified',
+        totalLeads,
+        wonLeads,
+        conversionRate,
+        revenue,
+      };
+    })
+    .sort((left, right) => {
+      if (right.revenue !== left.revenue) {
+        return right.revenue - left.revenue;
+      }
+
+      if (right.conversionRate !== left.conversionRate) {
+        return right.conversionRate - left.conversionRate;
+      }
+
+      return right.totalLeads - left.totalLeads;
+    })
+    .slice(0, 6);
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
@@ -257,9 +288,7 @@ function buildDashboardModel({
         dayjs(left.dueDateUtc).valueOf() - dayjs(right.dueDateUtc).valueOf(),
     )
     .slice(0, 5);
-  const leadSources = [...leadsBySource]
-    .sort((left, right) => (Number(right.totalLeads) || 0) - (Number(left.totalLeads) || 0))
-    .slice(0, 4);
+  const leadSources = buildLeadSourceRows(leadsBySource);
   const pipelineValueChartData = pipelineSummary.map((stage) => ({
     stageName: stage.stageName ?? stage.stage,
     value: Number(stage.totalEstimatedValue ?? stage.value) || 0,
@@ -779,59 +808,110 @@ function SalesFunnelCard({ funnelRows, t }) {
 }
 
 function LeadSourcesCard({ leadSources, t }) {
-  const maxLeads = Math.max(...leadSources.map((item) => item.totalLeads || 0), 1);
+  const maxRevenue = Math.max(...leadSources.map((item) => item.revenue || 0), 0);
+  const maxConversionRate = Math.max(
+    ...leadSources.map((item) => item.conversionRate || 0),
+    0,
+  );
+  const topLeadSource = [...leadSources].sort(
+    (left, right) => right.totalLeads - left.totalLeads,
+  )[0];
+  const topQualitySource = [...leadSources].sort(
+    (left, right) => right.conversionRate - left.conversionRate,
+  )[0];
 
   return (
     <DashboardCard className="min-h-[24rem]">
       <CardHeader className="gap-2">
-        <Badge variant="outline" className="w-fit border-border/80 bg-background/70 text-foreground">
-          {t('Lead sources')}
-        </Badge>
-        <CardTitle className="text-xl font-semibold">
-          {t('Where open pipeline volume is coming from')}
-        </CardTitle>
-        <CardDescription>
-          {t('Adapted from the Dashboard 2 channel widget using CRM lead source reporting.')}
-        </CardDescription>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>{t('Lead Source Performance')}</CardTitle>
+            <CardDescription>
+              {t('Ranked by won revenue, conversion quality, and total lead volume')}
+            </CardDescription>
+          </div>
+          <CardAction className="static">
+            <Badge variant="outline">{t('This Month')}</Badge>
+          </CardAction>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {leadSources.length === 0 ? (
           <EmptyState
             title={t('No source data yet')}
             description={t('Lead source performance will appear here once the CRM has reportable data.')}
           />
         ) : (
-          leadSources.map((source) => {
-            const totalLeads = Number(source.totalLeads) || 0;
-            const progress = Math.max(8, Math.round((totalLeads / maxLeads) * 100));
+          <>
+            <div className="crm-dashboard-source-header">
+              <span>{t('Source')}</span>
+              <span>{t('Leads')}</span>
+              <span>{t('Won')}</span>
+              <span>{t('Conv. %')}</span>
+              <span>{t('Revenue')}</span>
+            </div>
+            <div className="space-y-3">
+              {leadSources.map((source) => {
+                const revenueProgress =
+                  maxRevenue > 0 ? Math.max(5, Math.round((source.revenue / maxRevenue) * 100)) : 0;
+                const conversionProgress =
+                  maxConversionRate > 0
+                    ? Math.max(5, Math.round((source.conversionRate / maxConversionRate) * 100))
+                    : 0;
 
-            return (
-              <div key={source.source} className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-foreground">{source.source || t('Unspecified')}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatNumber(source.openLeads || 0)} {t('open')} | {formatNumber(source.wonLeads || 0)} {t('won')}
-                    </p>
+                return (
+                  <div key={source.source} className="crm-dashboard-source-row">
+                    <div className="crm-dashboard-source-row__summary">
+                      <span className="crm-dashboard-source-row__dot" aria-hidden="true" />
+                      <strong>{t(source.source)}</strong>
+                    </div>
+                    <span>{formatNumber(source.totalLeads)}</span>
+                    <span>{formatNumber(source.wonLeads)}</span>
+                    <span>{`${source.conversionRate.toFixed(1).replace(/\.0$/, '')}%`}</span>
+                    <span className="font-semibold text-foreground">
+                      {formatCompactCurrency(source.revenue)}
+                    </span>
+                    <div className="crm-dashboard-source-row__bars">
+                      <div className="crm-dashboard-source-row__bar-group">
+                        <span>{t('Revenue')}</span>
+                        <div className="crm-dashboard-progress-track">
+                          <div
+                            className="crm-dashboard-progress-fill"
+                            style={{ width: `${revenueProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="crm-dashboard-source-row__bar-group crm-dashboard-source-row__bar-group--quality">
+                        <span>{t('Quality')}</span>
+                        <div className="crm-dashboard-progress-track">
+                          <div
+                            className="crm-dashboard-progress-fill"
+                            style={{ width: `${conversionProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">{formatNumber(totalLeads)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatCurrency(Number(source.estimatedValue) || 0)}
-                    </p>
-                  </div>
-                </div>
-                <div className="crm-dashboard-progress-track">
-                  <div
-                    className="crm-dashboard-progress-fill"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })
+                );
+              })}
+            </div>
+          </>
         )}
       </CardContent>
+      {leadSources.length > 0 ? (
+        <CardFooter className="justify-between border-t border-border/70 bg-background/55">
+          <span className="text-xs text-muted-foreground">
+            {topLeadSource
+              ? `${t('Most leads')}: ${t(topLeadSource.source)}`
+              : t('Most leads')}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {topQualitySource
+              ? `${t('Best conversion')}: ${t(topQualitySource.source)}`
+              : t('Best conversion')}
+          </span>
+        </CardFooter>
+      ) : null}
     </DashboardCard>
   );
 }

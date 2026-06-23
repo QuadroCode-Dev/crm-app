@@ -180,6 +180,53 @@ describe('Dashboard feature', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders lead source performance with ranked marketing metrics', async () => {
+    authenticate();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/reports/leads-by-source`, () =>
+        HttpResponse.json([
+          { source: 'Google Ads', leads: 120, won: 18, revenue: 42000 },
+          { source: 'Facebook', leads: 200, won: 10, revenue: 18000 },
+          { source: 'Website Form', leads: 75, won: 14, revenue: 31000 },
+          { source: 'Referral', leads: 30, won: 9, revenue: 26000 },
+        ]),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Lead Source Performance')).toBeInTheDocument();
+    expect(await screen.findByText('Google Ads')).toBeInTheDocument();
+    expect(screen.getByText('Website Form')).toBeInTheDocument();
+    expect(screen.getAllByText('Referral').length).toBeGreaterThan(0);
+    expect(screen.getByText('18.7%')).toBeInTheDocument();
+    expect(screen.getByText('30%')).toBeInTheDocument();
+    expect(screen.getByText(/Most leads: Facebook/)).toBeInTheDocument();
+    expect(screen.getByText(/Best conversion: Referral/)).toBeInTheDocument();
+  });
+
+  it('handles lead source rows with zero leads safely', async () => {
+    authenticate();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/reports/leads-by-source`, () =>
+        HttpResponse.json([
+          { source: 'Manual Entry', leads: 0, won: 0, revenue: 0 },
+          { source: 'WhatsApp', leads: 12, won: 3, revenue: 9000 },
+        ]),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Lead Source Performance')).toBeInTheDocument();
+    expect(await screen.findByText('Manual Entry')).toBeInTheDocument();
+    expect(screen.getByText('WhatsApp')).toBeInTheDocument();
+    expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
+    expect(screen.getByText('25%')).toBeInTheDocument();
+  });
+
   it('renders quick actions with the expected destinations', async () => {
     authenticate();
 
