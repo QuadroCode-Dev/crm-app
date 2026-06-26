@@ -281,6 +281,122 @@ function buildAverageFirstResponseTime(leads) {
   };
 }
 
+function getLeadStageAgeDays(lead) {
+  const explicitAge = Number(
+    lead.daysInCurrentStage ??
+      lead.stageAgeDays ??
+      lead.currentStageAgeDays ??
+      lead.daysSinceStageChange,
+  );
+
+  if (Number.isFinite(explicitAge) && explicitAge >= 0) {
+    return explicitAge;
+  }
+
+  const stageEnteredAt = lead.stageEnteredAtUtc ?? lead.currentStageEnteredAtUtc;
+
+  if (stageEnteredAt && dayjs(stageEnteredAt).isValid()) {
+    return dayjs().diff(dayjs(stageEnteredAt), 'day');
+  }
+
+  if (lead.createdAtUtc && dayjs(lead.createdAtUtc).isValid()) {
+    return dayjs().diff(dayjs(lead.createdAtUtc), 'day');
+  }
+
+  return 0;
+}
+
+function buildLeadsNeedingAttentionRows({ leads, overdueTaskItems, t }) {
+  const overdueTaskLeadIds = new Set(
+    overdueTaskItems.map((task) => task.leadId).filter(Boolean),
+  );
+
+  return leads
+    .map((lead) => {
+      const status = lead.status?.toLowerCase();
+      const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
+      const daysInactive = updatedAt?.isValid() ? dayjs().diff(updatedAt, 'day') : 0;
+      const stageAgeDays = getLeadStageAgeDays(lead);
+      const estimatedValue = Number(lead.estimatedCost ?? lead.value) || 0;
+      const isClosed = status === 'won' || status === 'lost';
+      const issueCandidates = [
+        {
+          active: !isClosed && overdueTaskLeadIds.has(lead.id),
+          issue: t('Follow-up overdue'),
+          type: 'overdue',
+          priority: 100,
+          actionLabel: t('Create task'),
+          actionTo: '/tasks',
+          tone: 'text-rose-500',
+        },
+        {
+          active: !isClosed && !lead.ownerName,
+          issue: t('Unassigned'),
+          type: 'unassigned',
+          priority: 90,
+          actionLabel: t('Assign'),
+          actionTo: `/leads/${lead.id}`,
+          tone: 'text-primary',
+        },
+        {
+          active: !isClosed && status === 'new',
+          issue: t('Not contacted'),
+          type: 'not-contacted',
+          priority: 80,
+          actionLabel: t('Open lead'),
+          actionTo: `/leads/${lead.id}`,
+          tone: 'text-amber-500',
+        },
+        {
+          active: !isClosed && estimatedValue >= 50000 && daysInactive >= 7,
+          issue: t('High-value inactive'),
+          type: 'high-value-inactive',
+          priority: 70,
+          actionLabel: t('Open lead'),
+          actionTo: `/leads/${lead.id}`,
+          tone: 'text-orange-500',
+        },
+        {
+          active: !isClosed && stageAgeDays >= 10,
+          issue: `${t('Stuck in stage')} ${stageAgeDays} ${t('days')}`,
+          type: 'stuck',
+          priority: 60,
+          actionLabel: t('Open lead'),
+          actionTo: `/leads/${lead.id}`,
+          tone: 'text-violet-500',
+        },
+      ];
+      const topIssue = issueCandidates.find((item) => item.active);
+
+      if (!topIssue) {
+        return null;
+      }
+
+      return {
+        id: lead.id,
+        lead: lead.title || lead.contactName || t('Untitled lead'),
+        stage: lead.stageName || t('Unassigned'),
+        value: estimatedValue,
+        owner: lead.ownerName || t('Unassigned'),
+        issue: topIssue.issue,
+        issueType: topIssue.type,
+        priority: topIssue.priority,
+        actionLabel: topIssue.actionLabel,
+        actionTo: topIssue.actionTo,
+        tone: topIssue.tone,
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => {
+      if (right.priority !== left.priority) {
+        return right.priority - left.priority;
+      }
+
+      return right.value - left.value;
+    })
+    .slice(0, 6);
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
@@ -370,14 +486,10 @@ function buildDashboardModel({
     leadCount: Number(stage.leadCount ?? stage.count) || 0,
   }));
   const salesFunnelRows = buildSalesFunnelRows(pipelineSummary);
-  const leadsNeedingAttention = leads.filter((lead) => {
-    const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
-
-    return (
-      lead.isDuplicateWarning ||
-      lead.status?.toLowerCase() === 'new' ||
-      (updatedAt && dayjs().diff(updatedAt, 'day') >= 7)
-    );
+  const leadsNeedingAttention = buildLeadsNeedingAttentionRows({
+    leads,
+    overdueTaskItems,
+    t,
   });
   const trendRows = Array.from({ length: 6 }, (_, index) => {
     const day = dayjs().subtract(5 - index, 'day');
@@ -1250,7 +1362,7 @@ function LeadsNeedingAttentionCard({ leads, t }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle>{t('Leads Needing Attention')}</CardTitle>
-            <CardDescription>{t('Stalled, new, or flagged leads that need a next step')}</CardDescription>
+            <CardDescription>{t('Prioritized work queue for leads that need a next step')}</CardDescription>
           </div>
           <RouterLink
             to="/leads"
@@ -1264,55 +1376,74 @@ function LeadsNeedingAttentionCard({ leads, t }) {
         {leads.length === 0 ? (
           <div className="px-6">
             <EmptyState
-              title={t('No attention needed')}
-              description={t('Leads that need owner review will appear here.')}
+              title={t('No urgent leads right now.')}
+              description={t('All visible opportunities are under control.')}
             />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="ps-6">{t('Lead')}</TableHead>
-                <TableHead>{t('Stage')}</TableHead>
-                <TableHead>{t('Value')}</TableHead>
-                <TableHead>{t('Issue')}</TableHead>
-                <TableHead className="pe-6 text-right">{t('Action')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leads.slice(0, 4).map((lead) => {
-                const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
-                const issue = lead.isDuplicateWarning
-                  ? t('Duplicate warning')
-                  : lead.status?.toLowerCase() === 'new'
-                    ? t('Not contacted')
-                    : updatedAt
-                      ? t('No activity 7+ days')
-                      : t('Needs review');
-
-                return (
+          <div className="crm-dashboard-attention-table">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="ps-6">{t('Lead')}</TableHead>
+                  <TableHead>{t('Stage')}</TableHead>
+                  <TableHead>{t('Value')}</TableHead>
+                  <TableHead>{t('Owner')}</TableHead>
+                  <TableHead>{t('Issue')}</TableHead>
+                  <TableHead className="pe-6 text-right">{t('Action')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
                   <TableRow key={lead.id}>
-                    <TableCell className="ps-6 font-medium">{lead.title}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{lead.stageName || t('Unassigned')}</Badge>
-                    </TableCell>
-                    <TableCell>{formatCurrency(Number(lead.estimatedCost) || 0)}</TableCell>
-                    <TableCell className="text-amber-500">{issue}</TableCell>
-                    <TableCell className="pe-6 text-right">
+                    <TableCell className="ps-6 font-medium">
                       <RouterLink
                         to={`/leads/${lead.id}`}
+                        className="crm-dashboard-table-link text-foreground"
+                      >
+                        {lead.lead}
+                      </RouterLink>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{lead.stage}</Badge>
+                    </TableCell>
+                    <TableCell>{formatCurrency(lead.value)}</TableCell>
+                    <TableCell className="text-muted-foreground">{lead.owner}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn('crm-dashboard-attention-issue', lead.tone)}
+                      >
+                        {lead.issue}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="pe-6 text-right">
+                      <RouterLink
+                        to={lead.actionTo}
                         className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                       >
-                        {t('Open lead')}
+                        {lead.actionLabel}
                       </RouterLink>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
+      <CardFooter className="justify-between border-t border-border/70 bg-background/55">
+        <span className="text-xs text-muted-foreground">
+          {t('Highest priority leads are shown first')}
+        </span>
+        <RouterLink
+          to="/leads"
+          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'rounded-full')}
+        >
+          {t('View all leads')}
+          <ArrowRightIcon className="size-4" />
+        </RouterLink>
+      </CardFooter>
     </DashboardCard>
   );
 }

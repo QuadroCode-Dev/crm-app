@@ -364,6 +364,171 @@ describe('Dashboard feature', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders leads needing attention as a prioritized action queue', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'attention-overdue',
+              title: 'Noor Clinic',
+              status: 'Open',
+              stageName: 'Qualified',
+              ownerName: 'Omar',
+              estimatedCost: 8000,
+              createdAtUtc: now.subtract(4, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+            {
+              id: 'attention-unassigned',
+              title: 'ABC Company',
+              status: 'Open',
+              stageName: 'New Lead',
+              ownerName: '',
+              estimatedCost: 2000,
+              createdAtUtc: now.subtract(1, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'hour').toISOString(),
+            },
+            {
+              id: 'attention-new',
+              title: 'Fresh Website Lead',
+              status: 'New',
+              stageName: 'New Lead',
+              ownerName: 'Lina',
+              estimatedCost: 3200,
+              createdAtUtc: now.subtract(2, 'hour').toISOString(),
+              updatedAtUtc: now.subtract(2, 'hour').toISOString(),
+            },
+            {
+              id: 'attention-high-value',
+              title: 'Ahmed Khaled',
+              status: 'Open',
+              stageName: 'Proposal Sent',
+              ownerName: 'Sara',
+              estimatedCost: 75000,
+              createdAtUtc: now.subtract(14, 'day').toISOString(),
+              updatedAtUtc: now.subtract(8, 'day').toISOString(),
+            },
+            {
+              id: 'attention-stuck',
+              title: 'Slow Moving Deal',
+              status: 'Open',
+              stageName: 'Contacted',
+              ownerName: 'Maya',
+              estimatedCost: 4500,
+              daysInCurrentStage: 12,
+              createdAtUtc: now.subtract(12, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'hour').toISOString(),
+            },
+          ],
+          total: 5,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'overdue-follow-up',
+              leadId: 'attention-overdue',
+              title: 'Call Noor Clinic',
+              status: 'Open',
+              priority: 'High',
+              dueDateUtc: now.subtract(1, 'day').toISOString(),
+              isCompleted: false,
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/reports/tasks-summary`, () =>
+        HttpResponse.json({
+          totalTasks: 1,
+          pendingTasks: 1,
+          completedTasks: 0,
+          overdueTasks: 1,
+          tasksByPriority: [],
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Leads Needing Attention')).toBeInTheDocument();
+    expect((await screen.findAllByText('Noor Clinic')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('ABC Company').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Fresh Website Lead').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Ahmed Khaled').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Slow Moving Deal').length).toBeGreaterThan(0);
+    expect(screen.getByText('Follow-up overdue')).toBeInTheDocument();
+    expect(screen.getAllByText('Unassigned').length).toBeGreaterThan(0);
+    expect(screen.getByText('Not contacted')).toBeInTheDocument();
+    expect(screen.getByText('High-value inactive')).toBeInTheDocument();
+    expect(screen.getByText('Stuck in stage 12 days')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Create task' })[0]).toHaveAttribute('href', '/tasks');
+    expect(screen.getByRole('link', { name: 'Assign' })).toHaveAttribute('href', '/leads/attention-unassigned');
+    expect(screen.getAllByRole('link', { name: 'Open lead' }).length).toBeGreaterThan(0);
+  });
+
+  it('shows an empty state when no leads need attention', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'healthy-lead',
+              title: 'Healthy pipeline lead',
+              status: 'Open',
+              stageName: 'Qualified',
+              ownerName: 'Sara',
+              estimatedCost: 12000,
+              daysInCurrentStage: 2,
+              createdAtUtc: now.subtract(2, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'hour').toISOString(),
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/reports/tasks-summary`, () =>
+        HttpResponse.json({
+          totalTasks: 0,
+          pendingTasks: 0,
+          completedTasks: 0,
+          overdueTasks: 0,
+          tasksByPriority: [],
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('No urgent leads right now.')).toBeInTheDocument();
+    expect(screen.getByText('All visible opportunities are under control.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'View all leads' })[0]).toHaveAttribute('href', '/leads');
+  });
+
   it('renders quick actions with the expected destinations', async () => {
     authenticate();
 

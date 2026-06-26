@@ -387,6 +387,20 @@
   text-decoration: underline;
 }
 
+.crm-dashboard-attention-table {
+  overflow-x: auto;
+}
+
+.crm-dashboard-attention-table table {
+  min-width: 48rem;
+}
+
+.crm-dashboard-attention-issue {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  white-space: nowrap;
+}
+
 .crm-dashboard-velocity-item {
   display: grid;
   align-content: start;
