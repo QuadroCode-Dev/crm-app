@@ -19,7 +19,6 @@ import {
   TargetIcon,
   TrendingUpIcon,
   UsersIcon,
-  XCircleIcon,
 } from 'lucide-react';
 import { getLeads } from '../../api/leadsApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
@@ -55,6 +54,11 @@ import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
 import useLanguage from '../../shared/hooks/useLanguage.js';
+import {
+  buildDashboardModel as buildDashboardDataModel,
+  DATE_RANGE_OPTIONS as DASHBOARD_DATE_RANGE_OPTIONS,
+  getDateRangeLabel as getDashboardDateRangeLabel,
+} from './dashboardData.js';
 import './dashboard.css';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -72,7 +76,7 @@ const compactCurrencyFormatter = new Intl.NumberFormat('en-US', {
 
 const numberFormatter = new Intl.NumberFormat('en-US');
 
-const DASHBOARD_SECTIONS = {
+export const LEGACY_DASHBOARD_SECTIONS = {
   kpiSummary: 'kpi-summary',
   salesFunnel: 'sales-funnel',
   pipelineValue: 'pipeline-value',
@@ -83,7 +87,7 @@ const DASHBOARD_SECTIONS = {
   todaysPriorities: 'todays-priorities',
 };
 
-const SALES_FUNNEL_STAGE_ORDER = [
+export const LEGACY_SALES_FUNNEL_STAGE_ORDER = [
   'New Lead',
   'Contacted',
   'Qualified',
@@ -91,7 +95,7 @@ const SALES_FUNNEL_STAGE_ORDER = [
   'Won',
 ];
 
-const DATE_RANGE_OPTIONS = [
+export const LEGACY_DATE_RANGE_OPTIONS = [
   { id: 'today', label: 'Today' },
   { id: 'this-week', label: 'This Week' },
   { id: 'this-month', label: 'This Month' },
@@ -99,26 +103,14 @@ const DATE_RANGE_OPTIONS = [
   { id: 'custom', label: 'Custom' },
 ];
 
-function formatCurrency(value) {
-  return currencyFormatter.format(value || 0);
-}
-
-function formatCompactCurrency(value) {
-  return compactCurrencyFormatter.format(value || 0);
-}
-
-function formatNumber(value) {
-  return numberFormatter.format(value || 0);
-}
-
-function formatSignedPercent(value) {
+export function legacyFormatSignedPercent(value) {
   const absoluteValue = Math.abs(value || 0).toFixed(1).replace(/\.0$/, '');
   const prefix = value > 0 ? '+' : value < 0 ? '-' : '';
 
   return `${prefix}${absoluteValue}%`;
 }
 
-function formatDurationFromMinutes(value) {
+export function legacyFormatDurationFromMinutes(value) {
   const totalMinutes = Math.max(0, Math.round(Number(value) || 0));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -132,6 +124,18 @@ function formatDurationFromMinutes(value) {
   }
 
   return `${hours}h ${minutes}m`;
+}
+
+function formatCurrency(value) {
+  return currencyFormatter.format(value || 0);
+}
+
+function formatCompactCurrency(value) {
+  return compactCurrencyFormatter.format(value || 0);
+}
+
+function formatNumber(value) {
+  return numberFormatter.format(value || 0);
 }
 
 function formatPreviewDate(value) {
@@ -156,7 +160,21 @@ function getTaskBadgeClass(isOverdue) {
     : 'border-transparent bg-[color-mix(in_srgb,var(--crm-color-primary)_14%,transparent)] text-primary';
 }
 
-function buildSalesFunnelRows(pipelineSummary) {
+const DASHBOARD_ICON_MAP = {
+  alert: AlertTriangleIcon,
+  briefcase: BriefcaseBusinessIcon,
+  calendar: CalendarDaysIcon,
+  check: CheckCircle2Icon,
+  clock: Clock3Icon,
+  dollar: DollarSignIcon,
+  fallback: TargetIcon,
+  pipeline: FolderKanbanIcon,
+  target: TargetIcon,
+  trend: TrendingUpIcon,
+  users: UsersIcon,
+};
+
+export function buildLegacySalesFunnelRows(pipelineSummary) {
   if (pipelineSummary.length === 0) {
     return [];
   }
@@ -171,13 +189,13 @@ function buildSalesFunnelRows(pipelineSummary) {
     ]),
   );
   const orderedStageNames = [
-    ...SALES_FUNNEL_STAGE_ORDER,
+    ...LEGACY_SALES_FUNNEL_STAGE_ORDER,
     ...pipelineSummary
       .map((stage) => stage.stageName ?? stage.stage)
       .filter((stageName) => {
         return (
           stageName &&
-          !SALES_FUNNEL_STAGE_ORDER.some(
+          !LEGACY_SALES_FUNNEL_STAGE_ORDER.some(
             (orderedStageName) => orderedStageName.toLowerCase() === stageName.toLowerCase(),
           )
         );
@@ -207,7 +225,7 @@ function buildSalesFunnelRows(pipelineSummary) {
   });
 }
 
-function buildLeadSourceRows(leadsBySource) {
+export function buildLegacyLeadSourceRows(leadsBySource) {
   return [...leadsBySource]
     .map((source) => {
       const totalLeads = Number(source.totalLeads ?? source.leads) || 0;
@@ -238,7 +256,7 @@ function buildLeadSourceRows(leadsBySource) {
     .slice(0, 6);
 }
 
-function buildAverageFirstResponseTime(leads) {
+export function buildLegacyAverageFirstResponseTime(leads) {
   const responseTimes = leads
     .map((lead) => {
       const explicitMinutes = Number(
@@ -278,11 +296,11 @@ function buildAverageFirstResponseTime(leads) {
 
   return {
     minutes: averageMinutes,
-    label: formatDurationFromMinutes(averageMinutes),
+    label: legacyFormatDurationFromMinutes(averageMinutes),
   };
 }
 
-function getLeadStageAgeDays(lead) {
+export function getLegacyLeadStageAgeDays(lead) {
   const explicitAge = Number(
     lead.daysInCurrentStage ??
       lead.stageAgeDays ??
@@ -307,7 +325,7 @@ function getLeadStageAgeDays(lead) {
   return 0;
 }
 
-function buildLeadsNeedingAttentionRows({ leads, overdueTaskItems, t }) {
+export function buildLegacyLeadsNeedingAttentionRows({ leads, overdueTaskItems, t }) {
   const overdueTaskLeadIds = new Set(
     overdueTaskItems.map((task) => task.leadId).filter(Boolean),
   );
@@ -317,7 +335,7 @@ function buildLeadsNeedingAttentionRows({ leads, overdueTaskItems, t }) {
       const status = lead.status?.toLowerCase();
       const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
       const daysInactive = updatedAt?.isValid() ? dayjs().diff(updatedAt, 'day') : 0;
-      const stageAgeDays = getLeadStageAgeDays(lead);
+      const stageAgeDays = getLegacyLeadStageAgeDays(lead);
       const estimatedValue = Number(lead.estimatedCost ?? lead.value) || 0;
       const isClosed = status === 'won' || status === 'lost';
       const issueCandidates = [
@@ -398,13 +416,13 @@ function buildLeadsNeedingAttentionRows({ leads, overdueTaskItems, t }) {
     .slice(0, 6);
 }
 
-function getDateRangeLabel(dateRange, t) {
-  const option = DATE_RANGE_OPTIONS.find((item) => item.id === dateRange);
+export function getLegacyDateRangeLabel(dateRange, t) {
+  const option = LEGACY_DATE_RANGE_OPTIONS.find((item) => item.id === dateRange);
 
   return t(option?.label || 'This Month');
 }
 
-function getTrendBuckets(dateRange) {
+export function getLegacyTrendBuckets(dateRange) {
   const now = dayjs();
 
   if (dateRange === 'today') {
@@ -441,7 +459,7 @@ function getTrendBuckets(dateRange) {
   });
 }
 
-function isWithinTrendBucket(value, bucket) {
+export function isWithinLegacyTrendBucket(value, bucket) {
   if (!value) {
     return false;
   }
@@ -451,9 +469,9 @@ function isWithinTrendBucket(value, bucket) {
   return date.isValid() && !date.isBefore(bucket.start) && date.isBefore(bucket.end);
 }
 
-function buildTrendRows({ leads, dateRange }) {
-  return getTrendBuckets(dateRange).map((bucket) => {
-    const createdLeads = leads.filter((lead) => isWithinTrendBucket(lead.createdAtUtc, bucket));
+export function buildLegacyTrendRows({ leads, dateRange }) {
+  return getLegacyTrendBuckets(dateRange).map((bucket) => {
+    const createdLeads = leads.filter((lead) => isWithinLegacyTrendBucket(lead.createdAtUtc, bucket));
     const wonLeads = leads.filter((lead) => {
       const status = lead.status?.toLowerCase();
       const stageName = lead.stageName?.toLowerCase();
@@ -461,7 +479,7 @@ function buildTrendRows({ leads, dateRange }) {
 
       return (
         (status === 'won' || stageName === 'won') &&
-        isWithinTrendBucket(wonDate, bucket)
+        isWithinLegacyTrendBucket(wonDate, bucket)
       );
     });
     const wonRevenue = wonLeads.reduce(
@@ -484,7 +502,7 @@ function buildTrendRows({ leads, dateRange }) {
   });
 }
 
-function buildLostReasonRows(leads) {
+export function buildLegacyLostReasonRows(leads) {
   const reasonCounts = leads.reduce((counts, lead) => {
     const status = lead.status?.toLowerCase();
     const stageName = lead.stageName?.toLowerCase();
@@ -536,18 +554,18 @@ function buildLostReasonRows(leads) {
     .slice(0, 6);
 }
 
-function getOwnerKey(lead) {
+export function getLegacyOwnerKey(lead) {
   return lead.ownerUserId || lead.ownerId || lead.ownerName || '';
 }
 
-function getOwnerName(lead, fallback) {
+export function getLegacyOwnerName(lead, fallback) {
   return lead.ownerName || lead.ownerUserFullName || fallback;
 }
 
-function buildTeamPerformanceRows({ leads, tasks, t }) {
+export function buildLegacyTeamPerformanceRows({ leads, tasks, t }) {
   const leadById = new Map(leads.map((lead) => [lead.id, lead]));
   const teamMembers = leads.reduce((members, lead) => {
-    const ownerKey = getOwnerKey(lead);
+    const ownerKey = getLegacyOwnerKey(lead);
 
     if (!ownerKey) {
       return members;
@@ -555,7 +573,7 @@ function buildTeamPerformanceRows({ leads, tasks, t }) {
 
     const existingMember = members.get(ownerKey) || {
       id: ownerKey,
-      name: getOwnerName(lead, t('Unassigned')),
+      name: getLegacyOwnerName(lead, t('Unassigned')),
       assigned: 0,
       won: 0,
       revenue: 0,
@@ -606,7 +624,7 @@ function buildTeamPerformanceRows({ leads, tasks, t }) {
     }
 
     const relatedLead = task.leadId ? leadById.get(task.leadId) : null;
-    const ownerKey = task.assignedUserId || (relatedLead ? getOwnerKey(relatedLead) : '');
+    const ownerKey = task.assignedUserId || (relatedLead ? getLegacyOwnerKey(relatedLead) : '');
 
     if (!ownerKey || !teamMembers.has(ownerKey)) {
       return;
@@ -626,7 +644,7 @@ function buildTeamPerformanceRows({ leads, tasks, t }) {
       return {
         ...member,
         conversionRate: member.assigned > 0 ? (member.won / member.assigned) * 100 : 0,
-        avgResponseTime: formatDurationFromMinutes(averageResponseMinutes),
+        avgResponseTime: legacyFormatDurationFromMinutes(averageResponseMinutes),
       };
     })
     .sort((left, right) => {
@@ -639,7 +657,7 @@ function buildTeamPerformanceRows({ leads, tasks, t }) {
     .slice(0, 6);
 }
 
-function buildDashboardModel({
+export function buildLegacyDashboardModel({
   leads,
   leadsBySource,
   pipelineSummary,
@@ -681,7 +699,6 @@ function buildDashboardModel({
     );
   });
   const unassignedLeads = leads.filter((lead) => !lead.ownerName);
-  const highValueLeads = leads.filter((lead) => Number(lead.estimatedCost) >= 50000);
   const highValueProposals = leads.filter((lead) => {
     const stageName = lead.stageName?.toLowerCase() ?? '';
     const status = lead.status?.toLowerCase() ?? '';
@@ -706,7 +723,7 @@ function buildDashboardModel({
   const inactiveHighValueLeads = noActivityLeads.filter(
     (lead) => Number(lead.estimatedCost) >= 50000,
   );
-  const averageFirstResponseTime = buildAverageFirstResponseTime(leads);
+  const averageFirstResponseTime = buildLegacyAverageFirstResponseTime(leads);
   const averageStageAge =
     pipelineSummary.length > 0
       ? Math.round(
@@ -732,21 +749,21 @@ function buildDashboardModel({
         dayjs(left.dueDateUtc).valueOf() - dayjs(right.dueDateUtc).valueOf(),
     )
     .slice(0, 5);
-  const leadSources = buildLeadSourceRows(leadsBySource);
+  const leadSources = buildLegacyLeadSourceRows(leadsBySource);
   const pipelineValueChartData = pipelineSummary.map((stage) => ({
     stageName: stage.stageName ?? stage.stage,
     value: Number(stage.totalEstimatedValue ?? stage.value) || 0,
     leadCount: Number(stage.leadCount ?? stage.count) || 0,
   }));
-  const salesFunnelRows = buildSalesFunnelRows(pipelineSummary);
-  const leadsNeedingAttention = buildLeadsNeedingAttentionRows({
+  const salesFunnelRows = buildLegacySalesFunnelRows(pipelineSummary);
+  const leadsNeedingAttention = buildLegacyLeadsNeedingAttentionRows({
     leads,
     overdueTaskItems,
     t,
   });
-  const trendRows = buildTrendRows({ leads, dateRange });
-  const lostReasons = buildLostReasonRows(leads);
-  const teamPerformance = buildTeamPerformanceRows({ leads, tasks, t });
+  const trendRows = buildLegacyTrendRows({ leads, dateRange });
+  const lostReasons = buildLegacyLostReasonRows(leads);
+  const teamPerformance = buildLegacyTeamPerformanceRows({ leads, tasks, t });
   const overdueLeadIds = new Set(overdueTaskItems.map((task) => task.leadId).filter(Boolean));
   const overdueFollowUpCount = overdueLeadIds.size || overdueTaskItems.length;
   const todayPriorities = [
@@ -844,13 +861,13 @@ function buildDashboardModel({
   };
 
   return {
-    sections: DASHBOARD_SECTIONS,
+    sections: LEGACY_DASHBOARD_SECTIONS,
     summaryCards: [
       {
         label: t('New leads'),
         value: formatNumber(newLeads),
         helper: t('Fresh opportunities waiting for first response'),
-        comparison: `${formatSignedPercent(newLeads > 0 ? 12 : 0)} ${t('vs last week')}`,
+        comparison: `${legacyFormatSignedPercent(newLeads > 0 ? 12 : 0)} ${t('vs last week')}`,
         statusLabel: t('Lead intake'),
         delta: newLeads,
         icon: UsersIcon,
@@ -860,7 +877,7 @@ function buildDashboardModel({
         label: t('Open leads'),
         value: formatNumber(openLeads),
         helper: t('Leads currently active in the pipeline'),
-        comparison: `${formatSignedPercent(openLeads > 0 ? 8 : 0)} ${t('vs last month')}`,
+        comparison: `${legacyFormatSignedPercent(openLeads > 0 ? 8 : 0)} ${t('vs last month')}`,
         statusLabel: openLeads > 0 ? t('In motion') : t('No open work'),
         delta: openLeads,
         icon: FolderKanbanIcon,
@@ -870,7 +887,7 @@ function buildDashboardModel({
         label: t('Open Pipeline Value'),
         value: formatCurrency(estimatedPipelineValue),
         helper: t('Total estimated value of open opportunities'),
-        comparison: `${formatSignedPercent(estimatedPipelineValue > 0 ? 15 : 0)} ${t('vs last month')}`,
+        comparison: `${legacyFormatSignedPercent(estimatedPipelineValue > 0 ? 15 : 0)} ${t('vs last month')}`,
         statusLabel: t('Revenue view'),
         delta: estimatedPipelineValue,
         icon: DollarSignIcon,
@@ -880,7 +897,7 @@ function buildDashboardModel({
         label: t('Won Revenue'),
         value: formatCurrency(wonRevenue),
         helper: t('Revenue won in the selected period'),
-        comparison: `${formatSignedPercent(wonRevenue > 0 ? 18 : 0)} ${t('vs last month')}`,
+        comparison: `${legacyFormatSignedPercent(wonRevenue > 0 ? 18 : 0)} ${t('vs last month')}`,
         statusLabel: wonLeads > 0 ? t('Closed won') : t('Awaiting wins'),
         delta: wonRevenue,
         icon: CheckCircle2Icon,
@@ -890,7 +907,7 @@ function buildDashboardModel({
         label: t('Conversion Rate'),
         value: `${conversionRate.toFixed(1)}%`,
         helper: t('Lead-to-won conversion across the selected period'),
-        comparison: `${formatSignedPercent(conversionRate > 0 ? 3.4 : 0)} ${t('vs last month')}`,
+        comparison: `${legacyFormatSignedPercent(conversionRate > 0 ? 3.4 : 0)} ${t('vs last month')}`,
         statusLabel: conversionRate > 0 ? t('Improving') : t('No closed data'),
         delta: conversionRate,
         icon: TrendingUpIcon,
@@ -1158,7 +1175,7 @@ function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
 function DashboardPeriodControls({ selectedDateRange, onDateRangeChange, t }) {
   return (
     <div className="crm-dashboard-period-controls" aria-label={t('Dashboard period')}>
-      {DATE_RANGE_OPTIONS.map((option) => (
+      {DASHBOARD_DATE_RANGE_OPTIONS.map((option) => (
         <button
           key={option.id}
           type="button"
@@ -2184,7 +2201,7 @@ function DashboardPage() {
 
   const dashboardModel = useMemo(
     () =>
-      buildDashboardModel({
+      buildDashboardDataModel({
         leads,
         leadsBySource,
         pipelineSummary,
@@ -2192,6 +2209,7 @@ function DashboardPage() {
         tasksSummary,
         dateRange: selectedDateRange,
         t,
+        icons: DASHBOARD_ICON_MAP,
       }),
     [leads, leadsBySource, pipelineSummary, selectedDateRange, t, tasks, tasksSummary],
   );
@@ -2261,7 +2279,7 @@ function DashboardPage() {
 
             <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]">
               <TrendsCard
-                dateRangeLabel={getDateRangeLabel(selectedDateRange, t)}
+                dateRangeLabel={getDashboardDateRangeLabel(selectedDateRange, t)}
                 trends={dashboardModel.trends}
                 t={t}
               />
