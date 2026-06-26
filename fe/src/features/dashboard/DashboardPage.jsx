@@ -117,6 +117,22 @@ function formatSignedPercent(value) {
   return `${prefix}${absoluteValue}%`;
 }
 
+function formatDurationFromMinutes(value) {
+  const totalMinutes = Math.max(0, Math.round(Number(value) || 0));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) {
+    return `${minutes}m`;
+  }
+
+  if (minutes === 0) {
+    return `${hours}h`;
+  }
+
+  return `${hours}h ${minutes}m`;
+}
+
 function formatPreviewDate(value) {
   return value ? dayjs(value).format('MMM D, YYYY') : '-';
 }
@@ -221,6 +237,50 @@ function buildLeadSourceRows(leadsBySource) {
     .slice(0, 6);
 }
 
+function buildAverageFirstResponseTime(leads) {
+  const responseTimes = leads
+    .map((lead) => {
+      const explicitMinutes = Number(
+        lead.firstResponseMinutes ??
+          lead.firstResponseTimeMinutes ??
+          lead.firstResponseTimeInMinutes,
+      );
+
+      if (Number.isFinite(explicitMinutes) && explicitMinutes >= 0) {
+        return explicitMinutes;
+      }
+
+      if (!lead.createdAtUtc || !lead.updatedAtUtc || lead.status?.toLowerCase() === 'new') {
+        return null;
+      }
+
+      const createdAt = dayjs(lead.createdAtUtc);
+      const updatedAt = dayjs(lead.updatedAtUtc);
+
+      if (!createdAt.isValid() || !updatedAt.isValid() || updatedAt.isBefore(createdAt)) {
+        return null;
+      }
+
+      return updatedAt.diff(createdAt, 'minute');
+    })
+    .filter((value) => value !== null);
+
+  if (responseTimes.length === 0) {
+    return {
+      minutes: 0,
+      label: '0m',
+    };
+  }
+
+  const averageMinutes =
+    responseTimes.reduce((sum, value) => sum + value, 0) / responseTimes.length;
+
+  return {
+    minutes: averageMinutes,
+    label: formatDurationFromMinutes(averageMinutes),
+  };
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
@@ -263,6 +323,21 @@ function buildDashboardModel({
   });
   const unassignedLeads = leads.filter((lead) => !lead.ownerName);
   const highValueLeads = leads.filter((lead) => Number(lead.estimatedCost) >= 50000);
+  const noActivityLeads = leads.filter((lead) => {
+    const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
+
+    return (
+      lead.status?.toLowerCase() !== 'won' &&
+      lead.status?.toLowerCase() !== 'lost' &&
+      updatedAt &&
+      dayjs().diff(updatedAt, 'day') >= 7
+    );
+  });
+  const newLeadsNotContacted = leads.filter((lead) => lead.status?.toLowerCase() === 'new');
+  const inactiveHighValueLeads = noActivityLeads.filter(
+    (lead) => Number(lead.estimatedCost) >= 50000,
+  );
+  const averageFirstResponseTime = buildAverageFirstResponseTime(leads);
   const averageStageAge =
     pipelineSummary.length > 0
       ? Math.round(
@@ -350,36 +425,73 @@ function buildDashboardModel({
       tone: 'text-violet-500',
     },
   ];
-  const followUpHealth = [
-    {
-      label: t('Overdue tasks'),
-      value: formatNumber(overdueTaskItems.length),
-      helper: t('Follow-ups past due'),
-      icon: Clock3Icon,
-      tone: 'text-rose-500',
-    },
-    {
-      label: t('Due today'),
-      value: formatNumber(dueTodayTasks.length),
-      helper: t('Tasks scheduled for today'),
-      icon: CalendarDaysIcon,
-      tone: 'text-amber-500',
-    },
-    {
-      label: t('No activity leads'),
-      value: formatNumber(leadsNeedingAttention.length),
-      helper: t('Needs a next action'),
-      icon: AlertTriangleIcon,
-      tone: 'text-orange-500',
-    },
-    {
-      label: t('Unassigned leads'),
-      value: formatNumber(unassignedLeads.length),
-      helper: t('Needs an owner'),
-      icon: UsersIcon,
-      tone: 'text-primary',
-    },
-  ];
+  const followUpIssueCount =
+    overdueTaskItems.length +
+    newLeadsNotContacted.length +
+    inactiveHighValueLeads.length +
+    unassignedLeads.length;
+  const followUpHealth = {
+    hasIssues: followUpIssueCount > 0,
+    metrics: [
+      {
+        label: t('Overdue Tasks'),
+        value: formatNumber(overdueTaskItems.length),
+        helper: overdueTaskItems.length > 0 ? t('Past due follow-ups') : t('No overdue work'),
+        icon: Clock3Icon,
+        tone: overdueTaskItems.length > 0 ? 'text-rose-500' : 'text-emerald-500',
+        status: overdueTaskItems.length > 0 ? 'urgent' : 'healthy',
+      },
+      {
+        label: t('Due Today'),
+        value: formatNumber(dueTodayTasks.length),
+        helper: dueTodayTasks.length > 0 ? t('Follow-ups due today') : t('Nothing due today'),
+        icon: CalendarDaysIcon,
+        tone: dueTodayTasks.length > 0 ? 'text-amber-500' : 'text-emerald-500',
+        status: dueTodayTasks.length > 0 ? 'warning' : 'healthy',
+      },
+      {
+        label: t('No Activity Leads'),
+        value: formatNumber(noActivityLeads.length),
+        helper: noActivityLeads.length > 0 ? t('Inactive for 7+ days') : t('Pipeline is moving'),
+        icon: AlertTriangleIcon,
+        tone: noActivityLeads.length > 0 ? 'text-orange-500' : 'text-emerald-500',
+        status: noActivityLeads.length > 0 ? 'warning' : 'healthy',
+      },
+      {
+        label: t('Avg. First Response Time'),
+        value: averageFirstResponseTime.label,
+        helper: t('From lead creation to first touch'),
+        icon: TargetIcon,
+        tone: averageFirstResponseTime.minutes > 240 ? 'text-amber-500' : 'text-emerald-500',
+        status: averageFirstResponseTime.minutes > 240 ? 'warning' : 'healthy',
+      },
+      {
+        label: t('Unassigned Leads'),
+        value: formatNumber(unassignedLeads.length),
+        helper: unassignedLeads.length > 0 ? t('Needs an owner') : t('Every lead has an owner'),
+        icon: UsersIcon,
+        tone: unassignedLeads.length > 0 ? 'text-primary' : 'text-emerald-500',
+        status: unassignedLeads.length > 0 ? 'warning' : 'healthy',
+      },
+    ],
+    priorityItems: [
+      {
+        label: t('overdue follow-ups'),
+        count: overdueTaskItems.length,
+        tone: 'text-rose-500',
+      },
+      {
+        label: t('new leads not contacted'),
+        count: newLeadsNotContacted.length,
+        tone: 'text-primary',
+      },
+      {
+        label: t('high-value leads inactive for 7+ days'),
+        count: inactiveHighValueLeads.length,
+        tone: 'text-amber-500',
+      },
+    ],
+  };
 
   return {
     sections: DASHBOARD_SECTIONS,
@@ -916,39 +1028,100 @@ function LeadSourcesCard({ leadSources, t }) {
   );
 }
 
-function FollowUpHealthCard({ healthItems, t }) {
+function FollowUpHealthCard({ health, t }) {
   return (
     <DashboardCard className="min-h-[18rem]">
       <CardHeader className="gap-2">
-        <Badge variant="outline" className="w-fit border-border/80 bg-background/70 text-foreground">
-          {t('Follow-up Health')}
-        </Badge>
-        <CardTitle className="text-xl font-semibold">
-          {t('What needs attention today')}
-        </CardTitle>
-        <CardDescription>
-          {t('Overdue work, due tasks, and leads without recent motion.')}
-        </CardDescription>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>{t('Follow-up Health')}</CardTitle>
+            <CardDescription>
+              {t('Execution blockers across overdue work, ignored leads, and ownership gaps.')}
+            </CardDescription>
+          </div>
+          <Badge
+            variant="outline"
+            className={cn(
+              'border-transparent',
+              health.hasIssues
+                ? 'bg-rose-500/12 text-rose-500'
+                : 'bg-emerald-500/12 text-emerald-500',
+            )}
+          >
+            {health.hasIssues ? t('Needs attention today') : t('Healthy')}
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-2">
-        {healthItems.map((item) => {
-          const Icon = item.icon;
+      <CardContent className="space-y-4">
+        <div className="crm-dashboard-follow-up-grid">
+          {health.metrics.map((item) => {
+            const Icon = item.icon;
 
-          return (
-            <div
-              key={item.label}
-              className="rounded-[1.35rem] border border-border/70 bg-background/65 p-4"
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <Icon className={cn('size-4', item.tone)} />
+            return (
+              <div
+                key={item.label}
+                className={cn(
+                  'crm-dashboard-follow-up-metric',
+                  item.status === 'urgent' && 'crm-dashboard-follow-up-metric--urgent',
+                  item.status === 'warning' && 'crm-dashboard-follow-up-metric--warning',
+                  item.status === 'healthy' && 'crm-dashboard-follow-up-metric--healthy',
+                )}
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-sm text-muted-foreground">{item.label}</p>
+                  <Icon className={cn('size-4', item.tone)} />
+                </div>
+                <p className="text-lg font-semibold text-foreground">{item.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.helper}</p>
               </div>
-              <p className="text-lg font-semibold text-foreground">{item.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{item.helper}</p>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        <div
+          className={cn(
+            'crm-dashboard-follow-up-summary',
+            !health.hasIssues && 'crm-dashboard-follow-up-summary--healthy',
+          )}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <strong>{health.hasIssues ? t('Needs attention today') : t('Follow-ups are under control')}</strong>
+            {health.hasIssues ? (
+              <AlertTriangleIcon className="size-4 text-rose-500" />
+            ) : (
+              <CheckCircle2Icon className="size-4 text-emerald-500" />
+            )}
+          </div>
+          {health.hasIssues ? (
+            <ul className="mt-3 space-y-2">
+              {health.priorityItems.map((item) => (
+                <li key={item.label} className="crm-dashboard-follow-up-summary__item">
+                  <span className={cn('crm-dashboard-follow-up-summary__count', item.tone)}>
+                    {formatNumber(item.count)}
+                  </span>
+                  <span>{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t('No overdue follow-ups, ignored new leads, or inactive high-value leads need action right now.')}
+            </p>
+          )}
+        </div>
       </CardContent>
+      <CardFooter className="justify-between border-t border-border/70 bg-background/55">
+        <span className="text-xs text-muted-foreground">
+          {t('Sales execution health updates from leads and tasks')}
+        </span>
+        <RouterLink
+          to="/tasks"
+          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'rounded-full')}
+        >
+          {t('Open tasks')}
+          <ArrowRightIcon className="size-4" />
+        </RouterLink>
+      </CardFooter>
     </DashboardCard>
   );
 }
@@ -1492,7 +1665,7 @@ function DashboardPage() {
 
             <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]">
               <TrendsCard trends={dashboardModel.trends} t={t} />
-              <FollowUpHealthCard healthItems={dashboardModel.followUpHealth} t={t} />
+              <FollowUpHealthCard health={dashboardModel.followUpHealth} t={t} />
               <LeadsNeedingAttentionCard leads={dashboardModel.leadsNeedingAttention} t={t} />
             </section>
 

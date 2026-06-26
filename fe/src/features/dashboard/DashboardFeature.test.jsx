@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { RouterProvider } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import dayjs from 'dayjs';
 import AppProviders from '../../app/providers/AppProviders.jsx';
 import { createTestRouter } from '../../app/router.jsx';
 import { clearAuthSession, setAuthSession } from '../auth/authSession.js';
@@ -225,6 +226,142 @@ describe('Dashboard feature', () => {
     expect(screen.getByText('WhatsApp')).toBeInTheDocument();
     expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
     expect(screen.getByText('25%')).toBeInTheDocument();
+  });
+
+  it('renders follow-up health with urgent sales execution issues', async () => {
+    authenticate();
+
+    const now = dayjs();
+    const overdueTasks = Array.from({ length: 8 }, (_, index) => ({
+      id: `overdue-task-${index}`,
+      title: `Overdue follow-up ${index + 1}`,
+      status: 'Open',
+      priority: 'High',
+      dueDateUtc: now.subtract(1, 'day').toISOString(),
+      isCompleted: false,
+    }));
+    const dueTodayTasks = Array.from({ length: 14 }, (_, index) => ({
+      id: `today-task-${index}`,
+      title: `Today follow-up ${index + 1}`,
+      status: 'Open',
+      priority: 'Medium',
+      dueDateUtc: now.toISOString(),
+      isCompleted: false,
+    }));
+    const newLeads = Array.from({ length: 5 }, (_, index) => ({
+      id: `new-lead-${index}`,
+      title: `New lead ${index + 1}`,
+      status: 'New',
+      ownerName: 'Sales Owner',
+      estimatedCost: 12000,
+      createdAtUtc: now.subtract(2, 'hour').toISOString(),
+      updatedAtUtc: now.subtract(2, 'hour').toISOString(),
+    }));
+    const inactiveHighValueLeads = Array.from({ length: 3 }, (_, index) => ({
+      id: `inactive-lead-${index}`,
+      title: `Inactive high-value lead ${index + 1}`,
+      status: 'Open',
+      ownerName: 'Sales Owner',
+      estimatedCost: 80000,
+      firstResponseMinutes: 155,
+      createdAtUtc: now.subtract(10, 'day').toISOString(),
+      updatedAtUtc: now.subtract(8, 'day').toISOString(),
+    }));
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [...newLeads, ...inactiveHighValueLeads],
+          total: 8,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [...overdueTasks, ...dueTodayTasks],
+          total: 22,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/reports/tasks-summary`, () =>
+        HttpResponse.json({
+          totalTasks: 22,
+          pendingTasks: 22,
+          completedTasks: 0,
+          overdueTasks: 8,
+          tasksByPriority: [],
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Follow-up Health')).toBeInTheDocument();
+    expect(screen.getAllByText('Needs attention today').length).toBeGreaterThan(0);
+    expect(screen.getByText('Overdue Tasks')).toBeInTheDocument();
+    expect(screen.getByText('Due Today')).toBeInTheDocument();
+    expect(screen.getByText('No Activity Leads')).toBeInTheDocument();
+    expect(screen.getByText('Avg. First Response Time')).toBeInTheDocument();
+    expect(await screen.findByText('2h 35m')).toBeInTheDocument();
+    expect(screen.getByText('overdue follow-ups')).toBeInTheDocument();
+    expect(screen.getByText('new leads not contacted')).toBeInTheDocument();
+    expect(screen.getByText('high-value leads inactive for 7+ days')).toBeInTheDocument();
+  });
+
+  it('shows a healthy follow-up state when sales execution has no issues', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'healthy-lead',
+              title: 'Healthy lead',
+              status: 'Open',
+              ownerName: 'Sales Owner',
+              estimatedCost: 12000,
+              firstResponseMinutes: 30,
+              createdAtUtc: now.subtract(2, 'hour').toISOString(),
+              updatedAtUtc: now.subtract(1, 'hour').toISOString(),
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/reports/tasks-summary`, () =>
+        HttpResponse.json({
+          totalTasks: 0,
+          pendingTasks: 0,
+          completedTasks: 0,
+          overdueTasks: 0,
+          tasksByPriority: [],
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Follow-up Health')).toBeInTheDocument();
+    expect(await screen.findByText('Healthy')).toBeInTheDocument();
+    expect(await screen.findByText('Follow-ups are under control')).toBeInTheDocument();
+    expect(
+      screen.getByText('No overdue follow-ups, ignored new leads, or inactive high-value leads need action right now.'),
+    ).toBeInTheDocument();
   });
 
   it('renders quick actions with the expected destinations', async () => {
