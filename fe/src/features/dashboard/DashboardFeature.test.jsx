@@ -934,10 +934,110 @@ describe('Dashboard feature', () => {
 
     renderRoute(['/dashboard']);
 
-    expect(await screen.findByRole('link', { name: 'Create lead' })).toHaveAttribute('href', '/leads');
-    expect(screen.getByRole('link', { name: 'Create task' })).toHaveAttribute('href', '/tasks');
-    expect(screen.getByRole('link', { name: 'Go to pipeline' })).toHaveAttribute('href', '/pipeline');
-    expect(screen.getByRole('link', { name: 'Open reports' })).toHaveAttribute('href', '/reports');
+    expect(await screen.findByRole('link', { name: 'Create Lead' })).toHaveAttribute('href', '/leads');
+    expect(screen.getByRole('link', { name: 'Create Task' })).toHaveAttribute('href', '/tasks');
+    expect(screen.getByRole('link', { name: 'Open Pipeline' })).toHaveAttribute('href', '/pipeline');
+    expect(screen.getByRole('link', { name: 'Open Reports' })).toHaveAttribute('href', '/reports');
+  });
+
+  it("renders Today's Priorities from urgent dashboard metrics", async () => {
+    authenticate();
+
+    const now = dayjs();
+    const newLeads = Array.from({ length: 6 }, (_, index) => ({
+      id: `priority-new-lead-${index}`,
+      title: `Priority new lead ${index + 1}`,
+      status: 'New',
+      stageName: 'New Lead',
+      ownerName: 'Sara',
+      estimatedCost: 12000,
+      createdAtUtc: now.subtract(index + 1, 'hour').toISOString(),
+      updatedAtUtc: now.subtract(index + 1, 'hour').toISOString(),
+    }));
+    const unassignedLeads = Array.from({ length: 3 }, (_, index) => ({
+      id: `priority-unassigned-lead-${index}`,
+      title: `Unassigned lead ${index + 1}`,
+      status: 'Open',
+      stageName: 'Qualified',
+      ownerName: '',
+      estimatedCost: 18000,
+      createdAtUtc: now.subtract(index + 1, 'day').toISOString(),
+      updatedAtUtc: now.subtract(index + 1, 'day').toISOString(),
+    }));
+    const proposalLeads = Array.from({ length: 2 }, (_, index) => ({
+      id: `priority-proposal-lead-${index}`,
+      title: `Proposal lead ${index + 1}`,
+      status: 'Open',
+      stageName: 'Proposal Sent',
+      ownerName: 'Omar',
+      estimatedCost: 75000,
+      createdAtUtc: now.subtract(index + 2, 'day').toISOString(),
+      updatedAtUtc: now.subtract(index + 2, 'day').toISOString(),
+    }));
+    const overdueTasks = Array.from({ length: 8 }, (_, index) => ({
+      id: `priority-overdue-task-${index}`,
+      title: `Overdue task ${index + 1}`,
+      status: 'Open',
+      priority: 'High',
+      dueDateUtc: now.subtract(1, 'day').toISOString(),
+      isCompleted: false,
+      leadId: `overdue-lead-${index}`,
+    }));
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [...newLeads, ...unassignedLeads, ...proposalLeads],
+          total: 11,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: overdueTasks,
+          total: 8,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText("Today's Priorities")).toBeInTheDocument();
+    expect(await screen.findByText('Contact 6 new leads')).toBeInTheDocument();
+    expect(screen.getByText('Follow up 8 overdue leads')).toBeInTheDocument();
+    expect(screen.getByText('Assign 3 unassigned leads')).toBeInTheDocument();
+    expect(screen.getByText('Review 2 high-value proposals')).toBeInTheDocument();
+  });
+
+  it("shows an all-clear Today's Priorities state when no urgent actions exist", async () => {
+    authenticate();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Everything looks under control today.')).toBeInTheDocument();
+    expect(screen.getByText('No urgent sales actions found.')).toBeInTheDocument();
   });
 
   it('shows a loading state while dashboard queries are in flight', async () => {

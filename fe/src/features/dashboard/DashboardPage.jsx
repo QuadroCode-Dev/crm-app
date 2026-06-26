@@ -682,6 +682,16 @@ function buildDashboardModel({
   });
   const unassignedLeads = leads.filter((lead) => !lead.ownerName);
   const highValueLeads = leads.filter((lead) => Number(lead.estimatedCost) >= 50000);
+  const highValueProposals = leads.filter((lead) => {
+    const stageName = lead.stageName?.toLowerCase() ?? '';
+    const status = lead.status?.toLowerCase() ?? '';
+
+    return (
+      Number(lead.estimatedCost ?? lead.value) >= 50000 &&
+      !['won', 'lost'].includes(status) &&
+      ['proposal sent', 'proposal', 'proposal made'].includes(stageName)
+    );
+  });
   const noActivityLeads = leads.filter((lead) => {
     const updatedAt = lead.updatedAtUtc ? dayjs(lead.updatedAtUtc) : null;
 
@@ -737,36 +747,34 @@ function buildDashboardModel({
   const trendRows = buildTrendRows({ leads, dateRange });
   const lostReasons = buildLostReasonRows(leads);
   const teamPerformance = buildTeamPerformanceRows({ leads, tasks, t });
+  const overdueLeadIds = new Set(overdueTaskItems.map((task) => task.leadId).filter(Boolean));
+  const overdueFollowUpCount = overdueLeadIds.size || overdueTaskItems.length;
   const todayPriorities = [
     {
-      label: t('Contact new leads'),
-      current: 0,
-      total: newLeads,
+      label: `${t('Contact')} ${formatNumber(newLeadsNotContacted.length)} ${t('new leads')}`,
+      total: newLeadsNotContacted.length,
       icon: UsersIcon,
       tone: 'text-primary',
     },
     {
-      label: t('Follow up overdue tasks'),
-      current: 0,
-      total: overdueTaskItems.length,
+      label: `${t('Follow up')} ${formatNumber(overdueFollowUpCount)} ${t('overdue leads')}`,
+      total: overdueFollowUpCount,
       icon: Clock3Icon,
       tone: 'text-rose-500',
     },
     {
-      label: t('Assign unassigned leads'),
-      current: 0,
+      label: `${t('Assign')} ${formatNumber(unassignedLeads.length)} ${t('unassigned leads')}`,
       total: unassignedLeads.length,
       icon: BriefcaseBusinessIcon,
       tone: 'text-emerald-500',
     },
     {
-      label: t('Review high-value leads'),
-      current: 0,
-      total: highValueLeads.length,
+      label: `${t('Review')} ${formatNumber(highValueProposals.length)} ${t('high-value proposals')}`,
+      total: highValueProposals.length,
       icon: DollarSignIcon,
       tone: 'text-violet-500',
     },
-  ];
+  ].filter((priority) => priority.total > 0);
   const followUpIssueCount =
     overdueTaskItems.length +
     newLeadsNotContacted.length +
@@ -967,28 +975,28 @@ function QuickActionsCard({ t }) {
   const actions = [
     {
       to: '/leads',
-      label: t('Create lead'),
+      label: t('Create Lead'),
       description: t('Capture a new opportunity'),
       icon: PlusIcon,
       variant: 'default',
     },
     {
       to: '/tasks',
-      label: t('Create task'),
+      label: t('Create Task'),
       description: t('Schedule the next follow-up'),
       icon: ClipboardListIcon,
       variant: 'outline',
     },
     {
       to: '/pipeline',
-      label: t('Go to pipeline'),
+      label: t('Open Pipeline'),
       description: t('Review stage movement'),
       icon: FolderKanbanIcon,
       variant: 'outline',
     },
     {
       to: '/reports',
-      label: t('Open reports'),
+      label: t('Open Reports'),
       description: t('Inspect trends and outcomes'),
       icon: FileBarChart2Icon,
       variant: 'outline',
@@ -1784,19 +1792,26 @@ function TodayPrioritiesCard({ priorities, t }) {
         <CardDescription>{t('The actions most likely to improve conversion today')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {priorities.map((priority) => {
-          const Icon = priority.icon;
+        {priorities.length === 0 ? (
+          <EmptyState
+            title={t('Everything looks under control today.')}
+            description={t('No urgent sales actions found.')}
+          />
+        ) : (
+          priorities.map((priority) => {
+            const Icon = priority.icon;
 
-          return (
-            <div key={priority.label} className="crm-dashboard-priority-row">
-              <span className={cn('crm-dashboard-priority-row__icon', priority.tone)}>
-                <Icon className="size-4" />
-              </span>
-              <span>{priority.label}</span>
-              <strong>{priority.current} / {priority.total}</strong>
-            </div>
-          );
-        })}
+            return (
+              <div key={priority.label} className="crm-dashboard-priority-row">
+                <span className={cn('crm-dashboard-priority-row__icon', priority.tone)}>
+                  <Icon className="size-4" />
+                </span>
+                <span>{priority.label}</span>
+                <ArrowRightIcon className="size-4 text-muted-foreground" />
+              </div>
+            );
+          })
+        )}
       </CardContent>
       <CardFooter className="justify-end border-t border-border/70 bg-background/55">
         <RouterLink
