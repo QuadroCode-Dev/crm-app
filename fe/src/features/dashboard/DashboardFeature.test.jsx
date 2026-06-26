@@ -726,6 +726,209 @@ describe('Dashboard feature', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders team performance for multiple owners', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'sara-won-1',
+              title: 'Sara won 1',
+              status: 'Won',
+              stageName: 'Won',
+              ownerUserId: 'sara-id',
+              ownerName: 'Sara',
+              estimatedCost: 22000,
+              firstResponseMinutes: 80,
+              createdAtUtc: now.subtract(5, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+            {
+              id: 'sara-open-1',
+              title: 'Sara open',
+              status: 'Open',
+              stageName: 'Qualified',
+              ownerUserId: 'sara-id',
+              ownerName: 'Sara',
+              estimatedCost: 9000,
+              firstResponseMinutes: 100,
+              createdAtUtc: now.subtract(4, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+            {
+              id: 'omar-won-1',
+              title: 'Omar won 1',
+              status: 'Won',
+              stageName: 'Won',
+              ownerUserId: 'omar-id',
+              ownerName: 'Omar',
+              estimatedCost: 11000,
+              firstResponseMinutes: 190,
+              createdAtUtc: now.subtract(4, 'day').toISOString(),
+              updatedAtUtc: now.subtract(2, 'day').toISOString(),
+            },
+            {
+              id: 'omar-open-1',
+              title: 'Omar open 1',
+              status: 'Open',
+              stageName: 'Contacted',
+              ownerUserId: 'omar-id',
+              ownerName: 'Omar',
+              estimatedCost: 8000,
+              firstResponseMinutes: 170,
+              createdAtUtc: now.subtract(3, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+            {
+              id: 'omar-open-2',
+              title: 'Omar open 2',
+              status: 'Open',
+              stageName: 'New Lead',
+              ownerUserId: 'omar-id',
+              ownerName: 'Omar',
+              estimatedCost: 7000,
+              firstResponseMinutes: 180,
+              createdAtUtc: now.subtract(1, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+          ],
+          total: 5,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'sara-overdue',
+              leadId: 'sara-open-1',
+              title: 'Sara overdue',
+              assignedUserId: 'sara-id',
+              assignedUserName: 'Sara',
+              status: 'Open',
+              dueDateUtc: now.subtract(1, 'day').toISOString(),
+              isCompleted: false,
+            },
+            {
+              id: 'omar-overdue-1',
+              leadId: 'omar-open-1',
+              title: 'Omar overdue 1',
+              assignedUserId: 'omar-id',
+              assignedUserName: 'Omar',
+              status: 'Open',
+              dueDateUtc: now.subtract(1, 'day').toISOString(),
+              isCompleted: false,
+            },
+            {
+              id: 'omar-overdue-2',
+              leadId: 'omar-open-2',
+              title: 'Omar overdue 2',
+              assignedUserId: 'omar-id',
+              assignedUserName: 'Omar',
+              status: 'Open',
+              dueDateUtc: now.subtract(2, 'day').toISOString(),
+              isCompleted: false,
+            },
+          ],
+          total: 3,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Team Performance')).toBeInTheDocument();
+    expect((await screen.findAllByText('Sara')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Omar').length).toBeGreaterThan(0);
+    expect(screen.getByText('Leads assigned')).toBeInTheDocument();
+    expect(screen.getByText('Won leads')).toBeInTheDocument();
+    expect(screen.getByText('Conversion rate')).toBeInTheDocument();
+    expect(screen.getByText('Avg. first response')).toBeInTheDocument();
+    expect(screen.getByText('$22,000')).toBeInTheDocument();
+    expect(screen.getByText('50%')).toBeInTheDocument();
+    expect(screen.getByText('1h 30m')).toBeInTheDocument();
+    expect(screen.getByText('3h')).toBeInTheDocument();
+    expect(screen.getByText(/Top performer: Sara/)).toBeInTheDocument();
+  });
+
+  it('shows a helpful team performance state for a single owner', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'solo-owner-lead',
+              title: 'Solo owner lead',
+              status: 'Open',
+              stageName: 'Qualified',
+              ownerUserId: 'solo-id',
+              ownerName: 'Solo Owner',
+              estimatedCost: 12000,
+              createdAtUtc: now.subtract(1, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'hour').toISOString(),
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Team performance needs multiple owners')).toBeInTheDocument();
+    expect(
+      screen.getByText('This section appears when leads are assigned across multiple salespeople or owners.'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows a helpful team performance state when owner data is empty', async () => {
+    authenticate();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+      http.get(`${apiBaseUrl}/api/tasks`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Team performance needs multiple owners')).toBeInTheDocument();
+  });
+
   it('renders quick actions with the expected destinations', async () => {
     authenticate();
 

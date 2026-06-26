@@ -536,6 +536,109 @@ function buildLostReasonRows(leads) {
     .slice(0, 6);
 }
 
+function getOwnerKey(lead) {
+  return lead.ownerUserId || lead.ownerId || lead.ownerName || '';
+}
+
+function getOwnerName(lead, fallback) {
+  return lead.ownerName || lead.ownerUserFullName || fallback;
+}
+
+function buildTeamPerformanceRows({ leads, tasks, t }) {
+  const leadById = new Map(leads.map((lead) => [lead.id, lead]));
+  const teamMembers = leads.reduce((members, lead) => {
+    const ownerKey = getOwnerKey(lead);
+
+    if (!ownerKey) {
+      return members;
+    }
+
+    const existingMember = members.get(ownerKey) || {
+      id: ownerKey,
+      name: getOwnerName(lead, t('Unassigned')),
+      assigned: 0,
+      won: 0,
+      revenue: 0,
+      overdueTasks: 0,
+      responseMinutes: [],
+    };
+    const status = lead.status?.toLowerCase();
+    const stageName = lead.stageName?.toLowerCase();
+    const explicitResponseMinutes = Number(
+      lead.firstResponseMinutes ??
+        lead.firstResponseTimeMinutes ??
+        lead.firstResponseTimeInMinutes,
+    );
+
+    existingMember.assigned += 1;
+
+    if (status === 'won' || stageName === 'won') {
+      existingMember.won += 1;
+      existingMember.revenue += Number(lead.wonValue ?? lead.estimatedCost ?? lead.value) || 0;
+    }
+
+    if (Number.isFinite(explicitResponseMinutes) && explicitResponseMinutes >= 0) {
+      existingMember.responseMinutes.push(explicitResponseMinutes);
+    } else if (
+      lead.createdAtUtc &&
+      lead.updatedAtUtc &&
+      status !== 'new' &&
+      dayjs(lead.createdAtUtc).isValid() &&
+      dayjs(lead.updatedAtUtc).isValid() &&
+      !dayjs(lead.updatedAtUtc).isBefore(dayjs(lead.createdAtUtc))
+    ) {
+      existingMember.responseMinutes.push(
+        dayjs(lead.updatedAtUtc).diff(dayjs(lead.createdAtUtc), 'minute'),
+      );
+    }
+
+    members.set(ownerKey, existingMember);
+    return members;
+  }, new Map());
+
+  tasks.forEach((task) => {
+    if (
+      task.isCompleted ||
+      !task.dueDateUtc ||
+      !dayjs(task.dueDateUtc).isBefore(dayjs(), 'day')
+    ) {
+      return;
+    }
+
+    const relatedLead = task.leadId ? leadById.get(task.leadId) : null;
+    const ownerKey = task.assignedUserId || (relatedLead ? getOwnerKey(relatedLead) : '');
+
+    if (!ownerKey || !teamMembers.has(ownerKey)) {
+      return;
+    }
+
+    teamMembers.get(ownerKey).overdueTasks += 1;
+  });
+
+  return Array.from(teamMembers.values())
+    .map((member) => {
+      const averageResponseMinutes =
+        member.responseMinutes.length > 0
+          ? member.responseMinutes.reduce((sum, value) => sum + value, 0) /
+            member.responseMinutes.length
+          : 0;
+
+      return {
+        ...member,
+        conversionRate: member.assigned > 0 ? (member.won / member.assigned) * 100 : 0,
+        avgResponseTime: formatDurationFromMinutes(averageResponseMinutes),
+      };
+    })
+    .sort((left, right) => {
+      if (right.revenue !== left.revenue) {
+        return right.revenue - left.revenue;
+      }
+
+      return right.conversionRate - left.conversionRate;
+    })
+    .slice(0, 6);
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
@@ -633,6 +736,7 @@ function buildDashboardModel({
   });
   const trendRows = buildTrendRows({ leads, dateRange });
   const lostReasons = buildLostReasonRows(leads);
+  const teamPerformance = buildTeamPerformanceRows({ leads, tasks, t });
   const todayPriorities = [
     {
       label: t('Contact new leads'),
@@ -802,6 +906,7 @@ function buildDashboardModel({
     pipelineValueChartData,
     leadsNeedingAttention,
     trends: trendRows,
+    teamPerformance,
     todayPriorities,
     followUpHealth,
     lostReasons,
@@ -1793,6 +1898,93 @@ function LostReasonsCard({ reasons, t }) {
   );
 }
 
+function TeamPerformanceCard({ teamMembers, t }) {
+  const hasTeamData = teamMembers.length > 1;
+
+  return (
+    <DashboardCard className="min-h-[16rem]">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle>{t('Team Performance')}</CardTitle>
+            <CardDescription>
+              {t('Owner leaderboard for closing, follow-up load, and response speed')}
+            </CardDescription>
+          </div>
+          <Badge variant="outline">{t('This Month')}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className={cn(hasTeamData && 'px-0')}>
+        {!hasTeamData ? (
+          <EmptyState
+            title={t('Team performance needs multiple owners')}
+            description={t('This section appears when leads are assigned across multiple salespeople or owners.')}
+          />
+        ) : (
+          <div className="crm-dashboard-team-table">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="ps-6">{t('Salesperson')}</TableHead>
+                  <TableHead>{t('Leads assigned')}</TableHead>
+                  <TableHead>{t('Won leads')}</TableHead>
+                  <TableHead>{t('Conversion rate')}</TableHead>
+                  <TableHead>{t('Revenue')}</TableHead>
+                  <TableHead>{t('Overdue tasks')}</TableHead>
+                  <TableHead className="pe-6">{t('Avg. first response')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {teamMembers.map((member) => (
+                  <TableRow key={member.id}>
+                    <TableCell className="ps-6 font-medium text-foreground">
+                      {member.name}
+                    </TableCell>
+                    <TableCell>{formatNumber(member.assigned)}</TableCell>
+                    <TableCell>{formatNumber(member.won)}</TableCell>
+                    <TableCell>
+                      {`${member.conversionRate.toFixed(1).replace(/\.0$/, '')}%`}
+                    </TableCell>
+                    <TableCell className="font-semibold text-foreground">
+                      {formatCurrency(member.revenue)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'border-transparent',
+                          member.overdueTasks > 0
+                            ? 'bg-rose-500/12 text-rose-500'
+                            : 'bg-emerald-500/12 text-emerald-500',
+                        )}
+                      >
+                        {formatNumber(member.overdueTasks)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="pe-6 text-muted-foreground">
+                      {member.avgResponseTime}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+      {hasTeamData ? (
+        <CardFooter className="justify-between border-t border-border/70 bg-background/55">
+          <span className="text-xs text-muted-foreground">
+            {t('Sorted by revenue, then conversion rate')}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {t('Top performer')}: {teamMembers[0].name}
+          </span>
+        </CardFooter>
+      ) : null}
+    </DashboardCard>
+  );
+}
+
 function PipelineVelocityCard({ dashboardModel, t }) {
   const velocityItems = [
     {
@@ -2062,8 +2254,9 @@ function DashboardPage() {
               <LeadsNeedingAttentionCard leads={dashboardModel.leadsNeedingAttention} t={t} />
             </section>
 
-            <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)]">
+            <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.45fr)]">
               <LostReasonsCard reasons={dashboardModel.lostReasons} t={t} />
+              <TeamPerformanceCard teamMembers={dashboardModel.teamPerformance} t={t} />
               <PipelineVelocityCard dashboardModel={dashboardModel} t={t} />
             </section>
 

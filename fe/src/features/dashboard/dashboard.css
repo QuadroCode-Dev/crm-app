@@ -377,6 +377,14 @@
   white-space: nowrap;
 }
 
+.crm-dashboard-team-table {
+  overflow-x: auto;
+}
+
+.crm-dashboard-team-table table {
+  min-width: 48rem;
+}
+
 .crm-dashboard-quick-action {
   text-decoration: none;
 }
