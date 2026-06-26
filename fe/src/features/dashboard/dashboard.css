@@ -361,6 +361,22 @@
   background: var(--chart-3);
 }
 
+.crm-dashboard-lost-reason-row {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.crm-dashboard-lost-reason-row span {
+  color: var(--crm-color-text);
+  font-weight: 650;
+}
+
+.crm-dashboard-lost-reason-row strong {
+  color: var(--crm-color-text-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
 .crm-dashboard-quick-action {
   text-decoration: none;
 }

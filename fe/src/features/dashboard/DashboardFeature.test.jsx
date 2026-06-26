@@ -612,6 +612,120 @@ describe('Dashboard feature', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders lost reasons as a ranked analysis with percentages', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'lost-no-response-1',
+              title: 'Lost no response 1',
+              status: 'Lost',
+              stageName: 'Lost',
+              lostReason: 'No response',
+              estimatedCost: 5000,
+              createdAtUtc: now.subtract(8, 'day').toISOString(),
+              updatedAtUtc: now.subtract(2, 'day').toISOString(),
+            },
+            {
+              id: 'lost-no-response-2',
+              title: 'Lost no response 2',
+              status: 'Lost',
+              stageName: 'Lost',
+              lossReason: 'No response',
+              estimatedCost: 7000,
+              createdAtUtc: now.subtract(7, 'day').toISOString(),
+              updatedAtUtc: now.subtract(2, 'day').toISOString(),
+            },
+            {
+              id: 'lost-price',
+              title: 'Lost price',
+              status: 'Lost',
+              stageName: 'Lost',
+              closedReason: 'Price too high',
+              estimatedCost: 11000,
+              createdAtUtc: now.subtract(6, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+            {
+              id: 'lost-not-ready',
+              title: 'Lost not ready',
+              status: 'Lost',
+              stageName: 'Lost',
+              lostReasonName: 'Not ready now',
+              estimatedCost: 9000,
+              createdAtUtc: now.subtract(5, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+            {
+              id: 'open-lead',
+              title: 'Open lead',
+              status: 'Open',
+              stageName: 'Qualified',
+              lostReason: 'Should not count',
+              estimatedCost: 9000,
+              createdAtUtc: now.subtract(1, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'hour').toISOString(),
+            },
+          ],
+          total: 5,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Lost Reasons')).toBeInTheDocument();
+    expect(await screen.findByText('No response')).toBeInTheDocument();
+    expect(await screen.findByText('50% (2)')).toBeInTheDocument();
+    expect(await screen.findByText('Price too high')).toBeInTheDocument();
+    expect(screen.getAllByText('25% (1)').length).toBeGreaterThan(0);
+    expect(await screen.findByText('Not ready now')).toBeInTheDocument();
+    expect(screen.getByText(/Total lost leads with reasons/)).toBeInTheDocument();
+    expect(screen.getByText(/Top reason: No response/)).toBeInTheDocument();
+    expect(screen.queryByText('Should not count')).not.toBeInTheDocument();
+  });
+
+  it('shows an empty state when lost leads do not have reasons yet', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'lost-without-reason',
+              title: 'Lost without reason',
+              status: 'Lost',
+              stageName: 'Lost',
+              estimatedCost: 5000,
+              createdAtUtc: now.subtract(3, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('No lost reason data yet')).toBeInTheDocument();
+    expect(
+      screen.getByText('Lost reason data will appear after leads are marked as lost with a reason.'),
+    ).toBeInTheDocument();
+  });
+
   it('renders quick actions with the expected destinations', async () => {
     authenticate();
 

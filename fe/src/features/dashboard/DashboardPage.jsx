@@ -83,13 +83,6 @@ const DASHBOARD_SECTIONS = {
   todaysPriorities: 'todays-priorities',
 };
 
-const FALLBACK_LOST_REASONS = [
-  { label: 'No response', count: 12, percent: 37 },
-  { label: 'Price too high', count: 8, percent: 25 },
-  { label: 'Not ready now', count: 6, percent: 19 },
-  { label: 'Chose competitor', count: 4, percent: 13 },
-];
-
 const SALES_FUNNEL_STAGE_ORDER = [
   'New Lead',
   'Contacted',
@@ -491,6 +484,58 @@ function buildTrendRows({ leads, dateRange }) {
   });
 }
 
+function buildLostReasonRows(leads) {
+  const reasonCounts = leads.reduce((counts, lead) => {
+    const status = lead.status?.toLowerCase();
+    const stageName = lead.stageName?.toLowerCase();
+
+    if (status !== 'lost' && stageName !== 'lost') {
+      return counts;
+    }
+
+    const reason = (
+      lead.lostReason ??
+      lead.lossReason ??
+      lead.lostReasonName ??
+      lead.lossReasonName ??
+      lead.closedReason ??
+      lead.closeReason ??
+      lead.reasonLost ??
+      ''
+    ).trim();
+
+    if (!reason) {
+      return counts;
+    }
+
+    counts.set(reason, (counts.get(reason) || 0) + 1);
+    return counts;
+  }, new Map());
+  const totalReasonedLostLeads = Array.from(reasonCounts.values()).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+
+  if (totalReasonedLostLeads === 0) {
+    return [];
+  }
+
+  return Array.from(reasonCounts.entries())
+    .map(([reason, count]) => ({
+      reason,
+      count,
+      percent: (count / totalReasonedLostLeads) * 100,
+    }))
+    .sort((left, right) => {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+
+      return left.reason.localeCompare(right.reason);
+    })
+    .slice(0, 6);
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
@@ -587,6 +632,7 @@ function buildDashboardModel({
     t,
   });
   const trendRows = buildTrendRows({ leads, dateRange });
+  const lostReasons = buildLostReasonRows(leads);
   const todayPriorities = [
     {
       label: t('Contact new leads'),
@@ -758,7 +804,7 @@ function buildDashboardModel({
     trends: trendRows,
     todayPriorities,
     followUpHealth,
-    lostReasons: FALLBACK_LOST_REASONS,
+    lostReasons,
     snapshot: {
       openLeads,
       wonLeads,
@@ -1690,30 +1736,59 @@ function SnapshotCard({ snapshot, t }) {
 }
 
 function LostReasonsCard({ reasons, t }) {
+  const totalLostReasons = reasons.reduce((sum, reason) => sum + reason.count, 0);
+
   return (
     <DashboardCard className="min-h-[16rem]">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle>{t('Lost Reasons')}</CardTitle>
-            <CardDescription>{t('Demo-ready until loss reason reporting is available')}</CardDescription>
+            <CardDescription>
+              {t('Common failure patterns across deals marked as lost')}
+            </CardDescription>
           </div>
-          <Badge variant="outline">{t('Demo')}</Badge>
+          <Badge variant="outline">{t('This Month')}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {reasons.map((reason) => (
-          <div key={reason.label} className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>{t(reason.label)}</span>
-              <strong>{reason.percent}% ({reason.count})</strong>
+        {reasons.length === 0 ? (
+          <EmptyState
+            title={t('No lost reason data yet')}
+            description={t('Lost reason data will appear after leads are marked as lost with a reason.')}
+          />
+        ) : (
+          reasons.map((reason) => (
+            <div key={reason.reason} className="crm-dashboard-lost-reason-row">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span>{t(reason.reason)}</span>
+                <strong>
+                  {`${reason.percent.toFixed(0)}%`} ({formatNumber(reason.count)})
+                </strong>
+              </div>
+              <div
+                className="crm-dashboard-progress-track"
+                aria-label={`${reason.reason} ${reason.percent.toFixed(0)}%`}
+              >
+                <div
+                  className="crm-dashboard-progress-fill"
+                  style={{ width: `${Math.max(5, reason.percent)}%` }}
+                />
+              </div>
             </div>
-            <div className="crm-dashboard-progress-track">
-              <div className="crm-dashboard-progress-fill" style={{ width: `${reason.percent}%` }} />
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
+      {reasons.length > 0 ? (
+        <CardFooter className="justify-between border-t border-border/70 bg-background/55">
+          <span className="text-xs text-muted-foreground">
+            {t('Total lost leads with reasons')}: {formatNumber(totalLostReasons)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {t('Top reason')}: {t(reasons[0].reason)}
+          </span>
+        </CardFooter>
+      ) : null}
     </DashboardCard>
   );
 }
