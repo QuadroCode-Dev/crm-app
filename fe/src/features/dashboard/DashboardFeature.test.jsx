@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { RouterProvider } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
@@ -527,6 +527,89 @@ describe('Dashboard feature', () => {
     expect(await screen.findByText('No urgent leads right now.')).toBeInTheDocument();
     expect(screen.getByText('All visible opportunities are under control.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'View all leads' })[0]).toHaveAttribute('href', '/leads');
+  });
+
+  it('renders trends and updates the selected dashboard date range', async () => {
+    authenticate();
+
+    const now = dayjs();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'trend-lead-today',
+              title: 'Today lead',
+              status: 'New',
+              stageName: 'New Lead',
+              ownerName: 'Lina',
+              estimatedCost: 12000,
+              createdAtUtc: now.subtract(2, 'hour').toISOString(),
+              updatedAtUtc: now.subtract(2, 'hour').toISOString(),
+            },
+            {
+              id: 'trend-won-yesterday',
+              title: 'Won yesterday',
+              status: 'Won',
+              stageName: 'Won',
+              ownerName: 'Sara',
+              estimatedCost: 30000,
+              createdAtUtc: now.subtract(2, 'day').toISOString(),
+              updatedAtUtc: now.subtract(1, 'day').toISOString(),
+            },
+          ],
+          total: 2,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('Trends')).toBeInTheDocument();
+    expect(screen.getByText('Leads Over Time')).toBeInTheDocument();
+    expect(screen.getByText('Won Revenue Over Time')).toBeInTheDocument();
+    expect(screen.getByText('Conversion Rate Over Time')).toBeInTheDocument();
+
+    const todayButton = screen.getByRole('button', { name: 'Today' });
+    const monthButton = screen.getByRole('button', { name: 'This Month' });
+    const last30DaysButton = screen.getByRole('button', { name: 'Last 30 Days' });
+    const customButton = screen.getByRole('button', { name: 'Custom' });
+
+    expect(monthButton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(last30DaysButton);
+    expect(last30DaysButton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(todayButton);
+    expect(todayButton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(customButton);
+    expect(customButton).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shows an empty state when trend data is unavailable for the selected range', async () => {
+    authenticate();
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/leads`, () =>
+        HttpResponse.json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        }),
+      ),
+    );
+
+    renderRoute(['/dashboard']);
+
+    expect(await screen.findByText('No trend data yet')).toBeInTheDocument();
+    expect(
+      screen.getByText('Leads, won revenue, and conversion rate trends will appear once activity exists in this date range.'),
+    ).toBeInTheDocument();
   });
 
   it('renders quick actions with the expected destinations', async () => {

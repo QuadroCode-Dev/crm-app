@@ -326,6 +326,41 @@
   font-weight: 800;
 }
 
+.crm-dashboard-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+}
+
+.crm-dashboard-trend-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--crm-color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.crm-dashboard-trend-legend__item::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: var(--crm-color-primary);
+}
+
+.crm-dashboard-trend-legend__item--leads::before {
+  background: var(--chart-1);
+}
+
+.crm-dashboard-trend-legend__item--revenue::before {
+  background: var(--chart-2);
+}
+
+.crm-dashboard-trend-legend__item--conversion::before {
+  background: var(--chart-3);
+}
+
 .crm-dashboard-quick-action {
   text-decoration: none;
 }

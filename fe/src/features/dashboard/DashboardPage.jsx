@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from 'recharts';
 import {
   AlertTriangleIcon,
   ArrowRightIcon,
@@ -96,6 +96,14 @@ const SALES_FUNNEL_STAGE_ORDER = [
   'Qualified',
   'Proposal Sent',
   'Won',
+];
+
+const DATE_RANGE_OPTIONS = [
+  { id: 'today', label: 'Today' },
+  { id: 'this-week', label: 'This Week' },
+  { id: 'this-month', label: 'This Month' },
+  { id: 'last-30-days', label: 'Last 30 Days' },
+  { id: 'custom', label: 'Custom' },
 ];
 
 function formatCurrency(value) {
@@ -397,12 +405,99 @@ function buildLeadsNeedingAttentionRows({ leads, overdueTaskItems, t }) {
     .slice(0, 6);
 }
 
+function getDateRangeLabel(dateRange, t) {
+  const option = DATE_RANGE_OPTIONS.find((item) => item.id === dateRange);
+
+  return t(option?.label || 'This Month');
+}
+
+function getTrendBuckets(dateRange) {
+  const now = dayjs();
+
+  if (dateRange === 'today') {
+    const startOfToday = now.startOf('day');
+
+    return Array.from({ length: 6 }, (_, index) => {
+      const start = startOfToday.add(index * 4, 'hour');
+      const end = index === 5 ? startOfToday.add(1, 'day') : start.add(4, 'hour');
+
+      return {
+        start,
+        end,
+        label: start.format('ha'),
+      };
+    });
+  }
+
+  const dayCountByRange = {
+    'this-week': 7,
+    'this-month': Math.max(now.date(), 1),
+    'last-30-days': 30,
+    custom: 14,
+  };
+  const dayCount = dayCountByRange[dateRange] || dayCountByRange['this-month'];
+
+  return Array.from({ length: dayCount }, (_, index) => {
+    const start = now.subtract(dayCount - 1 - index, 'day').startOf('day');
+
+    return {
+      start,
+      end: start.add(1, 'day'),
+      label: start.format(dayCount > 10 ? 'MMM D' : 'ddd'),
+    };
+  });
+}
+
+function isWithinTrendBucket(value, bucket) {
+  if (!value) {
+    return false;
+  }
+
+  const date = dayjs(value);
+
+  return date.isValid() && !date.isBefore(bucket.start) && date.isBefore(bucket.end);
+}
+
+function buildTrendRows({ leads, dateRange }) {
+  return getTrendBuckets(dateRange).map((bucket) => {
+    const createdLeads = leads.filter((lead) => isWithinTrendBucket(lead.createdAtUtc, bucket));
+    const wonLeads = leads.filter((lead) => {
+      const status = lead.status?.toLowerCase();
+      const stageName = lead.stageName?.toLowerCase();
+      const wonDate = lead.wonAtUtc ?? lead.closedAtUtc ?? lead.updatedAtUtc;
+
+      return (
+        (status === 'won' || stageName === 'won') &&
+        isWithinTrendBucket(wonDate, bucket)
+      );
+    });
+    const wonRevenue = wonLeads.reduce(
+      (sum, lead) => sum + (Number(lead.wonValue ?? lead.estimatedCost ?? lead.value) || 0),
+      0,
+    );
+    const conversionRate =
+      createdLeads.length > 0
+        ? (wonLeads.length / createdLeads.length) * 100
+        : wonLeads.length > 0
+          ? 100
+          : 0;
+
+    return {
+      label: bucket.label,
+      leads: createdLeads.length,
+      wonRevenue,
+      conversionRate,
+    };
+  });
+}
+
 function buildDashboardModel({
   leads,
   leadsBySource,
   pipelineSummary,
   tasks,
   tasksSummary,
+  dateRange,
   t,
 }) {
   const newLeads = leads.filter((lead) => lead.status?.toLowerCase() === 'new').length;
@@ -491,22 +586,7 @@ function buildDashboardModel({
     overdueTaskItems,
     t,
   });
-  const trendRows = Array.from({ length: 6 }, (_, index) => {
-    const day = dayjs().subtract(5 - index, 'day');
-    const leadsCreated = leads.filter((lead) =>
-      lead.createdAtUtc ? dayjs(lead.createdAtUtc).isSame(day, 'day') : false,
-    ).length;
-    const leadsUpdated = leads.filter((lead) =>
-      lead.updatedAtUtc ? dayjs(lead.updatedAtUtc).isSame(day, 'day') : false,
-    ).length;
-
-    return {
-      label: day.format('MMM D'),
-      leads: leadsCreated,
-      activity: leadsUpdated,
-      conversion: conversionRate,
-    };
-  });
+  const trendRows = buildTrendRows({ leads, dateRange });
   const todayPriorities = [
     {
       label: t('Contact new leads'),
@@ -916,14 +996,22 @@ function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
   );
 }
 
-function DashboardPeriodControls({ t }) {
+function DashboardPeriodControls({ selectedDateRange, onDateRangeChange, t }) {
   return (
     <div className="crm-dashboard-period-controls" aria-label={t('Dashboard period')}>
-      <button type="button">{t('This Week')}</button>
-      <button type="button" className="crm-dashboard-period-controls__active">
-        {t('This Month')}
-      </button>
-      <button type="button">{t('Last 30 Days')}</button>
+      {DATE_RANGE_OPTIONS.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          className={cn(
+            selectedDateRange === option.id && 'crm-dashboard-period-controls__active',
+          )}
+          aria-pressed={selectedDateRange === option.id}
+          onClick={() => onDateRangeChange(option.id)}
+        >
+          {t(option.label)}
+        </button>
+      ))}
     </div>
   );
 }
@@ -1238,15 +1326,22 @@ function FollowUpHealthCard({ health, t }) {
   );
 }
 
-function TrendsCard({ trends, t }) {
+function TrendsCard({ dateRangeLabel, trends, t }) {
+  const hasTrendData = trends.some(
+    (item) => item.leads > 0 || item.wonRevenue > 0 || item.conversionRate > 0,
+  );
   const chartConfig = {
     leads: {
       label: t('Leads'),
       color: 'var(--chart-1)',
     },
-    activity: {
-      label: t('Activity'),
+    wonRevenue: {
+      label: t('Won Revenue'),
       color: 'var(--chart-2)',
+    },
+    conversionRate: {
+      label: t('Conversion Rate (%)'),
+      color: 'var(--chart-3)',
     },
   };
 
@@ -1256,26 +1351,108 @@ function TrendsCard({ trends, t }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle>{t('Trends')}</CardTitle>
-            <CardDescription>{t('Lead intake and activity over the last 6 days')}</CardDescription>
+            <CardDescription>
+              {t('Leads, won revenue, and conversion rate over time')}
+            </CardDescription>
           </div>
-          <Badge variant="outline">{t('This Month')}</Badge>
+          <Badge variant="outline">{dateRangeLabel}</Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <ChartContainer
-          className="h-[13rem] w-full"
-          config={chartConfig}
-          initialDimension={{ width: 560, height: 208 }}
-        >
-          <BarChart data={trends} margin={{ left: 4, right: 4, top: 8 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={8} />
-            <YAxis axisLine={false} tickLine={false} width={32} />
-            <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
-            <Bar dataKey="leads" fill="var(--color-leads)" radius={[8, 8, 2, 2]} />
-            <Bar dataKey="activity" fill="var(--color-activity)" radius={[8, 8, 2, 2]} />
-          </BarChart>
-        </ChartContainer>
+      <CardContent className="space-y-4">
+        {hasTrendData ? (
+          <>
+            <div className="crm-dashboard-trend-legend">
+              <span className="crm-dashboard-trend-legend__item crm-dashboard-trend-legend__item--leads">
+                {t('Leads Over Time')}
+              </span>
+              <span className="crm-dashboard-trend-legend__item crm-dashboard-trend-legend__item--revenue">
+                {t('Won Revenue Over Time')}
+              </span>
+              <span className="crm-dashboard-trend-legend__item crm-dashboard-trend-legend__item--conversion">
+                {t('Conversion Rate Over Time')}
+              </span>
+            </div>
+            <ChartContainer
+              className="h-[13rem] w-full"
+              config={chartConfig}
+              initialDimension={{ width: 560, height: 208 }}
+            >
+              <LineChart data={trends} margin={{ left: 4, right: 4, top: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  axisLine={false}
+                  dataKey="label"
+                  interval="preserveStartEnd"
+                  tickLine={false}
+                  tickMargin={8}
+                />
+                <YAxis
+                  yAxisId="count"
+                  axisLine={false}
+                  tickLine={false}
+                  width={32}
+                />
+                <YAxis
+                  yAxisId="value"
+                  axisLine={false}
+                  orientation="right"
+                  tickFormatter={(value) => formatCompactCurrency(Number(value) || 0)}
+                  tickLine={false}
+                  width={44}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => {
+                        if (name === 'wonRevenue') {
+                          return formatCurrency(Number(value) || 0);
+                        }
+
+                        if (name === 'conversionRate') {
+                          return `${Number(value || 0).toFixed(1).replace(/\.0$/, '')}%`;
+                        }
+
+                        return formatNumber(Number(value) || 0);
+                      }}
+                    />
+                  }
+                />
+                <Line
+                  yAxisId="count"
+                  type="monotone"
+                  dataKey="leads"
+                  stroke="var(--color-leads)"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  yAxisId="value"
+                  type="monotone"
+                  dataKey="wonRevenue"
+                  stroke="var(--color-wonRevenue)"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  yAxisId="count"
+                  type="monotone"
+                  dataKey="conversionRate"
+                  stroke="var(--color-conversionRate)"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ChartContainer>
+          </>
+        ) : (
+          <EmptyState
+            title={t('No trend data yet')}
+            description={t('Leads, won revenue, and conversion rate trends will appear once activity exists in this date range.')}
+          />
+        )}
       </CardContent>
     </DashboardCard>
   );
@@ -1669,6 +1846,7 @@ function UpcomingTasksCard({ tasks, t }) {
 
 function DashboardPage() {
   const { t } = useLanguage();
+  const [selectedDateRange, setSelectedDateRange] = useState('this-month');
   const leadsQuery = useQuery({
     queryKey: ['dashboard', 'leads'],
     queryFn: () => getLeads({ page: 1, pageSize: 100 }),
@@ -1730,9 +1908,10 @@ function DashboardPage() {
         pipelineSummary,
         tasks,
         tasksSummary,
+        dateRange: selectedDateRange,
         t,
       }),
-    [leads, leadsBySource, pipelineSummary, t, tasks, tasksSummary],
+    [leads, leadsBySource, pipelineSummary, selectedDateRange, t, tasks, tasksSummary],
   );
 
   function handleRetry() {
@@ -1771,7 +1950,11 @@ function DashboardPage() {
       <h1 className="sr-only">{t('Dashboard')}</h1>
 
       <div className="crm-dashboard-shell">
-        <DashboardPeriodControls t={t} />
+        <DashboardPeriodControls
+          selectedDateRange={selectedDateRange}
+          onDateRangeChange={setSelectedDateRange}
+          t={t}
+        />
 
         <div className="crm-dashboard-target-layout">
           <main className="crm-dashboard-target-main">
@@ -1795,7 +1978,11 @@ function DashboardPage() {
             </section>
 
             <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]">
-              <TrendsCard trends={dashboardModel.trends} t={t} />
+              <TrendsCard
+                dateRangeLabel={getDateRangeLabel(selectedDateRange, t)}
+                trends={dashboardModel.trends}
+                t={t}
+              />
               <FollowUpHealthCard health={dashboardModel.followUpHealth} t={t} />
               <LeadsNeedingAttentionCard leads={dashboardModel.leadsNeedingAttention} t={t} />
             </section>
