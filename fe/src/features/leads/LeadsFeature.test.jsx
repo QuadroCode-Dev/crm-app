@@ -57,6 +57,8 @@ describe('Leads feature', () => {
     ).toBeInTheDocument();
 
     expect(await screen.findByText('Solar rooftop installation')).toBeInTheDocument();
+    expect(screen.getByText('4d 6h in stage')).toBeInTheDocument();
+    expect(screen.getByText('8d 3h rotting')).toBeInTheDocument();
     expect(screen.getByText('Duplicate')).toBeInTheDocument();
   });
 

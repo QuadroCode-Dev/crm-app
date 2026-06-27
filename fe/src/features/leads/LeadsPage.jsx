@@ -38,6 +38,8 @@ import LeadFormDialog from './LeadFormDialog.jsx';
 import './leads.css';
 
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
+const defaultRottingThresholdDays = 7;
+const hoursPerDay = 24;
 
 function formatCurrency(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
@@ -53,6 +55,46 @@ function formatCurrency(value) {
 
 function formatDate(value) {
   return value ? dayjs(value).format('MMM D, YYYY') : '-';
+}
+
+function getHoursInStage(lead) {
+  if (lead.currentStageEnteredAtUtc) {
+    return Math.max(0, dayjs().diff(dayjs(lead.currentStageEnteredAtUtc), 'hour'));
+  }
+
+  if (Number.isFinite(Number(lead.daysInCurrentStage))) {
+    return Math.max(0, Math.round(Number(lead.daysInCurrentStage) * hoursPerDay));
+  }
+
+  return 0;
+}
+
+function formatStageAge(totalHours, t) {
+  const hours = Math.max(0, Math.floor(totalHours));
+  const days = Math.floor(hours / hoursPerDay);
+  const remainingHours = hours % hoursPerDay;
+
+  if (days === 0) {
+    return `${remainingHours}${t('h')}`;
+  }
+
+  return `${days}${t('d')} ${remainingHours}${t('h')}`;
+}
+
+function renderStageRottingCell(lead, t) {
+  const hoursInStage = getHoursInStage(lead);
+  const isRotting = hoursInStage >= defaultRottingThresholdDays * hoursPerDay;
+  const label = isRotting
+    ? `${formatStageAge(hoursInStage, t)} ${t('rotting')}`
+    : `${formatStageAge(hoursInStage, t)} ${t('in stage')}`;
+
+  return (
+    <Chip
+      className={`crm-leads-stage-age ${isRotting ? 'crm-leads-stage-age--rotting' : ''}`}
+      label={label}
+      size="small"
+    />
+  );
 }
 
 function renderCompactCell(value) {
@@ -266,7 +308,7 @@ function LeadsPage() {
         minWidth: 0,
         sortable: false,
         filterable: false,
-        renderCell: () => renderCompactCell('-'),
+        renderCell: (params) => renderStageRottingCell(params.row, t),
       },
       {
         field: 'status',
