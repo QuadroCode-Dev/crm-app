@@ -2,6 +2,8 @@ import {
   Box,
   Button,
   Chip,
+  MenuItem,
+  Popover,
   Stack,
   TextField,
   Typography,
@@ -47,6 +49,32 @@ import './pipeline.css';
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
 const defaultRottingThresholdHours = 168;
 const hoursPerDay = 24;
+const allFilterValue = 'all';
+
+const phoneCountryOptions = [
+  { code: 'LB', label: 'Lebanon', prefix: '+961' },
+  { code: 'US', label: 'United States', prefix: '+1' },
+  { code: 'GB', label: 'United Kingdom', prefix: '+44' },
+  { code: 'TR', label: 'Turkey', prefix: '+90' },
+  { code: 'AE', label: 'United Arab Emirates', prefix: '+971' },
+  { code: 'SA', label: 'Saudi Arabia', prefix: '+966' },
+  { code: 'QA', label: 'Qatar', prefix: '+974' },
+  { code: 'KW', label: 'Kuwait', prefix: '+965' },
+  { code: 'FR', label: 'France', prefix: '+33' },
+  { code: 'DE', label: 'Germany', prefix: '+49' },
+];
+
+function sanitizePhone(value) {
+  return String(value || '').replace(/[^\d+]/g, '').replace(/^00/, '+');
+}
+
+function getPhoneCountry(phone) {
+  const sanitized = sanitizePhone(phone);
+
+  return [...phoneCountryOptions]
+    .sort((left, right) => right.prefix.length - left.prefix.length)
+    .find((option) => sanitized.startsWith(option.prefix));
+}
 
 function getHoursInStage(lead) {
   if (lead.currentStageEnteredAtUtc) {
@@ -58,6 +86,12 @@ function getHoursInStage(lead) {
   }
 
   return 0;
+}
+
+function isLeadRotting(lead, stage) {
+  const rottingThresholdHours = stage?.rottingThresholdHours || defaultRottingThresholdHours;
+
+  return getHoursInStage(lead) >= rottingThresholdHours;
 }
 
 function formatStageAge(totalHours, t) {
@@ -166,8 +200,7 @@ function StageColumn({ stage, leads, activeStageId, children }) {
 function PipelineCard({ lead, stage }) {
   const { t } = useLanguage();
   const hoursInStage = getHoursInStage(lead);
-  const rottingThresholdHours = stage?.rottingThresholdHours || defaultRottingThresholdHours;
-  const isRotting = hoursInStage >= rottingThresholdHours;
+  const isRotting = isLeadRotting(lead, stage);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
   });
@@ -181,7 +214,7 @@ function PipelineCard({ lead, stage }) {
     <Box
       ref={setNodeRef}
       style={style}
-      className="crm-pipeline-card"
+      className={`crm-pipeline-card ${isRotting ? 'crm-pipeline-card--rotting' : ''}`}
       {...attributes}
       {...listeners}
     >
@@ -221,8 +254,30 @@ function PipelineCard({ lead, stage }) {
   );
 }
 
-function PipelineBoardToolbar({ dealCount, dealValue, search, onAddLead, onSearchChange }) {
+function PipelineBoardToolbar({
+  countryOptions,
+  dealCount,
+  dealValue,
+  filterCount,
+  filters,
+  search,
+  serviceOptions,
+  sourceOptions,
+  onAddLead,
+  onFilterChange,
+  onResetFilters,
+  onSearchChange,
+}) {
   const { t } = useLanguage();
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const filterOpen = Boolean(filterAnchorEl);
+
+  function handleFilterChange(name, value) {
+    onFilterChange({
+      ...filters,
+      [name]: value,
+    });
+  }
 
   return (
     <Box className="crm-pipeline-toolbar">
@@ -250,9 +305,98 @@ function PipelineBoardToolbar({ dealCount, dealValue, search, onAddLead, onSearc
           endIcon={<CaretDown size={15} weight="bold" />}
           startIcon={<FunnelSimple size={18} weight="duotone" />}
           variant="outlined"
+          onClick={(event) => setFilterAnchorEl(event.currentTarget)}
         >
-          {t('Filter')}
+          {filterCount ? `${t('Filter')} (${filterCount})` : t('Filter')}
         </Button>
+        <Popover
+          anchorEl={filterAnchorEl}
+          open={filterOpen}
+          onClose={() => setFilterAnchorEl(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+          slotProps={{
+            paper: {
+              className: 'crm-pipeline-filter-popover',
+            },
+          }}
+        >
+          <Stack className="crm-pipeline-filter-menu" spacing={1.4}>
+            <Typography className="crm-pipeline-filter-menu__title">
+              {t('Filter pipeline')}
+            </Typography>
+            <TextField
+              label={t('Stage timing')}
+              select
+              size="small"
+              value={filters.stageTiming}
+              onChange={(event) => handleFilterChange('stageTiming', event.target.value)}
+            >
+              <MenuItem value={allFilterValue}>{t('All leads')}</MenuItem>
+              <MenuItem value="rotting">{t('Rotting only')}</MenuItem>
+            </TextField>
+            <TextField
+              label={t('Created date')}
+              select
+              size="small"
+              value={filters.createdDate}
+              onChange={(event) => handleFilterChange('createdDate', event.target.value)}
+            >
+              <MenuItem value={allFilterValue}>{t('Any date')}</MenuItem>
+              <MenuItem value="today">{t('Today')}</MenuItem>
+            </TextField>
+            <TextField
+              label={t('Source')}
+              select
+              size="small"
+              value={filters.source}
+              onChange={(event) => handleFilterChange('source', event.target.value)}
+            >
+              <MenuItem value={allFilterValue}>{t('All sources')}</MenuItem>
+              {sourceOptions.map((source) => (
+                <MenuItem key={source.id || source.name} value={source.id || source.name}>
+                  {source.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label={t('Service requested')}
+              select
+              size="small"
+              value={filters.service}
+              onChange={(event) => handleFilterChange('service', event.target.value)}
+            >
+              <MenuItem value={allFilterValue}>{t('All services')}</MenuItem>
+              {serviceOptions.map((service) => (
+                <MenuItem key={service} value={service}>
+                  {service}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label={t('Country')}
+              select
+              size="small"
+              value={filters.country}
+              onChange={(event) => handleFilterChange('country', event.target.value)}
+            >
+              <MenuItem value={allFilterValue}>{t('All countries')}</MenuItem>
+              {countryOptions.map((country) => (
+                <MenuItem key={country.prefix} value={country.prefix}>
+                  {country.label} ({country.prefix})
+                </MenuItem>
+              ))}
+            </TextField>
+            <Button
+              className="crm-pipeline-filter-menu__reset"
+              disabled={!filterCount}
+              onClick={onResetFilters}
+              variant="outlined"
+            >
+              {t('Reset filters')}
+            </Button>
+          </Stack>
+        </Popover>
       </Box>
 
       <Box className="crm-pipeline-toolbar__summary">
@@ -279,6 +423,13 @@ function PipelinePage() {
   const [activeLeadId, setActiveLeadId] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState({
+    stageTiming: allFilterValue,
+    createdDate: allFilterValue,
+    source: allFilterValue,
+    service: allFilterValue,
+    country: allFilterValue,
+  });
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const stagesQuery = useQuery({
@@ -428,14 +579,26 @@ function PipelinePage() {
     [stagesQuery.data],
   );
   const allLeads = leadsQuery.data?.items || [];
+  const stageById = useMemo(
+    () => Object.fromEntries(sortedStages.map((stage) => [stage.id, stage])),
+    [sortedStages],
+  );
+  const countryOptions = useMemo(() => {
+    const countries = allLeads
+      .map((lead) => getPhoneCountry(lead.phone))
+      .filter(Boolean);
+    const uniqueCountries = new Map(countries.map((country) => [country.prefix, country]));
+
+    return [...uniqueCountries.values()].sort((left, right) =>
+      left.label.localeCompare(right.label),
+    );
+  }, [allLeads]);
   const normalizedSearch = search.trim().toLowerCase();
   const leads = useMemo(() => {
-    if (!normalizedSearch) {
-      return allLeads;
-    }
-
-    return allLeads.filter((lead) =>
-      [
+    return allLeads.filter((lead) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        [
         lead.title,
         lead.contactName,
         lead.serviceRequested,
@@ -443,9 +606,53 @@ function PipelinePage() {
         lead.phone,
       ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
-    );
-  }, [allLeads, normalizedSearch]);
+          .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+
+      if (!matchesSearch) {
+        return false;
+      }
+
+      if (
+        filters.stageTiming === 'rotting' &&
+        !isLeadRotting(lead, stageById[lead.stageId])
+      ) {
+        return false;
+      }
+
+      if (
+        filters.createdDate === 'today' &&
+        !dayjs(lead.createdAtUtc).isSame(dayjs(), 'day')
+      ) {
+        return false;
+      }
+
+      if (filters.source !== allFilterValue) {
+        const sourceValue = String(lead.sourceId || lead.source || '');
+
+        if (sourceValue !== filters.source) {
+          return false;
+        }
+      }
+
+      if (
+        filters.service !== allFilterValue &&
+        String(lead.serviceRequested || '') !== filters.service
+      ) {
+        return false;
+      }
+
+      if (filters.country !== allFilterValue) {
+        const country = getPhoneCountry(lead.phone);
+
+        if (country?.prefix !== filters.country) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allLeads, filters, normalizedSearch, stageById]);
+  const filterCount = Object.values(filters).filter((value) => value !== allFilterValue).length;
   const dealValue = leads.reduce((total, lead) => total + Number(lead.estimatedCost || 0), 0);
   const activeLead = leads.find((lead) => lead.id === activeLeadId) || null;
   const leadStageMap = Object.fromEntries(leads.map((lead) => [lead.id, lead.stageId]));
@@ -507,8 +714,23 @@ function PipelinePage() {
       <PipelineBoardToolbar
         dealCount={leads.length}
         dealValue={dealValue}
+        filterCount={filterCount}
+        filters={filters}
+        countryOptions={countryOptions}
         search={search}
+        serviceOptions={servicesQuery.data || []}
+        sourceOptions={leadSourcesQuery.data || []}
         onAddLead={() => setFormOpen(true)}
+        onFilterChange={setFilters}
+        onResetFilters={() =>
+          setFilters({
+            stageTiming: allFilterValue,
+            createdDate: allFilterValue,
+            source: allFilterValue,
+            service: allFilterValue,
+            country: allFilterValue,
+          })
+        }
         onSearchChange={setSearch}
       />
 
