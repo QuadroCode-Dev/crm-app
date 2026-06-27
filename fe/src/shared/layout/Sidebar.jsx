@@ -18,6 +18,7 @@ import {
   Lightning,
   Palette,
   PlugsConnected,
+  Tag,
   SquaresFour,
   Users,
 } from '@phosphor-icons/react';
@@ -40,6 +41,7 @@ const settingsItems = [
   { icon: GearSix, labelKey: 'navigation.pipelineStages', to: '/settings/pipeline' },
   { icon: Lightning, labelKey: 'navigation.automationRules', to: '/settings/automation' },
   { icon: PlugsConnected, labelKey: 'navigation.integrations', to: '/settings/integrations' },
+  { icon: Tag, labelKey: 'navigation.services', to: '/settings/services' },
   { icon: Palette, labelKey: 'navigation.customization', to: '/settings/customization' },
 ];
 

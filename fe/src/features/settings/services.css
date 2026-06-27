@@ -1,0 +1,37 @@
+.crm-services-settings-page {
+  width: 100%;
+}
+
+.crm-services-settings-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-services-settings-card {
+  border-radius: 16px !important;
+}
+
+.crm-services-settings-card__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.crm-services-settings-card__meta,
+.crm-services-settings-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .crm-services-settings-card__content {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-services-settings-card__meta,
+  .crm-services-settings-card__actions {
+    justify-content: flex-start;
+  }
+}

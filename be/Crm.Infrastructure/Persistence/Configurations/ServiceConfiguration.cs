@@ -20,6 +20,9 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(x => x.EstimatedCost)
+            .HasPrecision(18, 2);
+
         builder.HasIndex(x => x.Code)
             .IsUnique();
     }

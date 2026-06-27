@@ -61,9 +61,27 @@ export const mockPipelineStages = [
 ];
 
 export const mockServices = [
-  'Hair Transplant',
-  'Plastic Surgery',
-  'Rhinoplasty',
+  {
+    id: 'service-1',
+    name: 'Hair Transplant',
+    code: 'hair_transplant',
+    estimatedCost: 1500,
+    isActive: true,
+  },
+  {
+    id: 'service-2',
+    name: 'Plastic Surgery',
+    code: 'plastic_surgery',
+    estimatedCost: 2500,
+    isActive: true,
+  },
+  {
+    id: 'service-3',
+    name: 'Rhinoplasty',
+    code: 'rhinoplasty',
+    estimatedCost: null,
+    isActive: true,
+  },
 ];
 
 export const mockLeads = [

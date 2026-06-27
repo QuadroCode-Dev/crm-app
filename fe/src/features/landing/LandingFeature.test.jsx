@@ -43,6 +43,11 @@ afterAll(() => {
 });
 
 describe('Landing feature', () => {
+  async function selectService(user, name = 'Plastic Surgery') {
+    await user.click(screen.getByLabelText('Service requested'));
+    await user.click(await screen.findByRole('option', { name }));
+  }
+
   it('validates the landing form', async () => {
     const user = userEvent.setup();
 
@@ -88,7 +93,7 @@ describe('Landing feature', () => {
 
     await user.type(screen.getByLabelText('Full name'), 'Zeynep Kara');
     await user.type(screen.getByLabelText('Email'), 'zeynep@example.com');
-    await user.type(screen.getByLabelText('Service requested'), 'Kitchen remodel');
+    await selectService(user, 'Plastic Surgery');
     await user.click(screen.getByRole('button', { name: 'Submit request' }));
 
     await waitFor(() => {
@@ -98,6 +103,8 @@ describe('Landing feature', () => {
     expect(capturedPayload.utmSource).toBe('google');
     expect(capturedPayload.utmMedium).toBe('cpc');
     expect(capturedPayload.utmCampaign).toBe('summer-2026');
+    expect(capturedPayload.serviceRequested).toBe('Plastic Surgery');
+    expect(capturedPayload.estimatedCost).toBe(2500);
     expect(capturedPayload.pageUrl).toContain('/landing?utm_source=google&utm_medium=cpc&utm_campaign=summer-2026');
   });
 
@@ -108,7 +115,8 @@ describe('Landing feature', () => {
 
     await screen.findByRole('heading', { name: 'Request a callback' });
     await user.type(screen.getByLabelText('Full name'), 'Zeynep Kara');
-    await user.type(screen.getByLabelText('Phone'), '+90 555 222 3344');
+    await user.type(screen.getByLabelText('Phone'), '905552223344');
+    await selectService(user, 'Rhinoplasty');
     await user.click(screen.getByRole('button', { name: 'Submit request' }));
 
     expect(
@@ -138,12 +146,30 @@ describe('Landing feature', () => {
 
     await screen.findByRole('heading', { name: 'Request a callback' });
     await user.type(screen.getByLabelText('Full name'), 'Zeynep Kara');
-    await user.type(screen.getByLabelText('Phone'), '+90 555 222 3344');
+    await user.type(screen.getByLabelText('Phone'), '905552223344');
+    await selectService(user);
     await user.click(screen.getByRole('button', { name: 'Submit request' }));
 
     expect(
       await screen.findByText('We could not send your request right now. Please try again in a moment.'),
     ).toBeInTheDocument();
+  });
+
+  it('validates public landing input formats', async () => {
+    const user = userEvent.setup();
+
+    renderRoute(['/landing']);
+
+    await screen.findByRole('heading', { name: 'Request a callback' });
+    await user.type(screen.getByLabelText('Full name'), 'Zeynep 123');
+    await user.type(screen.getByLabelText('Email'), 'ziadk@ff');
+    await user.type(screen.getByLabelText('Phone'), '90555abc');
+    await selectService(user);
+    await user.click(screen.getByRole('button', { name: 'Submit request' }));
+
+    expect(screen.getByLabelText('Full name')).toHaveValue('Zeynep ');
+    expect(screen.getByLabelText('Phone')).toHaveValue('90555');
+    expect(await screen.findByText('Enter a valid email address.')).toBeInTheDocument();
   });
 
   it('renders a hidden honeypot field', async () => {

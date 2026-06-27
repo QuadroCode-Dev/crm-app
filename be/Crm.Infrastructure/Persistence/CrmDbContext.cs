@@ -119,6 +119,7 @@ public class CrmDbContext : DbContext
                 Id = Guid.Parse("88888888-8888-8888-8888-888888888881"),
                 Name = "Hair Transplant",
                 Code = "hair_transplant",
+                EstimatedCost = 1500m,
                 IsActive = true
             },
             new Service
@@ -126,6 +127,7 @@ public class CrmDbContext : DbContext
                 Id = Guid.Parse("88888888-8888-8888-8888-888888888882"),
                 Name = "Plastic Surgery",
                 Code = "plastic_surgery",
+                EstimatedCost = 2500m,
                 IsActive = true
             },
             new Service
@@ -133,6 +135,7 @@ public class CrmDbContext : DbContext
                 Id = Guid.Parse("88888888-8888-8888-8888-888888888883"),
                 Name = "Rhinoplasty",
                 Code = "rhinoplasty",
+                EstimatedCost = 2000m,
                 IsActive = true
             }
         );

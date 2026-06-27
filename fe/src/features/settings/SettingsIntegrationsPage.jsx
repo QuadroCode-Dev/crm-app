@@ -9,7 +9,6 @@ const supportedFields = [
   'email',
   'phone',
   'serviceRequested',
-  'estimatedCost',
   'message',
 ];
 
@@ -99,7 +98,7 @@ function SettingsIntegrationsPage() {
             <Stack spacing={1}>
               <Typography variant="h6">{t('Payload fields')}</Typography>
               <Typography className="crm-muted-text">
-                {t('The public website should send these visible lead-capture fields.')}
+                {t('The public website should send these visible lead-capture fields. Estimated cost is applied from the selected service when configured.')}
               </Typography>
             </Stack>
             <div className="crm-integrations-page__chip-list">

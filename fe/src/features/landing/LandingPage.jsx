@@ -7,52 +7,62 @@ import {
   CardContent,
   Chip,
   Grid2,
+  MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import { submitLeadCapture } from '../../api/publicApi.js';
+import { getServices } from '../../api/servicesApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import { saveLeadCaptureSuccess } from './landingStorage.js';
 import './landing.css';
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const nameCharacterPattern = /[^A-Za-z\s'-]/g;
+const phoneCharacterPattern = /\D/g;
+
 function createLandingSchema(t) {
   return yup
     .object({
-      fullName: yup.string().trim().required(t('Full name is required.')),
-    email: yup
-      .string()
-      .trim()
-      .nullable()
-      .transform((value) => value || '')
-      .test('email-format', t('Enter a valid email address.'), (value) => {
-        if (!value) {
-          return true;
-        }
+      fullName: yup
+        .string()
+        .trim()
+        .required(t('Full name is required.'))
+        .matches(/^[A-Za-z\s'-]+$/, t('Name can contain letters only.')),
+      email: yup
+        .string()
+        .trim()
+        .nullable()
+        .transform((value) => value || '')
+        .test('email-format', t('Enter a valid email address.'), (value) => {
+          if (!value) {
+            return true;
+          }
 
-        return yup.string().email().isValidSync(value);
-      }),
-    phone: yup.string().trim().nullable().default(''),
-    serviceRequested: yup.string().trim().nullable(),
-    estimatedCost: yup
-      .number()
-      .transform((value, originalValue) => (originalValue === '' ? null : value))
-      .nullable()
-      .typeError(t('Estimated cost must be a number.')),
-    message: yup.string().trim().nullable(),
-    utmSource: yup.string().trim().nullable(),
-    utmMedium: yup.string().trim().nullable(),
-    utmCampaign: yup.string().trim().nullable(),
-    pageUrl: yup.string().trim().required(),
-    honeypot: yup
-      .string()
-      .test('honeypot-empty', t('Spam detection was triggered.'), (value) => !value),
+          return emailPattern.test(value);
+        }),
+      phone: yup
+        .string()
+        .trim()
+        .nullable()
+        .default('')
+        .matches(/^\d*$/, t('Phone number can contain numbers only.')),
+      serviceRequested: yup.string().trim().required(t('Service requested is required.')),
+      message: yup.string().trim().nullable(),
+      utmSource: yup.string().trim().nullable(),
+      utmMedium: yup.string().trim().nullable(),
+      utmCampaign: yup.string().trim().nullable(),
+      pageUrl: yup.string().trim().required(),
+      honeypot: yup
+        .string()
+        .test('honeypot-empty', t('Spam detection was triggered.'), (value) => !value),
     })
     .test('email-or-phone', t('Provide at least an email or phone number.'), (value, context) => {
       if (value?.email || value?.phone) {
@@ -71,6 +81,10 @@ function LandingPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const servicesQuery = useQuery({
+    queryKey: ['public-services'],
+    queryFn: getServices,
+  });
   const pageUrl = useMemo(() => {
     const origin =
       typeof window !== 'undefined' && window.location.origin !== 'null'
@@ -91,7 +105,6 @@ function LandingPage() {
       email: '',
       phone: '',
       serviceRequested: '',
-      estimatedCost: '',
       message: '',
       utmSource: searchParams.get('utm_source') || '',
       utmMedium: searchParams.get('utm_medium') || '',
@@ -130,12 +143,13 @@ function LandingPage() {
   });
 
   function onSubmit(values) {
+    const selectedService = (servicesQuery.data || []).find(
+      (service) => service.name === values.serviceRequested,
+    );
+
     leadCaptureMutation.mutate({
       ...values,
-      estimatedCost:
-        values.estimatedCost === '' || values.estimatedCost === null
-          ? null
-          : Number(values.estimatedCost),
+      estimatedCost: selectedService?.estimatedCost ?? null,
     });
   }
 
@@ -162,7 +176,12 @@ function LandingPage() {
             </Stack>
           </Grid2>
           <Grid2 size={{ xs: 12, md: 7 }}>
-            <Box component="form" className="crm-public-form" onSubmit={handleSubmit(onSubmit)}>
+            <Box
+              component="form"
+              className="crm-public-form"
+              noValidate
+              onSubmit={handleSubmit(onSubmit)}
+            >
               <Stack spacing={2.5}>
                 <Typography variant="h5">{t('Request a callback')}</Typography>
                 <Typography className="crm-muted-text">
@@ -176,15 +195,25 @@ function LandingPage() {
                     <Controller
                       name="fullName"
                       control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label={t('Full name')}
-                          error={Boolean(errors.fullName)}
-                          helperText={errors.fullName?.message}
-                        />
-                      )}
+                      render={({ field }) => {
+                        const handleNameChange = (event) => {
+                          field.onChange(event.target.value.replace(nameCharacterPattern, ''));
+                        };
+
+                        return (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label={t('Full name')}
+                            onChange={handleNameChange}
+                            inputProps={{
+                              pattern: "[A-Za-z\\s'-]*",
+                            }}
+                            error={Boolean(errors.fullName)}
+                            helperText={errors.fullName?.message}
+                          />
+                        );
+                      }}
                     />
                   </Grid2>
                   <Grid2 size={{ xs: 12, md: 6 }}>
@@ -192,7 +221,22 @@ function LandingPage() {
                       name="serviceRequested"
                       control={control}
                       render={({ field }) => (
-                        <TextField {...field} fullWidth label={t('Service requested')} />
+                        <TextField
+                          {...field}
+                          fullWidth
+                          select
+                          label={t('Service requested')}
+                          error={Boolean(errors.serviceRequested)}
+                          helperText={errors.serviceRequested?.message}
+                          disabled={servicesQuery.isLoading}
+                        >
+                          <MenuItem value="">{t('Select a service')}</MenuItem>
+                          {(servicesQuery.data || []).map((service) => (
+                            <MenuItem key={service.id} value={service.name}>
+                              {service.name}
+                            </MenuItem>
+                          ))}
+                        </TextField>
                       )}
                     />
                   </Grid2>
@@ -205,6 +249,7 @@ function LandingPage() {
                           {...field}
                           fullWidth
                           label={t('Email')}
+                          type="email"
                           error={Boolean(errors.email)}
                           helperText={errors.email?.message}
                         />
@@ -215,30 +260,26 @@ function LandingPage() {
                     <Controller
                       name="phone"
                       control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label={t('Phone')}
-                          error={Boolean(errors.phone)}
-                          helperText={errors.phone?.message}
-                        />
-                      )}
-                    />
-                  </Grid2>
-                  <Grid2 size={{ xs: 12, md: 6 }}>
-                    <Controller
-                      name="estimatedCost"
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label={t('Estimated cost')}
-                          error={Boolean(errors.estimatedCost)}
-                          helperText={errors.estimatedCost?.message}
-                        />
-                      )}
+                      render={({ field }) => {
+                        const handlePhoneChange = (event) => {
+                          field.onChange(event.target.value.replace(phoneCharacterPattern, ''));
+                        };
+
+                        return (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label={t('Phone')}
+                            onChange={handlePhoneChange}
+                            inputProps={{
+                              inputMode: 'numeric',
+                              pattern: '[0-9]*',
+                            }}
+                            error={Boolean(errors.phone)}
+                            helperText={errors.phone?.message}
+                          />
+                        );
+                      }}
                     />
                   </Grid2>
                   <Grid2 size={{ xs: 12 }}>

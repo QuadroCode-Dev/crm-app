@@ -58,15 +58,42 @@
   border-radius: 22px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.96));
   border: 1px solid rgba(219, 228, 240, 0.95);
+  color: #172033;
 }
 
 .crm-public-form .MuiFormLabel-root {
-  color: var(--crm-color-text-muted);
+  color: #526176;
+}
+
+.crm-public-form .MuiTypography-root,
+.crm-public-form .crm-muted-text {
+  color: #526176;
+}
+
+.crm-public-form .MuiInputBase-input {
+  color: #172033;
+}
+
+.crm-public-form .MuiInputBase-input::placeholder {
+  color: #75849a;
+  opacity: 1;
 }
 
 .crm-public-form .MuiOutlinedInput-root {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.96);
+}
+
+.crm-public-form .MuiOutlinedInput-notchedOutline {
+  border-color: #9aa8ba;
+}
+
+.crm-public-form .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #526176;
+}
+
+.crm-public-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--crm-color-primary);
 }
 
 .crm-public-form .MuiButton-root {

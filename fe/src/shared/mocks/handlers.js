@@ -787,12 +787,62 @@ export const handlers = [
 
     return HttpResponse.json(getLeadSources());
   }),
-  http.get(`${apiBaseUrl}/api/services`, ({ request }) => {
+  http.get(`${apiBaseUrl}/api/services`, () => {
+    return HttpResponse.json(state.services || []);
+  }),
+  http.get(`${apiBaseUrl}/api/services/all`, ({ request }) => {
     if (!isAuthorized(request)) {
       return unauthorizedResponse();
     }
 
     return HttpResponse.json(state.services || []);
+  }),
+  http.post(`${apiBaseUrl}/api/services`, async ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    const body = await request.json();
+    const service = {
+      id: createId('service'),
+      code: body.name.toLowerCase().replaceAll(' ', '_'),
+      estimatedCost: null,
+      isActive: true,
+      ...body,
+    };
+
+    state.services.push(service);
+    persistState();
+    return HttpResponse.json(service, { status: 201 });
+  }),
+  http.put(`${apiBaseUrl}/api/services/:id`, async ({ params, request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    const index = state.services.findIndex((service) => service.id === params.id);
+
+    if (index === -1) {
+      return notFoundResponse('Service not found.');
+    }
+
+    const body = await request.json();
+    state.services[index] = {
+      ...state.services[index],
+      ...body,
+      code: body.name?.toLowerCase().replaceAll(' ', '_') || state.services[index].code,
+    };
+    persistState();
+    return HttpResponse.json(state.services[index]);
+  }),
+  http.delete(`${apiBaseUrl}/api/services/:id`, ({ params, request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    state.services = state.services.filter((service) => service.id !== params.id);
+    persistState();
+    return HttpResponse.json({ success: true });
   }),
   http.post(`${apiBaseUrl}/api/pipeline/stages`, async ({ request }) => {
     if (!isAuthorized(request)) {

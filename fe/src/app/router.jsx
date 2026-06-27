@@ -18,6 +18,7 @@ import SettingsAutomationPage from '../features/settings/SettingsAutomationPage.
 import SettingsCustomizationPage from '../features/settings/SettingsCustomizationPage.jsx';
 import SettingsIntegrationsPage from '../features/settings/SettingsIntegrationsPage.jsx';
 import SettingsPipelinePage from '../features/settings/SettingsPipelinePage.jsx';
+import SettingsServicesPage from '../features/settings/SettingsServicesPage.jsx';
 import TasksPage from '../features/tasks/TasksPage.jsx';
 import AppLayout from '../shared/layout/AppLayout.jsx';
 
@@ -110,6 +111,10 @@ export const appRoutes = [
           {
             path: '/settings/integrations',
             element: <SettingsIntegrationsPage />,
+          },
+          {
+            path: '/settings/services',
+            element: <SettingsServicesPage />,
           },
           {
             path: '/settings/customization',

@@ -379,6 +379,10 @@ namespace Crm.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("EstimatedCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -396,6 +400,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         {
                             Id = new Guid("88888888-8888-8888-8888-888888888881"),
                             Code = "hair_transplant",
+                            EstimatedCost = 1500m,
                             IsActive = true,
                             Name = "Hair Transplant"
                         },
@@ -403,6 +408,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         {
                             Id = new Guid("88888888-8888-8888-8888-888888888882"),
                             Code = "plastic_surgery",
+                            EstimatedCost = 2500m,
                             IsActive = true,
                             Name = "Plastic Surgery"
                         },
@@ -410,6 +416,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         {
                             Id = new Guid("88888888-8888-8888-8888-888888888883"),
                             Code = "rhinoplasty",
+                            EstimatedCost = 2000m,
                             IsActive = true,
                             Name = "Rhinoplasty"
                         });

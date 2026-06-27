@@ -45,7 +45,7 @@ import useAuth from '../../shared/hooks/useAuth.js';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
-import { getServices } from '../../api/servicesApi.js';
+import { getServiceNames } from '../../api/servicesApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
 import NoteFormDialog from './NoteFormDialog.jsx';
 import TaskFormDialog from '../tasks/TaskFormDialog.jsx';
@@ -190,7 +190,7 @@ function LeadDetailPage() {
   });
   const servicesQuery = useQuery({
     queryKey: ['services'],
-    queryFn: getServices,
+    queryFn: getServiceNames,
   });
   const stageTimerQuery = useQuery({
     queryKey: ['lead-stage-timer', id],
