@@ -46,21 +46,30 @@ import './pipeline.css';
 
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
 const defaultRottingThresholdDays = 7;
+const hoursPerDay = 24;
 
-function getDaysInStage(lead) {
+function getHoursInStage(lead) {
+  if (lead.currentStageEnteredAtUtc) {
+    return Math.max(0, dayjs().diff(dayjs(lead.currentStageEnteredAtUtc), 'hour'));
+  }
+
   if (Number.isFinite(Number(lead.daysInCurrentStage))) {
-    return Math.max(0, Number(lead.daysInCurrentStage));
+    return Math.max(0, Math.round(Number(lead.daysInCurrentStage) * hoursPerDay));
   }
 
-  if (!lead.currentStageEnteredAtUtc) {
-    return 0;
-  }
-
-  return Math.max(0, dayjs().diff(dayjs(lead.currentStageEnteredAtUtc), 'day'));
+  return 0;
 }
 
-function formatStageAge(days, t) {
-  return `${days}${t('d')}`;
+function formatStageAge(totalHours, t) {
+  const hours = Math.max(0, Math.floor(totalHours));
+  const days = Math.floor(hours / hoursPerDay);
+  const remainingHours = hours % hoursPerDay;
+
+  if (days === 0) {
+    return `${remainingHours}${t('h')}`;
+  }
+
+  return `${days}${t('d')} ${remainingHours}${t('h')}`;
 }
 
 function getDragLeadId(activeId) {
@@ -111,8 +120,8 @@ function StageColumn({ stage, leads, activeStageId, children }) {
     (total, lead) => total + Number(lead.estimatedCost || 0),
     0,
   );
-  const averageDaysInStage = leads.length
-    ? Math.round(leads.reduce((total, lead) => total + getDaysInStage(lead), 0) / leads.length)
+  const averageHoursInStage = leads.length
+    ? Math.round(leads.reduce((total, lead) => total + getHoursInStage(lead), 0) / leads.length)
     : 0;
 
   return (
@@ -127,7 +136,7 @@ function StageColumn({ stage, leads, activeStageId, children }) {
             <Typography variant="h6">{stage.name}</Typography>
             <Chip
               className="crm-pipeline-column__age-chip"
-              label={`${t('Avg')} ${formatStageAge(averageDaysInStage, t)}`}
+              label={`${t('Avg')} ${formatStageAge(averageHoursInStage, t)}`}
               size="small"
               variant="outlined"
             />
@@ -156,8 +165,8 @@ function StageColumn({ stage, leads, activeStageId, children }) {
 
 function PipelineCard({ lead }) {
   const { t } = useLanguage();
-  const daysInStage = getDaysInStage(lead);
-  const isRotting = daysInStage >= defaultRottingThresholdDays;
+  const hoursInStage = getHoursInStage(lead);
+  const isRotting = hoursInStage >= defaultRottingThresholdDays * hoursPerDay;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
   });
@@ -201,8 +210,8 @@ function PipelineCard({ lead }) {
           className={`crm-pipeline-card__stage-age ${isRotting ? 'crm-pipeline-card__stage-age--rotting' : ''}`}
           label={
             isRotting
-              ? `${formatStageAge(daysInStage, t)} ${t('rotting')}`
-              : `${formatStageAge(daysInStage, t)} ${t('in stage')}`
+              ? `${formatStageAge(hoursInStage, t)} ${t('rotting')}`
+              : `${formatStageAge(hoursInStage, t)} ${t('in stage')}`
           }
           size="small"
         />
