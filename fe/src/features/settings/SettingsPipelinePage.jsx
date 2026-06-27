@@ -50,6 +50,17 @@ function moveStage(stages, stageId, direction) {
   }));
 }
 
+function formatThreshold(hours, t) {
+  const days = Math.floor((hours || 0) / 24);
+  const remainingHours = (hours || 0) % 24;
+
+  if (days === 0) {
+    return `${remainingHours}${t('h')}`;
+  }
+
+  return `${days}${t('d')} ${remainingHours}${t('h')}`;
+}
+
 function SettingsPipelinePage() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
@@ -228,14 +239,28 @@ function SettingsPipelinePage() {
                   <Box>
                     <Typography variant="h6">{stage.name}</Typography>
                     <Typography className="crm-muted-text">
-                      {t('Order')} {stage.order} {t('in the pipeline')}
+                      {t('Order')} {stage.order} {t('in the pipeline')} - {t('Rotting threshold')}{' '}
+                      {formatThreshold(stage.rottingThresholdHours || 168, t)}
                     </Typography>
                   </Box>
-                  <Chip
-                    color={stage.isActive ? 'success' : 'default'}
-                    label={stage.isActive ? t('Active') : t('Inactive')}
-                    size="small"
-                  />
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    <Chip
+                      color={stage.isActive ? 'success' : 'default'}
+                      label={stage.isActive ? t('Active') : t('Inactive')}
+                      size="small"
+                    />
+                    {stage.isDefault ? <Chip label={t('Default')} size="small" /> : null}
+                    {stage.isWonStage ? <Chip color="success" label={t('Won')} size="small" /> : null}
+                    {stage.isLostStage ? <Chip color="error" label={t('Lost')} size="small" /> : null}
+                    {stage.color ? (
+                      <Chip
+                        label={stage.color}
+                        size="small"
+                        sx={{ borderColor: stage.color, color: stage.color }}
+                        variant="outlined"
+                      />
+                    ) : null}
+                  </Stack>
                 </Box>
 
                 <Box className="crm-stage-settings__actions">
@@ -285,6 +310,7 @@ function SettingsPipelinePage() {
       <StageFormDialog
         open={formOpen}
         stage={editingStage}
+        nextSortOrder={sortedStages.length + 1}
         onClose={() => {
           setFormOpen(false);
           setEditingStage(null);

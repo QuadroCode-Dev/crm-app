@@ -30,7 +30,7 @@ public sealed class PipelineService : IPipelineService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        ValidateStageRequest(request.Name, request.SortOrder);
+        ValidateStageRequest(request.Name, request.SortOrder, request.RottingThresholdHours);
         await ValidateStageRulesAsync(
             request.IsDefault,
             request.IsWonStage,
@@ -45,6 +45,7 @@ public sealed class PipelineService : IPipelineService
             Name = request.Name.Trim(),
             SortOrder = request.SortOrder,
             Color = NormalizeOptional(request.Color),
+            RottingThresholdHours = request.RottingThresholdHours,
             IsDefault = request.IsDefault,
             IsWonStage = request.IsWonStage,
             IsLostStage = request.IsLostStage,
@@ -64,7 +65,7 @@ public sealed class PipelineService : IPipelineService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        ValidateStageRequest(request.Name, request.SortOrder);
+        ValidateStageRequest(request.Name, request.SortOrder, request.RottingThresholdHours);
 
         var stage = await _dbContext.PipelineStages
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
@@ -81,6 +82,7 @@ public sealed class PipelineService : IPipelineService
         stage.Name = request.Name.Trim();
         stage.SortOrder = request.SortOrder;
         stage.Color = NormalizeOptional(request.Color);
+        stage.RottingThresholdHours = request.RottingThresholdHours;
         stage.IsDefault = request.IsDefault;
         stage.IsWonStage = request.IsWonStage;
         stage.IsLostStage = request.IsLostStage;
@@ -285,7 +287,7 @@ public sealed class PipelineService : IPipelineService
         }
     }
 
-    private static void ValidateStageRequest(string name, int sortOrder)
+    private static void ValidateStageRequest(string name, int sortOrder, int rottingThresholdHours)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -295,6 +297,11 @@ public sealed class PipelineService : IPipelineService
         if (sortOrder <= 0)
         {
             throw new ArgumentException("Sort order must be greater than zero.");
+        }
+
+        if (rottingThresholdHours <= 0)
+        {
+            throw new ArgumentException("Rotting threshold must be greater than zero.");
         }
     }
 
@@ -316,6 +323,7 @@ public sealed class PipelineService : IPipelineService
             Name = stage.Name,
             SortOrder = stage.SortOrder,
             Color = stage.Color,
+            RottingThresholdHours = stage.RottingThresholdHours,
             IsDefault = stage.IsDefault,
             IsWonStage = stage.IsWonStage,
             IsLostStage = stage.IsLostStage,

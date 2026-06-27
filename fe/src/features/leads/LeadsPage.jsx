@@ -38,7 +38,7 @@ import LeadFormDialog from './LeadFormDialog.jsx';
 import './leads.css';
 
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
-const defaultRottingThresholdDays = 7;
+const defaultRottingThresholdHours = 168;
 const hoursPerDay = 24;
 
 function formatCurrency(value) {
@@ -81,9 +81,10 @@ function formatStageAge(totalHours, t) {
   return `${days}${t('d')} ${remainingHours}${t('h')}`;
 }
 
-function renderStageRottingCell(lead, t) {
+function renderStageRottingCell(lead, stage, t) {
   const hoursInStage = getHoursInStage(lead);
-  const isRotting = hoursInStage >= defaultRottingThresholdDays * hoursPerDay;
+  const rottingThresholdHours = stage?.rottingThresholdHours || defaultRottingThresholdHours;
+  const isRotting = hoursInStage >= rottingThresholdHours;
   const label = isRotting
     ? `${formatStageAge(hoursInStage, t)} ${t('rotting')}`
     : `${formatStageAge(hoursInStage, t)} ${t('in stage')}`;
@@ -155,6 +156,10 @@ function LeadsPage() {
         },
       ]
     : [];
+  const stageById = useMemo(
+    () => Object.fromEntries((stagesQuery.data || []).map((stage) => [stage.id, stage])),
+    [stagesQuery.data],
+  );
 
   const createLeadMutation = useMutation({
     mutationFn: createLead,
@@ -308,7 +313,7 @@ function LeadsPage() {
         minWidth: 0,
         sortable: false,
         filterable: false,
-        renderCell: (params) => renderStageRottingCell(params.row, t),
+        renderCell: (params) => renderStageRottingCell(params.row, stageById[params.row.stageId], t),
       },
       {
         field: 'status',
@@ -397,7 +402,7 @@ function LeadsPage() {
         ),
       },
     ],
-    [t],
+    [stageById, t],
   );
 
   function handleCreate() {

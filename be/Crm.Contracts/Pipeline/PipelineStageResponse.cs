@@ -10,6 +10,8 @@ public sealed class PipelineStageResponse
 
     public string? Color { get; set; }
 
+    public int RottingThresholdHours { get; set; }
+
     public bool IsDefault { get; set; }
 
     public bool IsWonStage { get; set; }

@@ -45,7 +45,7 @@ import LeadFormDialog from '../leads/LeadFormDialog.jsx';
 import './pipeline.css';
 
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
-const defaultRottingThresholdDays = 7;
+const defaultRottingThresholdHours = 168;
 const hoursPerDay = 24;
 
 function getHoursInStage(lead) {
@@ -163,10 +163,11 @@ function StageColumn({ stage, leads, activeStageId, children }) {
   );
 }
 
-function PipelineCard({ lead }) {
+function PipelineCard({ lead, stage }) {
   const { t } = useLanguage();
   const hoursInStage = getHoursInStage(lead);
-  const isRotting = hoursInStage >= defaultRottingThresholdDays * hoursPerDay;
+  const rottingThresholdHours = stage?.rottingThresholdHours || defaultRottingThresholdHours;
+  const isRotting = hoursInStage >= rottingThresholdHours;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
   });
@@ -541,7 +542,7 @@ function PipelinePage() {
                 activeStageId={activeLead ? leadStageMap[activeLead.id] : null}
               >
                 {stageLeads.map((lead) => (
-                  <PipelineCard key={lead.id} lead={lead} />
+                  <PipelineCard key={lead.id} lead={lead} stage={stage} />
                 ))}
               </StageColumn>
             );
@@ -551,7 +552,10 @@ function PipelinePage() {
         <DragOverlay>
           {activeLead ? (
             <Box className="crm-pipeline-overlay">
-              <PipelineCard lead={activeLead} />
+              <PipelineCard
+                lead={activeLead}
+                stage={sortedStages.find((stage) => stage.id === activeLead.stageId)}
+              />
             </Box>
           ) : null}
         </DragOverlay>

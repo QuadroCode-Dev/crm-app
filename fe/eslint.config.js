@@ -5,7 +5,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/**', 'coverage/**', 'public/mockServiceWorker.js'],
+    ignores: ['dist/**', 'coverage/**'],
   },
   js.configs.recommended,
   {

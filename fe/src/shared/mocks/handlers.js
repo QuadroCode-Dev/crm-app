@@ -3,54 +3,15 @@ import { http, HttpResponse } from 'msw';
 import { baseMockState } from './crmMockData.js';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-const MOCK_STATE_STORAGE_KEY = 'crm.mocks.state';
 
 let state = createInitialState();
 
-function canPersistMockState() {
-  return (
-    typeof window !== 'undefined' &&
-    import.meta.env.DEV &&
-    import.meta.env.MODE !== 'test' &&
-    import.meta.env.VITE_ENABLE_API_MOCKS === 'true'
-  );
-}
-
-function getPersistedState() {
-  if (!canPersistMockState()) {
-    return null;
-  }
-
-  const value = window.localStorage.getItem(MOCK_STATE_STORAGE_KEY);
-
-  if (!value) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
 function persistState() {
-  if (!canPersistMockState()) {
-    return;
-  }
-
-  const persistedState = structuredClone(state);
-  delete persistedState.auth;
-  window.localStorage.setItem(MOCK_STATE_STORAGE_KEY, JSON.stringify(persistedState));
+  // Test-only handlers keep state in memory.
 }
 
 function createInitialState() {
-  const persistedState = getPersistedState();
-
-  return {
-    ...structuredClone(baseMockState),
-    ...(persistedState || {}),
-  };
+  return structuredClone(baseMockState);
 }
 
 export function resetMockState() {
@@ -878,6 +839,11 @@ export const handlers = [
     const stage = {
       id: createId('stage'),
       order: state.pipelineStages.length + 1,
+      color: '#64748B',
+      rottingThresholdHours: 168,
+      isDefault: false,
+      isWonStage: false,
+      isLostStage: false,
       isActive: true,
       ...body,
     };

@@ -543,6 +543,9 @@ namespace Crm.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("RottingThresholdHours")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
@@ -570,6 +573,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                             IsLostStage = false,
                             IsWonStage = false,
                             Name = "New Lead",
+                            RottingThresholdHours = 24,
                             SortOrder = 1
                         },
                         new
@@ -582,6 +586,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                             IsLostStage = false,
                             IsWonStage = false,
                             Name = "Contacted",
+                            RottingThresholdHours = 48,
                             SortOrder = 2
                         },
                         new
@@ -594,6 +599,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                             IsLostStage = false,
                             IsWonStage = false,
                             Name = "Qualified",
+                            RottingThresholdHours = 120,
                             SortOrder = 3
                         },
                         new
@@ -606,6 +612,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                             IsLostStage = false,
                             IsWonStage = false,
                             Name = "Proposal Sent",
+                            RottingThresholdHours = 168,
                             SortOrder = 4
                         },
                         new
@@ -618,6 +625,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                             IsLostStage = false,
                             IsWonStage = true,
                             Name = "Won",
+                            RottingThresholdHours = 720,
                             SortOrder = 5
                         },
                         new
@@ -630,6 +638,7 @@ namespace Crm.Infrastructure.Persistence.Migrations
                             IsLostStage = true,
                             IsWonStage = false,
                             Name = "Lost",
+                            RottingThresholdHours = 720,
                             SortOrder = 6
                         });
                 });

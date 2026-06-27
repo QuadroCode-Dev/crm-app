@@ -4,6 +4,7 @@ function normalizeStage(stage) {
   return {
     ...stage,
     order: stage.order ?? stage.sortOrder ?? 0,
+    rottingThresholdHours: stage.rottingThresholdHours ?? 168,
   };
 }
 

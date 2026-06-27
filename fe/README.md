@@ -74,7 +74,6 @@ The frontend reads the backend base URL from `VITE_API_BASE_URL`. API URLs are n
 Current usage is centralized in:
 
 - `src/api/httpClient.js`
-- `src/shared/mocks/handlers.js`
 
 For production builds, set `VITE_API_BASE_URL` before running `npm run build`, or pass it as a Docker build argument.
 

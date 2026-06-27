@@ -8,6 +8,8 @@ public sealed class CreatePipelineStageRequest
 
     public string? Color { get; set; }
 
+    public int RottingThresholdHours { get; set; } = 168;
+
     public bool IsDefault { get; set; }
 
     public bool IsWonStage { get; set; }
