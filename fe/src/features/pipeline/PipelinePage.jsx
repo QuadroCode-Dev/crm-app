@@ -1,25 +1,16 @@
 import {
   Box,
   Button,
-  ButtonGroup,
   Chip,
-  IconButton,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import {
   CaretDown,
-  CurrencyDollar,
   FunnelSimple,
-  GitBranch,
-  Info,
-  Kanban,
-  ListBullets,
   MagnifyingGlass,
-  PencilSimple,
   Plus,
-  PushPinSimple,
-  SortAscending,
   UserCircle,
   WarningCircle,
 } from '@phosphor-icons/react';
@@ -37,16 +28,22 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getLeads, updateLeadStage } from '../../api/leadsApi.js';
+import { getLeadSources } from '../../api/leadSourcesApi.js';
+import { createLead, getLeads, updateLeadStage } from '../../api/leadsApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
+import { getServiceNames } from '../../api/servicesApi.js';
 import PageHeader from '../../shared/components/PageHeader.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
+import useAuth from '../../shared/hooks/useAuth.js';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
+import LeadFormDialog from '../leads/LeadFormDialog.jsx';
 import './pipeline.css';
+
+const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
 
 function getDragLeadId(activeId) {
   return String(activeId).replace('lead-card-', '');
@@ -180,53 +177,30 @@ function PipelineCard({ lead }) {
   );
 }
 
-function PipelineBoardToolbar({ dealCount, dealValue }) {
+function PipelineBoardToolbar({ dealCount, dealValue, search, onAddLead, onSearchChange }) {
   const { t } = useLanguage();
 
   return (
     <Box className="crm-pipeline-toolbar">
-      <Box className="crm-pipeline-toolbar__primary">
-        <ButtonGroup variant="outlined" className="crm-pipeline-view-toggle">
-          <Button className="crm-pipeline-view-toggle__button crm-pipeline-view-toggle__button--active">
-            <Kanban size={20} weight="duotone" />
-          </Button>
-          <Button className="crm-pipeline-view-toggle__button">
-            <ListBullets size={20} weight="duotone" />
-          </Button>
-          <Button className="crm-pipeline-view-toggle__button">
-            <CurrencyDollar size={20} weight="duotone" />
-          </Button>
-        </ButtonGroup>
-        <Button className="crm-pipeline-add-button" startIcon={<Plus size={18} weight="bold" />} variant="contained">
-          {t('Deal')}
-        </Button>
-      </Box>
-
-      <Box className="crm-pipeline-toolbar__secondary">
-        <Typography className="crm-pipeline-toolbar__count">
-          {dealCount} {t('deals')}
-        </Typography>
-        <TooltiplessIcon label={t('Pipeline info')}>
-          <Info size={18} weight="duotone" />
-        </TooltiplessIcon>
+      <Box className="crm-pipeline-toolbar__main">
         <Button
-          className="crm-pipeline-toolbar__dropdown"
-          component={Link}
-          endIcon={<CaretDown size={15} weight="bold" />}
-          startIcon={<GitBranch size={18} weight="duotone" />}
-          to="/settings/pipeline"
-          variant="outlined"
+          className="crm-pipeline-add-button"
+          startIcon={<Plus size={18} weight="bold" />}
+          variant="contained"
+          onClick={onAddLead}
         >
-          {t('Pipeline')}
+          {t('Lead')}
         </Button>
-        <IconButton
-          aria-label={t('Manage stages')}
-          className="crm-pipeline-toolbar__icon-button"
-          component={Link}
-          to="/settings/pipeline"
-        >
-          <PencilSimple size={18} weight="bold" />
-        </IconButton>
+        <TextField
+          className="crm-pipeline-toolbar__search"
+          label={t('Search')}
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder={t('Name or service')}
+          InputProps={{
+            startAdornment: <MagnifyingGlass size={18} weight="duotone" />,
+          }}
+        />
         <Button
           className="crm-pipeline-toolbar__dropdown"
           endIcon={<CaretDown size={15} weight="bold" />}
@@ -237,10 +211,10 @@ function PipelineBoardToolbar({ dealCount, dealValue }) {
         </Button>
       </Box>
 
-      <Box className="crm-pipeline-toolbar__tertiary">
-        <Button className="crm-pipeline-pin-button" startIcon={<PushPinSimple size={17} weight="duotone" />}>
-          {t('Pin filters')}
-        </Button>
+      <Box className="crm-pipeline-toolbar__summary">
+        <Typography className="crm-pipeline-toolbar__count">
+          {dealCount} {t('deals')}
+        </Typography>
         <Typography className="crm-pipeline-toolbar__value">
           {new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -248,27 +222,19 @@ function PipelineBoardToolbar({ dealCount, dealValue }) {
             maximumFractionDigits: 0,
           }).format(dealValue)}
         </Typography>
-        <Button className="crm-pipeline-sort-button" startIcon={<SortAscending size={18} weight="bold" />}>
-          {t('Sort by: Next activity')} <CaretDown size={14} weight="bold" />
-        </Button>
       </Box>
     </Box>
   );
 }
 
-function TooltiplessIcon({ children, label }) {
-  return (
-    <IconButton aria-label={label} className="crm-pipeline-toolbar__plain-icon">
-      {children}
-    </IconButton>
-  );
-}
-
 function PipelinePage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [activeLeadId, setActiveLeadId] = useState(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const stagesQuery = useQuery({
@@ -278,6 +244,64 @@ function PipelinePage() {
   const leadsQuery = useQuery({
     queryKey: ['pipeline-board-leads'],
     queryFn: () => getLeads({ page: 1, pageSize: 100 }),
+  });
+  const leadSourcesQuery = useQuery({
+    queryKey: ['lead-sources'],
+    queryFn: getLeadSources,
+  });
+  const servicesQuery = useQuery({
+    queryKey: ['services'],
+    queryFn: getServiceNames,
+  });
+
+  const ownerOptions = user
+    ? [
+        {
+          id: user.id,
+          fullName: user.fullName,
+        },
+      ]
+    : [];
+
+  const createLeadMutation = useMutation({
+    mutationFn: createLead,
+    onSuccess: (createdLead) => {
+      queryClient.setQueryData(['pipeline-board-leads'], (current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          items: [createdLead, ...current.items],
+          total: (current.total || current.items.length) + 1,
+        };
+      });
+      queryClient.setQueriesData({ queryKey: ['leads'] }, (current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          items: [createdLead, ...current.items].slice(0, current.pageSize),
+          total: current.total + 1,
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: ['pipeline-board-leads'] });
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      showNotification({
+        severity: 'success',
+        message: t('Lead created successfully.'),
+      });
+      setFormOpen(false);
+    },
+    onError: (error) => {
+      showNotification({
+        severity: 'error',
+        message: normalizeApiError(error).message,
+      });
+    },
   });
 
   const stageChangeMutation = useMutation({
@@ -359,10 +383,40 @@ function PipelinePage() {
     () => [...(stagesQuery.data || [])].sort((a, b) => a.order - b.order),
     [stagesQuery.data],
   );
-  const leads = leadsQuery.data?.items || [];
+  const allLeads = leadsQuery.data?.items || [];
+  const normalizedSearch = search.trim().toLowerCase();
+  const leads = useMemo(() => {
+    if (!normalizedSearch) {
+      return allLeads;
+    }
+
+    return allLeads.filter((lead) =>
+      [
+        lead.title,
+        lead.contactName,
+        lead.serviceRequested,
+        lead.email,
+        lead.phone,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+    );
+  }, [allLeads, normalizedSearch]);
   const dealValue = leads.reduce((total, lead) => total + Number(lead.estimatedCost || 0), 0);
   const activeLead = leads.find((lead) => lead.id === activeLeadId) || null;
   const leadStageMap = Object.fromEntries(leads.map((lead) => [lead.id, lead.stageId]));
+
+  function handleCreateLead(values) {
+    const payload = {
+      ...values,
+      estimatedCost:
+        values.estimatedCost === '' || values.estimatedCost === null
+          ? null
+          : Number(values.estimatedCost),
+    };
+
+    return createLeadMutation.mutateAsync(payload);
+  }
 
   if ((stagesQuery.isLoading || leadsQuery.isLoading) && !stagesQuery.data && !leadsQuery.data) {
     return <LoadingState />;
@@ -404,10 +458,15 @@ function PipelinePage() {
       <PageHeader
         title={t('Deals')}
         description={t('Move leads between stages with drag and drop to reflect how deals are progressing.')}
-        actions={<Box className="crm-pipeline-search"><MagnifyingGlass size={19} weight="duotone" /><span>{t('Search')}</span></Box>}
       />
 
-      <PipelineBoardToolbar dealCount={leads.length} dealValue={dealValue} />
+      <PipelineBoardToolbar
+        dealCount={leads.length}
+        dealValue={dealValue}
+        search={search}
+        onAddLead={() => setFormOpen(true)}
+        onSearchChange={setSearch}
+      />
 
       <DndContext
         sensors={sensors}
@@ -454,6 +513,18 @@ function PipelinePage() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <LeadFormDialog
+        lead={null}
+        open={formOpen}
+        ownerOptions={ownerOptions}
+        serviceOptions={servicesQuery.data || []}
+        sourceOptions={leadSourcesQuery.data || []}
+        stageOptions={sortedStages}
+        statusOptions={statusOptions}
+        onClose={() => setFormOpen(false)}
+        onSubmit={handleCreateLead}
+      />
     </Stack>
   );
 }

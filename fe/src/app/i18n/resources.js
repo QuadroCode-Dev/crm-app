@@ -90,6 +90,7 @@ const commonCopy = {
   'All stages': 'All stages',
   'All owners': 'All owners',
   'Select a contact': 'Select a contact',
+  'Name or service': 'Name or service',
   'Select a title': 'Select a title',
   'Select salutation': 'Select salutation',
   'Select a service': 'Select a service',
@@ -674,6 +675,7 @@ const commonCopy = {
 const arabicCopy = {
   ...commonCopy,
   'Select a title': 'اختر لقبا',
+  'Name or service': 'الاسم أو الخدمة',
   'Select salutation': 'اختر اللقب',
   'Select a service': 'اختر خدمة',
   'Code': 'رمز الهاتف',
