@@ -223,6 +223,23 @@
   line-height: 1.25 !important;
 }
 
+.crm-pipeline-column__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.crm-pipeline-column__age-chip {
+  max-width: 7rem;
+  height: 1.45rem !important;
+  color: var(--crm-color-text-muted) !important;
+  border-color: color-mix(in srgb, var(--crm-color-border) 78%, transparent) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
 .crm-pipeline-column__summary {
   margin-top: 0.25rem !important;
   color: var(--crm-color-text-muted);
@@ -313,10 +330,6 @@
 }
 
 .crm-pipeline-card__meta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.65rem;
-  align-items: center;
   margin-top: 0.2rem;
 }
 
@@ -327,14 +340,6 @@
   line-height: 1.25 !important;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.crm-pipeline-card__activity {
-  width: 1.15rem;
-  min-width: 1.15rem !important;
-  height: 1.15rem !important;
-  border-radius: 999px !important;
-  background: var(--crm-color-danger) !important;
 }
 
 .crm-pipeline-card__value-row {
@@ -349,6 +354,20 @@
   color: var(--crm-color-text-muted);
   font-size: 0.8rem !important;
   font-weight: 800 !important;
+}
+
+.crm-pipeline-card__stage-age {
+  margin-left: auto;
+  height: 1.45rem !important;
+  background: color-mix(in srgb, var(--crm-color-primary) 10%, transparent) !important;
+  color: var(--crm-color-primary) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
+.crm-pipeline-card__stage-age--rotting {
+  background: color-mix(in srgb, var(--crm-color-danger) 14%, transparent) !important;
+  color: var(--crm-color-danger) !important;
 }
 
 .crm-pipeline-card__warning {

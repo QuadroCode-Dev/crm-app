@@ -541,6 +541,11 @@ public sealed class LeadsService : ILeadsService
             LeadSourceName = lead.LeadSource!.Name,
             CurrentPipelineStageId = lead.CurrentPipelineStageId,
             CurrentPipelineStageName = lead.CurrentPipelineStage!.Name,
+            CurrentStageEnteredAtUtc = lead.StageHistories
+                .Where(history => history.ExitedAtUtc == null)
+                .OrderByDescending(history => history.EnteredAtUtc)
+                .Select(history => (DateTime?)history.EnteredAtUtc)
+                .FirstOrDefault(),
             OwnerUserId = lead.OwnerUserId,
             OwnerUserFullName = lead.OwnerUser != null ? lead.OwnerUser.FullName : null,
             Title = lead.Title,

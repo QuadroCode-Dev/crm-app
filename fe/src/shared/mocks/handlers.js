@@ -511,6 +511,8 @@ export const handlers = [
       stageId,
       stageName: stage?.name || '',
       ownerName: owner?.fullName || '',
+      daysInCurrentStage: 0,
+      currentStageEnteredAtUtc: dayjs().toISOString(),
       createdAtUtc: dayjs().toISOString(),
       updatedAtUtc: dayjs().toISOString(),
       isDuplicateWarning: false,
@@ -615,6 +617,8 @@ export const handlers = [
 
     lead.stageId = stageId;
     lead.stageName = stage?.name || lead.stageName;
+    lead.daysInCurrentStage = 0;
+    lead.currentStageEnteredAtUtc = movedAtUtc;
     lead.updatedAtUtc = movedAtUtc;
 
     if (previousStageId !== stageId) {

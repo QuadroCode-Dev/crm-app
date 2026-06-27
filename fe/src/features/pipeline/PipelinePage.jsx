@@ -26,6 +26,7 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getLeadSources } from '../../api/leadSourcesApi.js';
@@ -44,6 +45,23 @@ import LeadFormDialog from '../leads/LeadFormDialog.jsx';
 import './pipeline.css';
 
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
+const defaultRottingThresholdDays = 7;
+
+function getDaysInStage(lead) {
+  if (Number.isFinite(Number(lead.daysInCurrentStage))) {
+    return Math.max(0, Number(lead.daysInCurrentStage));
+  }
+
+  if (!lead.currentStageEnteredAtUtc) {
+    return 0;
+  }
+
+  return Math.max(0, dayjs().diff(dayjs(lead.currentStageEnteredAtUtc), 'day'));
+}
+
+function formatStageAge(days, t) {
+  return `${days}${t('d')}`;
+}
 
 function getDragLeadId(activeId) {
   return String(activeId).replace('lead-card-', '');
@@ -93,6 +111,9 @@ function StageColumn({ stage, leads, activeStageId, children }) {
     (total, lead) => total + Number(lead.estimatedCost || 0),
     0,
   );
+  const averageDaysInStage = leads.length
+    ? Math.round(leads.reduce((total, lead) => total + getDaysInStage(lead), 0) / leads.length)
+    : 0;
 
   return (
     <Box
@@ -102,7 +123,15 @@ function StageColumn({ stage, leads, activeStageId, children }) {
     >
       <Box className="crm-pipeline-column__content">
         <Box className="crm-pipeline-column__header">
-          <Typography variant="h6">{stage.name}</Typography>
+          <Box className="crm-pipeline-column__title-row">
+            <Typography variant="h6">{stage.name}</Typography>
+            <Chip
+              className="crm-pipeline-column__age-chip"
+              label={`${t('Avg')} ${formatStageAge(averageDaysInStage, t)}`}
+              size="small"
+              variant="outlined"
+            />
+          </Box>
           <Typography className="crm-pipeline-column__summary">
             {new Intl.NumberFormat('en-US', {
               style: 'currency',
@@ -127,6 +156,8 @@ function StageColumn({ stage, leads, activeStageId, children }) {
 
 function PipelineCard({ lead }) {
   const { t } = useLanguage();
+  const daysInStage = getDaysInStage(lead);
+  const isRotting = daysInStage >= defaultRottingThresholdDays;
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
   });
@@ -156,12 +187,6 @@ function PipelineCard({ lead }) {
         <Typography className="crm-pipeline-card__contact">
           {lead.contactName || lead.companyName || lead.serviceRequested}
         </Typography>
-        <Chip
-          className="crm-pipeline-card__activity"
-          label=""
-          size="small"
-          title={t('Next activity')}
-        />
       </Box>
       <Box className="crm-pipeline-card__value-row">
         <UserCircle size={18} weight="fill" />
@@ -172,6 +197,15 @@ function PipelineCard({ lead }) {
             maximumFractionDigits: 0,
           }).format(Number(lead.estimatedCost || 0))}
         </Typography>
+        <Chip
+          className={`crm-pipeline-card__stage-age ${isRotting ? 'crm-pipeline-card__stage-age--rotting' : ''}`}
+          label={
+            isRotting
+              ? `${formatStageAge(daysInStage, t)} ${t('rotting')}`
+              : `${formatStageAge(daysInStage, t)} ${t('in stage')}`
+          }
+          size="small"
+        />
       </Box>
     </Box>
   );

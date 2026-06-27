@@ -22,6 +22,8 @@ public sealed class LeadResponse
 
     public string CurrentPipelineStageName { get; set; } = string.Empty;
 
+    public DateTime? CurrentStageEnteredAtUtc { get; set; }
+
     public Guid? OwnerUserId { get; set; }
 
     public string? OwnerUserFullName { get; set; }

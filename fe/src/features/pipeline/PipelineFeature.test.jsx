@@ -61,7 +61,10 @@ describe('Pipeline feature', () => {
     const proposalColumn = screen.getByText('Proposal').closest('.crm-pipeline-column');
 
     expect(within(qualifiedColumn).getByText('Solar rooftop installation')).toBeInTheDocument();
+    expect(within(qualifiedColumn).getByText('Avg 4d')).toBeInTheDocument();
+    expect(within(qualifiedColumn).getByText('4d in stage')).toBeInTheDocument();
     expect(within(proposalColumn).getByText('Kitchen remodel consultation')).toBeInTheDocument();
+    expect(within(proposalColumn).getByText('8d rotting')).toBeInTheDocument();
   });
 
   it('maps drag end into a stage-change callback', () => {
