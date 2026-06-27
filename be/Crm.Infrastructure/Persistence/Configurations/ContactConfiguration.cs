@@ -12,6 +12,9 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Salutation)
+            .HasMaxLength(20);
+
         builder.Property(x => x.FullName)
             .IsRequired()
             .HasMaxLength(200);

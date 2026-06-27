@@ -4,6 +4,8 @@ namespace Crm.Domain.Entities;
 
 public class Contact : SoftDeleteEntity
 {
+    public string? Salutation { get; set; }
+
     public string FullName { get; set; } = string.Empty;
 
     public string? Email { get; set; }

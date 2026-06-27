@@ -25,6 +25,7 @@ export const mockUsers = [
 export const mockContacts = [
   {
     id: 'contact-1',
+    salutation: 'Mrs.',
     fullName: 'Elif Yilmaz',
     email: 'elif@example.com',
     phone: '+90 555 100 1001',
@@ -34,6 +35,7 @@ export const mockContacts = [
   },
   {
     id: 'contact-2',
+    salutation: 'Mr.',
     fullName: 'Can Demir',
     email: 'can@example.com',
     phone: '+90 555 100 1002',
@@ -43,6 +45,7 @@ export const mockContacts = [
   },
   {
     id: 'contact-3',
+    salutation: 'Miss',
     fullName: 'Derya Akin',
     email: 'derya@example.com',
     phone: '+90 555 100 1003',
@@ -89,6 +92,7 @@ export const mockLeads = [
     id: 'lead-1',
     title: 'Solar rooftop installation',
     contactId: 'contact-1',
+    contactSalutation: 'Mrs.',
     contactName: 'Elif Yilmaz',
     email: 'elif@example.com',
     phone: '+90 555 100 1001',
@@ -109,6 +113,7 @@ export const mockLeads = [
     id: 'lead-2',
     title: 'Kitchen remodel consultation',
     contactId: 'contact-2',
+    contactSalutation: 'Mr.',
     contactName: 'Can Demir',
     email: 'can@example.com',
     phone: '+90 555 100 1002',
@@ -129,6 +134,7 @@ export const mockLeads = [
     id: 'lead-3',
     title: 'Brand website redesign',
     contactId: 'contact-3',
+    contactSalutation: 'Miss',
     contactName: 'Derya Akin',
     email: 'derya@example.com',
     phone: '+90 555 100 1003',

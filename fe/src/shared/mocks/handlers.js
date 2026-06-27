@@ -145,6 +145,17 @@ function toLeadDetail(lead) {
   };
 }
 
+function buildInquiryTitle(serviceRequested, contactName, fallbackTitle = '') {
+  const service = String(serviceRequested || '').trim();
+  const contact = String(contactName || '').trim();
+
+  if (service && contact) {
+    return `${service} - ${contact}`;
+  }
+
+  return String(fallbackTitle || contact || service).trim();
+}
+
 function applyLeadFilters(leads, searchParams) {
   const search = searchParams.get('search')?.toLowerCase();
   const source = searchParams.get('source') || searchParams.get('sourceId');
@@ -473,6 +484,7 @@ export const handlers = [
     if (!contact && body.contactName) {
       contact = {
         id: createId('contact'),
+        salutation: body.contactSalutation || '',
         fullName: body.contactName,
         email: body.contactEmail || '',
         phone: body.contactPhone || '',
@@ -488,7 +500,9 @@ export const handlers = [
     const createdLead = {
       id: createId('lead'),
       ...body,
+      title: buildInquiryTitle(body.serviceRequested, contact?.fullName, body.title),
       contactId: contact?.id || body.contactId || '',
+      contactSalutation: contact?.salutation || '',
       contactName: contact?.fullName || '',
       email: contact?.email || '',
       phone: contact?.phone || '',
@@ -542,6 +556,7 @@ export const handlers = [
     );
 
     if (contact) {
+      contact.salutation = body.contactSalutation ?? contact.salutation;
       contact.fullName = body.contactName || contact.fullName;
       contact.email = body.contactEmail ?? contact.email;
       contact.phone = body.contactPhone ?? contact.phone;
@@ -554,6 +569,12 @@ export const handlers = [
       source: getLeadSources().find((item) => item.id === sourceId)?.name || sourceId || existingLead.source,
       sourceId,
       stageId,
+      title: buildInquiryTitle(
+        body.serviceRequested ?? existingLead.serviceRequested,
+        contact?.fullName || existingLead.contactName,
+        body.title ?? existingLead.title,
+      ),
+      contactSalutation: contact?.salutation || existingLead.contactSalutation || '',
       contactName: contact?.fullName || existingLead.contactName,
       email: contact?.email || existingLead.email,
       phone: contact?.phone || existingLead.phone,

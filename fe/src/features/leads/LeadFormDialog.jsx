@@ -14,9 +14,12 @@ import { useEffect } from 'react';
 import * as yup from 'yup';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 
-const titleOptions = [
+const salutationOptions = [
+  '',
   'Mr.',
   'Mrs.',
+  'Miss',
+  'Dr.',
 ];
 
 const phonePrefixOptions = [
@@ -70,10 +73,22 @@ function buildInternationalPhone(prefix, number) {
   return localNumber ? `${parsed.prefix}${localNumber}` : '';
 }
 
+function buildInquiryTitle(serviceRequested, contactName, fallbackTitle = '') {
+  const service = String(serviceRequested || '').trim();
+  const contact = String(contactName || '').trim();
+
+  if (service && contact) {
+    return `${service} - ${contact}`;
+  }
+
+  return String(fallbackTitle || contact || service).trim();
+}
+
 function createLeadSchema(t) {
   return yup.object({
-    title: yup.string().trim().required(t('Title is required.')),
+    title: yup.string().trim().nullable(),
     contactId: yup.string().nullable(),
+    contactSalutation: yup.string().trim().nullable(),
     contactName: yup.string().trim().required(t('Contact is required.')),
     contactEmail: yup
       .string()
@@ -142,11 +157,13 @@ function LeadFormDialog({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
       title: '',
       contactId: '',
+      contactSalutation: '',
       contactName: '',
       contactEmail: '',
       phonePrefix: '+961',
@@ -161,10 +178,10 @@ function LeadFormDialog({
     },
     resolver: yupResolver(createLeadSchema(t)),
   });
-  const availableTitleOptions =
-    lead?.title && !titleOptions.includes(lead.title)
-      ? [lead.title, ...titleOptions]
-      : titleOptions;
+  const watchedServiceRequested = watch('serviceRequested');
+  const watchedContactName = watch('contactName');
+  const watchedTitle = watch('title');
+  const inquiryTitle = buildInquiryTitle(watchedServiceRequested, watchedContactName, watchedTitle);
 
   useEffect(() => {
     const parsedPhone = parseInternationalPhone(
@@ -175,6 +192,7 @@ function LeadFormDialog({
     reset({
       title: lead?.title || '',
       contactId: lead?.contactId || '',
+      contactSalutation: lead?.contact?.salutation || lead?.contactSalutation || '',
       contactName: lead?.contact?.fullName || lead?.contactName || '',
       contactEmail: lead?.contact?.email || lead?.email || '',
       phonePrefix: parsedPhone.prefix,
@@ -210,6 +228,7 @@ function LeadFormDialog({
 
     return onSubmit({
       ...payload,
+      title: buildInquiryTitle(values.serviceRequested, values.contactName, values.title),
       contactEmail: values.contactEmail || '',
       contactPhone,
     });
@@ -235,36 +254,53 @@ function LeadFormDialog({
             render={({ field }) => (
               <TextField
                 {...field}
-                select
-                SelectProps={selectProps}
-                InputLabelProps={{ ...labelProps, shrink: true }}
-                label={t('Title')}
+                value={inquiryTitle}
+                label={t('Inquiry')}
+                InputLabelProps={labelProps}
+                inputProps={{
+                  ...textInputProps,
+                  readOnly: true,
+                }}
                 error={Boolean(errors.title)}
                 helperText={errors.title?.message}
-              >
-                <option value="">{t('Select a title')}</option>
-                {availableTitleOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {t(option)}
-                  </option>
-                ))}
-              </TextField>
-            )}
-          />
-          <Controller
-            name="contactName"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label={t('Contact')}
-                InputLabelProps={labelProps}
-                inputProps={textInputProps}
-                error={Boolean(errors.contactName)}
-                helperText={errors.contactName?.message}
               />
             )}
           />
+          <Box className="crm-lead-form__identity-row">
+            <Controller
+              name="contactSalutation"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  SelectProps={selectProps}
+                  InputLabelProps={{ ...labelProps, shrink: true }}
+                  label={t('Salutation')}
+                >
+                  {salutationOptions.map((option) => (
+                    <option key={option || 'none'} value={option}>
+                      {option ? t(option) : t('Select salutation')}
+                    </option>
+                  ))}
+                </TextField>
+              )}
+            />
+            <Controller
+              name="contactName"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label={t('Contact')}
+                  InputLabelProps={labelProps}
+                  inputProps={textInputProps}
+                  error={Boolean(errors.contactName)}
+                  helperText={errors.contactName?.message}
+                />
+              )}
+            />
+          </Box>
           <Box className="crm-lead-form__contact-row">
             <Controller
               name="contactEmail"

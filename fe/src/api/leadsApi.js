@@ -16,6 +16,7 @@ function normalizeLead(lead) {
 
   return {
     ...lead,
+    contactSalutation: lead.contactSalutation ?? lead.contact?.salutation ?? '',
     contactName: lead.contactName ?? lead.contactFullName ?? '',
     email: lead.email ?? lead.contactEmail ?? '',
     phone: lead.phone ?? lead.contactPhone ?? '',

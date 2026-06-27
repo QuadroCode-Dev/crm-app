@@ -6,6 +6,8 @@ public sealed class LeadResponse
 
     public Guid ContactId { get; set; }
 
+    public string? ContactSalutation { get; set; }
+
     public string ContactFullName { get; set; } = string.Empty;
 
     public string? ContactEmail { get; set; }

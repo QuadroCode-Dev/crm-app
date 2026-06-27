@@ -210,7 +210,7 @@ function LeadsPage() {
     () => [
       {
         field: 'title',
-        headerName: t('Title'),
+        headerName: t('Inquiry'),
         flex: 0.65,
         minWidth: 0,
         renderCell: (params) => (

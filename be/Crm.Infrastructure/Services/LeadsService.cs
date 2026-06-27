@@ -71,10 +71,10 @@ public sealed class LeadsService : ILeadsService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        ValidateLead(request.Title);
-
         var status = ParseStatus(request.Status) ?? LeadStatus.Open;
         var contact = await ResolveCreateContactAsync(request, userId, cancellationToken);
+        var leadTitle = BuildInquiryTitle(request.ServiceRequested, contact.FullName, request.Title);
+        ValidateLead(leadTitle);
 
         var leadSource = await _dbContext.LeadSources
             .AsNoTracking()
@@ -96,7 +96,7 @@ public sealed class LeadsService : ILeadsService
             LeadSourceId = leadSource.Id,
             CurrentPipelineStageId = stage.Id,
             OwnerUserId = owner?.Id,
-            Title = request.Title.Trim(),
+            Title = leadTitle,
             Status = status,
             EstimatedCost = request.EstimatedCost,
             ServiceRequested = NormalizeOptional(request.ServiceRequested),
@@ -142,8 +142,6 @@ public sealed class LeadsService : ILeadsService
         Guid userId,
         CancellationToken cancellationToken)
     {
-        ValidateLead(request.Title);
-
         var lead = await _dbContext.Leads
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new KeyNotFoundException("Lead not found.");
@@ -170,14 +168,17 @@ public sealed class LeadsService : ILeadsService
         var owner = await ValidateOwnerAsync(request.OwnerUserId, cancellationToken);
         var status = ParseStatus(request.Status) ?? LeadStatus.Open;
 
+        contact.Salutation = NormalizeOptional(request.ContactSalutation);
         contact.FullName = NormalizeRequired(request.ContactName, contact.FullName);
         contact.Email = NormalizeOptional(request.ContactEmail);
         contact.Phone = NormalizeOptional(request.ContactPhone);
+        var leadTitle = BuildInquiryTitle(request.ServiceRequested, contact.FullName, request.Title);
+        ValidateLead(leadTitle);
 
         lead.ContactId = contact.Id;
         lead.LeadSourceId = request.LeadSourceId;
         lead.OwnerUserId = owner?.Id;
-        lead.Title = request.Title.Trim();
+        lead.Title = leadTitle;
         lead.Status = status;
         lead.EstimatedCost = request.EstimatedCost;
         lead.ServiceRequested = NormalizeOptional(request.ServiceRequested);
@@ -460,6 +461,7 @@ public sealed class LeadsService : ILeadsService
         var contact = new Contact
         {
             Id = Guid.NewGuid(),
+            Salutation = NormalizeOptional(request.ContactSalutation),
             FullName = request.ContactName.Trim(),
             Email = NormalizeOptional(request.ContactEmail),
             Phone = NormalizeOptional(request.ContactPhone),
@@ -477,6 +479,22 @@ public sealed class LeadsService : ILeadsService
         {
             throw new ArgumentException("Title is required.");
         }
+    }
+
+    private static string BuildInquiryTitle(string? serviceRequested, string contactName, string? fallbackTitle)
+    {
+        var service = NormalizeOptional(serviceRequested);
+        var contact = NormalizeOptional(contactName);
+
+        if (service is not null && contact is not null)
+        {
+            return $"{service} - {contact}";
+        }
+
+        return NormalizeOptional(fallbackTitle)
+            ?? contact
+            ?? service
+            ?? string.Empty;
     }
 
     private static string NormalizeRequired(string? value, string fallback)
@@ -515,6 +533,7 @@ public sealed class LeadsService : ILeadsService
         {
             Id = lead.Id,
             ContactId = lead.ContactId,
+            ContactSalutation = lead.Contact!.Salutation,
             ContactFullName = lead.Contact!.FullName,
             ContactEmail = lead.Contact.Email,
             ContactPhone = lead.Contact.Phone,

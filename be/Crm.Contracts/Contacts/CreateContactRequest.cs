@@ -2,6 +2,8 @@ namespace Crm.Contracts.Contacts;
 
 public sealed class CreateContactRequest
 {
+    public string? Salutation { get; set; }
+
     public string FullName { get; set; } = string.Empty;
 
     public string? Email { get; set; }

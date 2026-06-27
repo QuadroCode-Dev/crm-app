@@ -79,6 +79,7 @@ public sealed class ContactsService : IContactsService
         var contact = new Contact
         {
             Id = Guid.NewGuid(),
+            Salutation = NormalizeOptional(request.Salutation),
             FullName = request.FullName.Trim(),
             Email = NormalizeOptional(request.Email),
             Phone = NormalizeOptional(request.Phone),
@@ -115,6 +116,7 @@ public sealed class ContactsService : IContactsService
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new KeyNotFoundException("Contact not found.");
 
+        contact.Salutation = NormalizeOptional(request.Salutation);
         contact.FullName = request.FullName.Trim();
         contact.Email = NormalizeOptional(request.Email);
         contact.Phone = NormalizeOptional(request.Phone);
@@ -170,6 +172,7 @@ public sealed class ContactsService : IContactsService
         return contact => new ContactResponse
         {
             Id = contact.Id,
+            Salutation = contact.Salutation,
             FullName = contact.FullName,
             Email = contact.Email,
             Phone = contact.Phone,

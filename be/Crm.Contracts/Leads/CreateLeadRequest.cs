@@ -4,6 +4,8 @@ public sealed class CreateLeadRequest
 {
     public Guid ContactId { get; set; }
 
+    public string? ContactSalutation { get; set; }
+
     public string? ContactName { get; set; }
 
     public string? ContactEmail { get; set; }
