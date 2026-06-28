@@ -975,7 +975,7 @@ function LeadDetailPage() {
         contactOptions={contactsQuery.data?.items || []}
         assignedUserOptions={ownerOptions}
         priorityOptions={['High', 'Medium', 'Low']}
-        statusOptions={['Pending', 'In Progress', 'Completed']}
+        statusOptions={['Pending', 'Done', 'Cancelled']}
         onClose={() => {
           setTaskFormOpen(false);
           setEditingTask(null);

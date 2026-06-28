@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider } from 'react-router-dom';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import AppProviders from '../../app/providers/AppProviders.jsx';
 import { createTestRouter } from '../../app/router.jsx';
@@ -57,6 +58,36 @@ describe('Tasks feature', () => {
     expect(await screen.findByRole('heading', { name: 'Tasks' })).toBeInTheDocument();
     expect(await screen.findByText('Call customer about site inspection')).toBeInTheDocument();
     expect(screen.getByText('Prepare proposal deck')).toBeInTheDocument();
+  });
+
+  it('renders tasks when the API returns a bare task array', async () => {
+    authenticate();
+    server.use(
+      http.get('*/api/tasks', () =>
+        HttpResponse.json([
+          {
+            id: 'task-array-1',
+            leadId: 'lead-1',
+            contactId: 'contact-1',
+            assignedToUserId: 'user-1',
+            assignedToUserFullName: 'Ziad Ali',
+            title: 'Whatsapp Call',
+            dueAtUtc: '2026-06-29T20:59:59.000Z',
+            priority: 'Medium',
+            status: 'Pending',
+            createdAtUtc: '2026-06-28T10:00:00.000Z',
+            updatedAtUtc: null,
+            completedAtUtc: null,
+          },
+        ]),
+      ),
+    );
+
+    renderRoute(['/tasks']);
+
+    expect(await screen.findByRole('heading', { name: 'Tasks' })).toBeInTheDocument();
+    expect(await screen.findByText('Whatsapp Call')).toBeInTheDocument();
+    expect(screen.getByText('Ziad Ali')).toBeInTheDocument();
   });
 
   it('updates query state from filters', async () => {

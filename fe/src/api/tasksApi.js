@@ -2,6 +2,15 @@ import httpClient from './httpClient.js';
 import { appendQueryParams } from './queryHelpers.js';
 
 function normalizePagedResponse(data) {
+  if (Array.isArray(data)) {
+    return {
+      items: data.map(normalizeTask),
+      total: data.length,
+      page: 1,
+      pageSize: data.length,
+    };
+  }
+
   return {
     ...data,
     items: (data?.items || []).map(normalizeTask),
@@ -19,7 +28,8 @@ function normalizeTask(task) {
     assignedUserId: task.assignedUserId ?? task.assignedToUserId ?? '',
     assignedUserName: task.assignedUserName ?? task.assignedToUserFullName ?? '',
     dueDateUtc: task.dueDateUtc ?? task.dueAtUtc ?? null,
-    isCompleted: task.isCompleted ?? (task.status === 'Completed' || Boolean(task.completedAtUtc)),
+    isCompleted:
+      task.isCompleted ?? (task.status === 'Completed' || task.status === 'Done' || Boolean(task.completedAtUtc)),
   };
 }
 

@@ -37,7 +37,7 @@ import TaskFormDialog from './TaskFormDialog.jsx';
 import './tasks.css';
 
 const priorityOptions = ['High', 'Medium', 'Low'];
-const statusOptions = ['Pending', 'In Progress', 'Completed'];
+const statusOptions = ['Pending', 'Done', 'Cancelled'];
 
 function formatDate(value) {
   return value ? dayjs(value).format('MMM D, YYYY') : '-';
