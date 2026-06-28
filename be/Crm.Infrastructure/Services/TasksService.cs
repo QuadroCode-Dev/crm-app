@@ -25,6 +25,7 @@ public sealed class TasksService : ITasksService
         var query = _dbContext.TaskItems
             .AsNoTracking()
             .Include(x => x.AssignedToUser)
+            .Where(x => x.LeadId == null || _dbContext.Leads.Any(lead => lead.Id == x.LeadId.Value))
             .AsQueryable();
 
         if (request.AssignedToUserId.HasValue)
@@ -86,6 +87,7 @@ public sealed class TasksService : ITasksService
     {
         var task = await _dbContext.TaskItems
             .AsNoTracking()
+            .Where(x => x.LeadId == null || _dbContext.Leads.Any(lead => lead.Id == x.LeadId.Value))
             .Where(x => x.Id == id)
             .Select(MapTask())
             .FirstOrDefaultAsync(cancellationToken);

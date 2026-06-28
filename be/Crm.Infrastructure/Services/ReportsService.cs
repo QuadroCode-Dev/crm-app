@@ -21,7 +21,7 @@ public sealed class ReportsService : IReportsService
         ReportFilterRequest request,
         CancellationToken cancellationToken)
     {
-        var leads = await ApplyLeadFilters(_dbContext.Leads.AsNoTracking(), request)
+        var leads = await ApplyLeadFilters(_dbContext.Leads.IgnoreQueryFilters().AsNoTracking(), request)
             .Include(x => x.LeadSource)
             .ToListAsync(cancellationToken);
 
@@ -51,7 +51,7 @@ public sealed class ReportsService : IReportsService
             .OrderBy(x => x.SortOrder)
             .ToListAsync(cancellationToken);
 
-        var leads = await ApplyLeadFilters(_dbContext.Leads.AsNoTracking(), request)
+        var leads = await ApplyLeadFilters(_dbContext.Leads.IgnoreQueryFilters().AsNoTracking(), request)
             .Include(x => x.StageHistories)
             .ToListAsync(cancellationToken);
 
@@ -95,7 +95,7 @@ public sealed class ReportsService : IReportsService
             .OrderBy(x => x.SortOrder)
             .ToListAsync(cancellationToken);
 
-        var leads = await ApplyLeadFilters(_dbContext.Leads.AsNoTracking(), request)
+        var leads = await ApplyLeadFilters(_dbContext.Leads.IgnoreQueryFilters().AsNoTracking(), request)
             .Include(x => x.StageHistories)
             .ToListAsync(cancellationToken);
 
@@ -128,7 +128,7 @@ public sealed class ReportsService : IReportsService
         ReportFilterRequest request,
         CancellationToken cancellationToken)
     {
-        var tasks = await ApplyTaskFilters(_dbContext.TaskItems.AsNoTracking(), request)
+        var tasks = await ApplyTaskFilters(_dbContext.TaskItems.IgnoreQueryFilters().AsNoTracking(), request)
             .ToListAsync(cancellationToken);
 
         var utcNow = DateTime.UtcNow;
