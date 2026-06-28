@@ -3,6 +3,7 @@ import AuthLayout from '../features/auth/AuthLayout.jsx';
 import LoginPage from '../features/auth/LoginPage.jsx';
 import ProtectedRoute from '../features/auth/ProtectedRoute.jsx';
 import PublicOnlyRoute from '../features/auth/PublicOnlyRoute.jsx';
+import RoleRoute from '../features/auth/RoleRoute.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
 import HelpPage from '../features/help/HelpPage.jsx';
 import ContactsPage from '../features/contacts/ContactsPage.jsx';
@@ -122,8 +123,13 @@ export const appRoutes = [
             element: <SettingsCustomizationPage />,
           },
           {
-            path: '/users-management',
-            element: <UsersManagementPage />,
+            element: <RoleRoute allowedRoles={['SuperAdmin', 'Admin']} />,
+            children: [
+              {
+                path: '/users-management',
+                element: <UsersManagementPage />,
+              },
+            ],
           },
         ],
       },

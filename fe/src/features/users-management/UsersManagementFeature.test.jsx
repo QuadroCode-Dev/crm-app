@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider } from 'react-router-dom';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import AppProviders from '../../app/providers/AppProviders.jsx';
 import { createTestRouter } from '../../app/router.jsx';
@@ -10,6 +11,7 @@ import { mockAccessToken, mockAuthUser } from '../../shared/mocks/authMockData.j
 import { handlers, resetMockState } from '../../shared/mocks/handlers.js';
 
 const server = setupServer(...handlers);
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 function renderRoute(initialEntries) {
   const router = createTestRouter(initialEntries);
@@ -49,6 +51,31 @@ afterAll(() => {
 });
 
 describe('Users Management feature', () => {
+  it('redirects sales managers away from users management', async () => {
+    const salesManagerUser = {
+      ...mockAuthUser,
+      role: 'SalesManager',
+      permissions: ['leads.assign', 'tasks.assign'],
+    };
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/auth/me`, () => HttpResponse.json(salesManagerUser)),
+    );
+
+    authenticate();
+    setAuthSession({
+      user: salesManagerUser,
+    });
+
+    const { router } = renderRoute(['/users-management']);
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/dashboard');
+    });
+    expect(screen.queryByRole('heading', { name: 'Users Management' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Users Management' })).not.toBeInTheDocument();
+  });
+
   it('renders users and roles permissions', async () => {
     const user = userEvent.setup();
     authenticate();

@@ -430,6 +430,13 @@ export const handlers = [
 
     return HttpResponse.json(state.users);
   }),
+  http.get(`${apiBaseUrl}/api/users`, ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    return HttpResponse.json(state.users.filter((user) => user.isActive !== false));
+  }),
   http.post(`${apiBaseUrl}/api/users-management/users`, async ({ request }) => {
     if (!isAuthorized(request)) {
       return unauthorizedResponse();

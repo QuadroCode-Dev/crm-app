@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Crm.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = "SuperAdmin,Admin")]
 [Route("api/users-management")]
 public sealed class UsersManagementController : ControllerBase
 {

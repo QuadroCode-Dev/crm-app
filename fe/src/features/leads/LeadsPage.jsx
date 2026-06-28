@@ -34,6 +34,7 @@ import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
 import { getServiceNames } from '../../api/servicesApi.js';
+import { getActiveUsers } from '../../api/usersApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
 import './leads.css';
 
@@ -152,14 +153,21 @@ function LeadsPage() {
     queryFn: getServiceNames,
   });
 
-  const ownerOptions = user
-    ? [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        },
-      ]
-    : [];
+  const usersQuery = useQuery({
+    queryKey: ['users', 'active'],
+    queryFn: getActiveUsers,
+  });
+
+  const ownerOptions = usersQuery.data?.length
+    ? usersQuery.data
+    : user
+      ? [
+          {
+            id: user.id,
+            fullName: user.fullName,
+          },
+        ]
+      : [];
   const stageById = useMemo(
     () => Object.fromEntries((stagesQuery.data || []).map((stage) => [stage.id, stage])),
     [stagesQuery.data],

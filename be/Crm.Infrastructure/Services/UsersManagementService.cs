@@ -55,6 +55,25 @@ public sealed class UsersManagementService : IUsersManagementService
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<UserResponse>> GetActiveUsersAsync(CancellationToken cancellationToken)
+    {
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.FullName)
+            .Select(x => new UserResponse
+            {
+                Id = x.Id,
+                FullName = x.FullName,
+                Email = x.Email,
+                Role = x.Role.ToString(),
+                IsActive = x.IsActive,
+                CreatedAtUtc = x.CreatedAtUtc,
+                UpdatedAtUtc = x.UpdatedAtUtc
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<UserResponse> CreateUserAsync(
         CreateUserRequest request,
         CancellationToken cancellationToken)

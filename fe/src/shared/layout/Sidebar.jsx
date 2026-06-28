@@ -25,6 +25,7 @@ import {
 } from '@phosphor-icons/react';
 import { NavLink } from 'react-router-dom';
 import packageJson from '../../../package.json';
+import useAuth from '../hooks/useAuth.js';
 import useLanguage from '../hooks/useLanguage.js';
 import usePlatformCustomization from '../hooks/usePlatformCustomization.js';
 import './layout.css';
@@ -36,10 +37,15 @@ const navItems = [
   { icon: Users, labelKey: 'navigation.contacts', to: '/contacts' },
   { icon: SquaresFour, labelKey: 'navigation.tasks', to: '/tasks' },
   { icon: ChartBar, labelKey: 'navigation.reports', to: '/reports' },
-  { icon: UserGear, labelKey: 'navigation.usersManagement', to: '/users-management' },
 ];
 
 const settingsItems = [
+  {
+    icon: UserGear,
+    labelKey: 'navigation.usersManagement',
+    to: '/users-management',
+    roles: ['SuperAdmin', 'Admin'],
+  },
   { icon: GearSix, labelKey: 'navigation.pipelineStages', to: '/settings/pipeline' },
   { icon: Lightning, labelKey: 'navigation.automationRules', to: '/settings/automation' },
   { icon: PlugsConnected, labelKey: 'navigation.integrations', to: '/settings/integrations' },
@@ -77,8 +83,12 @@ function SidebarLink({ icon: Icon, labelKey, to, onNavigate }) {
 }
 
 function Sidebar({ onNavigate }) {
+  const { user } = useAuth();
   const { direction, t } = useLanguage();
   const { logoSrc } = usePlatformCustomization();
+  const visibleSettingsItems = settingsItems.filter(
+    (item) => !item.roles || item.roles.includes(user?.role),
+  );
 
   return (
     <Box className="crm-sidebar" dir={direction}>
@@ -112,7 +122,7 @@ function Sidebar({ onNavigate }) {
           {t('app.settingsLabel')}
         </Typography>
         <List disablePadding className="crm-sidebar__list">
-          {settingsItems.map((item) => (
+          {visibleSettingsItems.map((item) => (
             <SidebarLink key={item.to} {...item} onNavigate={onNavigate} />
           ))}
         </List>

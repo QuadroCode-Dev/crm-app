@@ -6,6 +6,8 @@ public interface IUsersManagementService
 {
     Task<IReadOnlyList<UserResponse>> GetUsersAsync(CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<UserResponse>> GetActiveUsersAsync(CancellationToken cancellationToken);
+
     Task<UserResponse> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken);
 
     Task<UserResponse> UpdateUserAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken);

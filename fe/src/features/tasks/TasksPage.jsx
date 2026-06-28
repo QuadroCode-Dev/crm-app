@@ -17,6 +17,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getContacts } from '../../api/contactsApi.js';
 import { getLeads } from '../../api/leadsApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
+import { getActiveUsers } from '../../api/usersApi.js';
 import {
   completeTask,
   createTask,
@@ -99,6 +100,11 @@ function TasksPage() {
   const contactsQuery = useQuery({
     queryKey: ['contacts', { page: 1, pageSize: 100 }],
     queryFn: () => getContacts({ page: 1, pageSize: 100 }),
+  });
+
+  const usersQuery = useQuery({
+    queryKey: ['users', 'active'],
+    queryFn: getActiveUsers,
   });
 
   const createTaskMutation = useMutation({
@@ -191,14 +197,16 @@ function TasksPage() {
       Object.fromEntries((contactsQuery.data?.items || []).map((contact) => [contact.id, contact])),
     [contactsQuery.data],
   );
-  const assignedUserOptions = user
-    ? [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        },
-      ]
-    : [];
+  const assignedUserOptions = usersQuery.data?.length
+    ? usersQuery.data
+    : user
+      ? [
+          {
+            id: user.id,
+            fullName: user.fullName,
+          },
+        ]
+      : [];
 
   const columns = useMemo(
     () => [

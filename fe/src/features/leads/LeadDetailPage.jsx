@@ -46,6 +46,7 @@ import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
 import { getServiceNames } from '../../api/servicesApi.js';
+import { getActiveUsers } from '../../api/usersApi.js';
 import LeadFormDialog from './LeadFormDialog.jsx';
 import NoteFormDialog from './NoteFormDialog.jsx';
 import TaskFormDialog from '../tasks/TaskFormDialog.jsx';
@@ -198,6 +199,10 @@ function LeadDetailPage() {
   const servicesQuery = useQuery({
     queryKey: ['services'],
     queryFn: getServiceNames,
+  });
+  const usersQuery = useQuery({
+    queryKey: ['users', 'active'],
+    queryFn: getActiveUsers,
   });
   const stageTimerQuery = useQuery({
     queryKey: ['lead-stage-timer', id],
@@ -471,14 +476,16 @@ function LeadDetailPage() {
   const canSeeLessTimelineItems =
     timelineItems.length > ACTIVITY_TIMELINE_PAGE_SIZE &&
     visibleTimelineCount > ACTIVITY_TIMELINE_PAGE_SIZE;
-  const ownerOptions = user
-    ? [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        },
-      ]
-    : [];
+  const ownerOptions = usersQuery.data?.length
+    ? usersQuery.data
+    : user
+      ? [
+          {
+            id: user.id,
+            fullName: user.fullName,
+          },
+        ]
+      : [];
 
   if (!lead) {
     return (
