@@ -1,5 +1,7 @@
 using Crm.Application.Abstractions.Auth;
 using Crm.Contracts.Auth;
+using Crm.Domain.Authorization;
+using Crm.Domain.Enums;
 using Crm.Infrastructure.Persistence;
 using System.Security.Cryptography;
 using System.Text;
@@ -96,8 +98,26 @@ public sealed class AuthService : IAuthService
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email,
-            Role = user.Role.ToString()
+            Role = user.Role.ToString(),
+            Permissions = await GetRolePermissionsAsync(user.Role, cancellationToken)
         };
+    }
+
+    private async Task<IReadOnlyList<string>> GetRolePermissionsAsync(
+        UserRole role,
+        CancellationToken cancellationToken)
+    {
+        if (role == UserRole.SuperAdmin)
+        {
+            return CrmPermissions.All;
+        }
+
+        return await _dbContext.RolePermissions
+            .AsNoTracking()
+            .Where(x => x.Role == role)
+            .Select(x => x.PermissionCode)
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
     }
 
     private async Task<LoginResponse> RefreshInternalAsync(

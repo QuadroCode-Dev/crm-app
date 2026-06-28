@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Crm.Application.Abstractions.Leads;
 using Crm.Contracts.Common;
 using Crm.Contracts.Leads;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -36,6 +38,7 @@ public sealed class LeadsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.LeadsCreate)]
     public async Task<ActionResult<LeadResponse>> CreateLead(
         [FromBody] CreateLeadRequest request,
         CancellationToken cancellationToken)
@@ -49,6 +52,7 @@ public sealed class LeadsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.LeadsEdit)]
     public async Task<ActionResult<LeadResponse>> UpdateLead(
         Guid id,
         [FromBody] UpdateLeadRequest request,
@@ -64,6 +68,7 @@ public sealed class LeadsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.LeadsDelete)]
     public async Task<IActionResult> DeleteLead(
         Guid id,
         CancellationToken cancellationToken)
@@ -73,6 +78,7 @@ public sealed class LeadsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/stage")]
+    [Authorize(Policy = CrmPermissions.LeadsEdit)]
     public async Task<ActionResult<LeadResponse>> ChangeStage(
         Guid id,
         [FromBody] ChangeLeadStageRequest request,

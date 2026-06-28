@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Crm.Application.Abstractions.Tasks;
 using Crm.Contracts.Tasks;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -35,6 +37,7 @@ public sealed class TasksController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.TasksCreate)]
     public async Task<ActionResult<TaskResponse>> CreateTask(
         [FromBody] CreateTaskRequest request,
         CancellationToken cancellationToken)
@@ -48,6 +51,7 @@ public sealed class TasksController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.TasksEdit)]
     public async Task<ActionResult<TaskResponse>> UpdateTask(
         Guid id,
         [FromBody] UpdateTaskRequest request,
@@ -63,6 +67,7 @@ public sealed class TasksController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/complete")]
+    [Authorize(Policy = CrmPermissions.TasksComplete)]
     public async Task<ActionResult<TaskResponse>> CompleteTask(
         Guid id,
         CancellationToken cancellationToken)
@@ -76,6 +81,7 @@ public sealed class TasksController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.TasksDelete)]
     public async Task<IActionResult> DeleteTask(
         Guid id,
         CancellationToken cancellationToken)

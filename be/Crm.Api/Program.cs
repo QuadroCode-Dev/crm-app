@@ -1,6 +1,7 @@
 using System.Text;
 using Crm.Api.Infrastructure;
 using Crm.Application.Abstractions.Auth;
+using Crm.Domain.Authorization;
 using Crm.Infrastructure;
 using Crm.Infrastructure.Persistence;
 using Crm.Infrastructure.Persistence.Seed;
@@ -108,10 +109,16 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
+    foreach (var permission in CrmPermissions.All)
+    {
+        options.AddPolicy(permission, policy => policy.Requirements.Add(new PermissionRequirement(permission)));
+    }
+
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 });
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 var app = builder.Build();
 

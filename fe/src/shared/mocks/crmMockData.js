@@ -14,11 +14,79 @@ export const mockUsers = [
     id: 'user-2',
     fullName: 'Mert Kaya',
     email: 'mert@example.com',
+    role: 'SalesManager',
+    isActive: true,
   },
   {
     id: 'user-3',
     fullName: 'Selin Aras',
     email: 'selin@example.com',
+    role: 'Agent',
+    isActive: true,
+  },
+];
+
+export const mockPermissions = [
+  { code: 'users.manage', label: 'Manage users', group: 'Administration' },
+  { code: 'roles.manage', label: 'Manage roles and permissions', group: 'Administration' },
+  { code: 'leads.create', label: 'Create leads', group: 'Leads' },
+  { code: 'leads.edit', label: 'Edit leads', group: 'Leads' },
+  { code: 'leads.delete', label: 'Delete leads', group: 'Leads' },
+  { code: 'leads.assign', label: 'Assign leads', group: 'Leads' },
+  { code: 'tasks.create', label: 'Create tasks', group: 'Tasks' },
+  { code: 'tasks.edit', label: 'Edit tasks', group: 'Tasks' },
+  { code: 'tasks.delete', label: 'Delete tasks', group: 'Tasks' },
+  { code: 'tasks.assign', label: 'Assign tasks', group: 'Tasks' },
+  { code: 'tasks.complete', label: 'Complete tasks', group: 'Tasks' },
+  { code: 'reports.view', label: 'View reports', group: 'Reports' },
+  { code: 'settings.manage', label: 'Manage settings', group: 'Settings' },
+];
+
+export const mockRoles = [
+  {
+    code: 'SuperAdmin',
+    name: 'Super Admin',
+    isEditable: false,
+    permissions: mockPermissions.map((permission) => permission.code),
+  },
+  {
+    code: 'Admin',
+    name: 'Admin',
+    isEditable: true,
+    permissions: [
+      'leads.create',
+      'leads.edit',
+      'leads.delete',
+      'leads.assign',
+      'tasks.create',
+      'tasks.edit',
+      'tasks.delete',
+      'tasks.assign',
+      'tasks.complete',
+      'reports.view',
+      'settings.manage',
+    ],
+  },
+  {
+    code: 'SalesManager',
+    name: 'Sales Manager',
+    isEditable: true,
+    permissions: [
+      'leads.create',
+      'leads.edit',
+      'leads.assign',
+      'tasks.create',
+      'tasks.edit',
+      'tasks.assign',
+      'tasks.complete',
+      'reports.view',
+    ],
+  },
+  {
+    code: 'Agent',
+    name: 'Agent',
+    isEditable: true,
+    permissions: ['leads.create', 'leads.edit', 'tasks.create', 'tasks.edit', 'tasks.complete'],
   },
 ];
 
@@ -488,6 +556,8 @@ export const baseMockState = {
     isAuthenticated: false,
   },
   users: mockUsers,
+  roles: mockRoles,
+  permissions: mockPermissions,
   contacts: mockContacts,
   pipelineStages: mockPipelineStages,
   services: mockServices,

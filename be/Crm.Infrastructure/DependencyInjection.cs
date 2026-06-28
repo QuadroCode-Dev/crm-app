@@ -9,6 +9,7 @@ using Crm.Application.Abstractions.Pipeline;
 using Crm.Application.Abstractions.Public;
 using Crm.Application.Abstractions.Reports;
 using Crm.Application.Abstractions.Tasks;
+using Crm.Application.Abstractions.Users;
 using Crm.Infrastructure.Auth;
 using Crm.Infrastructure.Events;
 using Crm.Infrastructure.Persistence;
@@ -58,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<IPublicLeadCaptureService, PublicLeadCaptureService>();
         services.AddScoped<IReportsService, ReportsService>();
         services.AddScoped<ITasksService, TasksService>();
+        services.AddScoped<IUsersManagementService, UsersManagementService>();
         services.AddSingleton<IPublicLeadCaptureRateLimiter, InMemoryPublicLeadCaptureRateLimiter>();
         services.AddScoped<IInternalEventPublisher, InternalEventPublisher>();
 

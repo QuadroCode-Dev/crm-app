@@ -29,6 +29,13 @@ public static class AdminSeeder
 
         if (existingAdmin is not null)
         {
+            if (existingAdmin.Role != UserRole.SuperAdmin)
+            {
+                existingAdmin.Role = UserRole.SuperAdmin;
+                existingAdmin.IsActive = true;
+                await dbContext.SaveChangesAsync();
+            }
+
             return;
         }
 
@@ -38,7 +45,7 @@ public static class AdminSeeder
             FullName = fullName,
             Email = email.Trim().ToLowerInvariant(),
             PasswordHash = passwordHasher.Hash(password),
-            Role = UserRole.Admin,
+            Role = UserRole.SuperAdmin,
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow
         };

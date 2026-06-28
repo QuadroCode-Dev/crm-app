@@ -64,6 +64,11 @@ function TasksPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
+  const userPermissions = new Set(user?.permissions || []);
+  const canCreateTask = userPermissions.has('tasks.create');
+  const canEditTask = userPermissions.has('tasks.edit');
+  const canDeleteTask = userPermissions.has('tasks.delete');
+  const canCompleteTask = userPermissions.has('tasks.complete');
 
   const page = Number(searchParams.get('page') || '1');
   const pageSize = Number(searchParams.get('pageSize') || '10');
@@ -279,7 +284,7 @@ function TasksPage() {
         sortable: false,
         renderCell: (params) => (
           <Stack direction="row" spacing={1} className="crm-tasks-table__actions">
-            {!params.row.isCompleted ? (
+            {!params.row.isCompleted && canCompleteTask ? (
               <Button
                 size="small"
                 variant="outlined"
@@ -288,26 +293,30 @@ function TasksPage() {
                 {t('Complete')}
               </Button>
             ) : null}
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => handleEdit(params.row)}
-            >
-              {t('Edit')}
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              onClick={() => setDeletingTask(params.row)}
-            >
-              {t('Delete')}
-            </Button>
+            {canEditTask ? (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleEdit(params.row)}
+              >
+                {t('Edit')}
+              </Button>
+            ) : null}
+            {canDeleteTask ? (
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                onClick={() => setDeletingTask(params.row)}
+              >
+                {t('Delete')}
+              </Button>
+            ) : null}
           </Stack>
         ),
       },
     ],
-    [completeTaskMutation, contactMap, leadMap, t],
+    [canCompleteTask, canDeleteTask, canEditTask, completeTaskMutation, contactMap, leadMap, t],
   );
 
   function updateFilters(nextValues) {
@@ -378,9 +387,11 @@ function TasksPage() {
         title={t('Tasks')}
         description={t('Track follow-ups, keep owners accountable, and spot overdue work before it slips.')}
         actions={
-          <Button onClick={handleCreate} variant="contained">
-            {t('Add task')}
-          </Button>
+          canCreateTask ? (
+            <Button onClick={handleCreate} variant="contained">
+              {t('Add task')}
+            </Button>
+          ) : null
         }
       />
 

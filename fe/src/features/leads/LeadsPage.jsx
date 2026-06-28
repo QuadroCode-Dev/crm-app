@@ -115,6 +115,10 @@ function LeadsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
+  const userPermissions = new Set(user?.permissions || []);
+  const canCreateLead = userPermissions.has('leads.create');
+  const canEditLead = userPermissions.has('leads.edit');
+  const canDeleteLead = userPermissions.has('leads.delete');
   const page = Number(searchParams.get('page') || '1');
   const pageSize = Number(searchParams.get('pageSize') || '10');
   const query = {
@@ -378,31 +382,35 @@ function LeadsPage() {
         disableColumnMenu: true,
         renderCell: (params) => (
           <Stack className="crm-leads-row-actions" direction="row" spacing={0.5}>
-            <Tooltip title={t('Edit')}>
-              <IconButton
-                aria-label={t('Edit')}
-                color="primary"
-                onClick={() => handleEdit(params.row)}
-                size="small"
-              >
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('Delete')}>
-              <IconButton
-                aria-label={t('Delete')}
-                color="error"
-                onClick={() => setDeletingLead(params.row)}
-                size="small"
-              >
-                <DeleteOutlineOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {canEditLead ? (
+              <Tooltip title={t('Edit')}>
+                <IconButton
+                  aria-label={t('Edit')}
+                  color="primary"
+                  onClick={() => handleEdit(params.row)}
+                  size="small"
+                >
+                  <EditOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+            {canDeleteLead ? (
+              <Tooltip title={t('Delete')}>
+                <IconButton
+                  aria-label={t('Delete')}
+                  color="error"
+                  onClick={() => setDeletingLead(params.row)}
+                  size="small"
+                >
+                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
           </Stack>
         ),
       },
     ],
-    [stageById, t],
+    [canDeleteLead, canEditLead, stageById, t],
   );
 
   function handleCreate() {
@@ -487,9 +495,11 @@ function LeadsPage() {
         description={t('Track pipeline-ready leads, filter by source and status, and spot duplicate warnings quickly.')}
         actions={
           <Box className="crm-leads-toolbar">
-            <Button onClick={handleCreate} variant="contained">
-              {t('Add lead')}
-            </Button>
+            {canCreateLead ? (
+              <Button onClick={handleCreate} variant="contained">
+                {t('Add lead')}
+              </Button>
+            ) : null}
           </Box>
         }
       />

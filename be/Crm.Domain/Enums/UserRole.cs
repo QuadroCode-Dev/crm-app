@@ -2,7 +2,8 @@ namespace Crm.Domain.Enums;
 
 public enum UserRole
 {
+    SuperAdmin = 0,
     Admin = 1,
-    Manager = 2,
+    SalesManager = 2,
     Agent = 3
 }

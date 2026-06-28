@@ -1,0 +1,89 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { RouterProvider } from 'react-router-dom';
+import { setupServer } from 'msw/node';
+import AppProviders from '../../app/providers/AppProviders.jsx';
+import { createTestRouter } from '../../app/router.jsx';
+import { clearAuthSession, setAuthSession } from '../auth/authSession.js';
+import { mockAccessToken, mockAuthUser } from '../../shared/mocks/authMockData.js';
+import { handlers, resetMockState } from '../../shared/mocks/handlers.js';
+
+const server = setupServer(...handlers);
+
+function renderRoute(initialEntries) {
+  const router = createTestRouter(initialEntries);
+
+  render(
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>,
+  );
+
+  return { router };
+}
+
+function authenticate() {
+  setAuthSession({
+    accessToken: mockAccessToken,
+    user: mockAuthUser,
+  });
+}
+
+beforeAll(() => {
+  server.listen({
+    onUnhandledRequest: 'error',
+  });
+});
+
+afterEach(() => {
+  resetMockState();
+  clearAuthSession();
+  window.localStorage.clear();
+  cleanup();
+  server.resetHandlers();
+});
+
+afterAll(() => {
+  server.close();
+});
+
+describe('Users Management feature', () => {
+  it('renders users and roles permissions', async () => {
+    const user = userEvent.setup();
+    authenticate();
+
+    renderRoute(['/users-management']);
+
+    expect(await screen.findByRole('heading', { name: 'Users Management' })).toBeInTheDocument();
+    expect(screen.getAllByText('Admin User').length).toBeGreaterThan(0);
+    expect(screen.getByText('Sales Manager')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Roles & Permissions' }));
+
+    expect(await screen.findByRole('heading', { name: 'Roles & Permissions' })).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Delete leads').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Save permissions' })[0]).toBeDisabled();
+  });
+
+  it('creates a user with a fixed role', async () => {
+    const user = userEvent.setup();
+    authenticate();
+
+    renderRoute(['/users-management']);
+
+    await screen.findByRole('heading', { name: 'Users Management' });
+    await user.click(screen.getByRole('button', { name: 'Add user' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Create user' });
+    await user.type(within(dialog).getByLabelText('Full name'), 'Nora Haddad');
+    await user.type(within(dialog).getByLabelText('Email'), 'nora@example.com');
+    await user.type(within(dialog).getByLabelText('Password'), 'secret123');
+    await user.click(within(dialog).getByRole('button', { name: 'Create user' }));
+
+    expect(await screen.findByText('User created successfully.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Nora Haddad')).toBeInTheDocument();
+    });
+  });
+});

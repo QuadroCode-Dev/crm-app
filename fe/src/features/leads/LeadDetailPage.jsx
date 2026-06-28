@@ -157,6 +157,13 @@ function LeadDetailPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
+  const userPermissions = new Set(user?.permissions || []);
+  const canEditLead = userPermissions.has('leads.edit');
+  const canDeleteLead = userPermissions.has('leads.delete');
+  const canCreateTask = userPermissions.has('tasks.create');
+  const canEditTask = userPermissions.has('tasks.edit');
+  const canDeleteTask = userPermissions.has('tasks.delete');
+  const canCompleteTask = userPermissions.has('tasks.complete');
   const [formOpen, setFormOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
@@ -493,12 +500,16 @@ function LeadDetailPage() {
             <Button component={Link} to="/leads" variant="outlined">
               {t('Back to leads')}
             </Button>
-            <Button onClick={() => setFormOpen(true)} variant="contained">
-              {t('Edit lead')}
-            </Button>
-            <Button color="error" onClick={() => setConfirmOpen(true)} variant="outlined">
-              {t('Delete')}
-            </Button>
+            {canEditLead ? (
+              <Button onClick={() => setFormOpen(true)} variant="contained">
+                {t('Edit lead')}
+              </Button>
+            ) : null}
+            {canDeleteLead ? (
+              <Button color="error" onClick={() => setConfirmOpen(true)} variant="outlined">
+                {t('Delete')}
+              </Button>
+            ) : null}
           </Box>
         }
       />
@@ -770,21 +781,23 @@ function LeadDetailPage() {
                 {t('Keep next steps tied to this lead so the owner always has a clear queue.')}
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setEditingTask({
-                  leadId: lead.id,
-                  contactId: lead.contact?.id || lead.contactId || '',
-                  assignedUserId: lead.ownerUserId || user?.id || '',
-                  priority: 'Medium',
-                  status: 'Pending',
-                });
-                setTaskFormOpen(true);
-              }}
-            >
-              {t('Add task')}
-            </Button>
+            {canCreateTask ? (
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setEditingTask({
+                    leadId: lead.id,
+                    contactId: lead.contact?.id || lead.contactId || '',
+                    assignedUserId: lead.ownerUserId || user?.id || '',
+                    priority: 'Medium',
+                    status: 'Pending',
+                  });
+                  setTaskFormOpen(true);
+                }}
+              >
+                {t('Add task')}
+              </Button>
+            ) : null}
           </Box>
 
           {tasksQuery.isLoading ? (
@@ -803,7 +816,7 @@ function LeadDetailPage() {
                       </Typography>
                     </Box>
                     <Box className="crm-lead-detail__task-actions">
-                      {!task.isCompleted ? (
+                      {!task.isCompleted && canCompleteTask ? (
                         <Button
                           variant="contained"
                           onClick={() => completeTaskMutation.mutate(task.id)}
@@ -811,22 +824,26 @@ function LeadDetailPage() {
                           {t('Complete')}
                         </Button>
                       ) : null}
-                      <Button
-                        variant="outlined"
-                        onClick={() => {
-                          setEditingTask(task);
-                          setTaskFormOpen(true);
-                        }}
-                      >
-                        {t('Edit')}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => setDeletingTask(task)}
-                      >
-                        {t('Delete')}
-                      </Button>
+                      {canEditTask ? (
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            setEditingTask(task);
+                            setTaskFormOpen(true);
+                          }}
+                        >
+                          {t('Edit')}
+                        </Button>
+                      ) : null}
+                      {canDeleteTask ? (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => setDeletingTask(task)}
+                        >
+                          {t('Delete')}
+                        </Button>
+                      ) : null}
                     </Box>
                   </Box>
                   <Box className="crm-lead-detail__task-meta">

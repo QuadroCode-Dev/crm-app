@@ -13,6 +13,7 @@ public class CrmDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadSource> LeadSources => Set<LeadSource>();
@@ -35,6 +36,7 @@ public class CrmDbContext : DbContext
         SeedLeadSources(modelBuilder);
         SeedServices(modelBuilder);
         SeedPipelineStages(modelBuilder);
+        SeedRolePermissions(modelBuilder);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -223,6 +225,70 @@ public class CrmDbContext : DbContext
                 CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
+    }
+
+    private static void SeedRolePermissions(ModelBuilder modelBuilder)
+    {
+        var superAdminPermissions = Crm.Domain.Authorization.CrmPermissions.All
+            .Select(permission => new RolePermission
+            {
+                Role = Crm.Domain.Enums.UserRole.SuperAdmin,
+                PermissionCode = permission
+            });
+
+        var adminPermissions = new[]
+        {
+            Crm.Domain.Authorization.CrmPermissions.LeadsCreate,
+            Crm.Domain.Authorization.CrmPermissions.LeadsEdit,
+            Crm.Domain.Authorization.CrmPermissions.LeadsDelete,
+            Crm.Domain.Authorization.CrmPermissions.LeadsAssign,
+            Crm.Domain.Authorization.CrmPermissions.TasksCreate,
+            Crm.Domain.Authorization.CrmPermissions.TasksEdit,
+            Crm.Domain.Authorization.CrmPermissions.TasksDelete,
+            Crm.Domain.Authorization.CrmPermissions.TasksAssign,
+            Crm.Domain.Authorization.CrmPermissions.TasksComplete,
+            Crm.Domain.Authorization.CrmPermissions.ReportsView,
+            Crm.Domain.Authorization.CrmPermissions.SettingsManage
+        }.Select(permission => new RolePermission
+        {
+            Role = Crm.Domain.Enums.UserRole.Admin,
+            PermissionCode = permission
+        });
+
+        var salesManagerPermissions = new[]
+        {
+            Crm.Domain.Authorization.CrmPermissions.LeadsCreate,
+            Crm.Domain.Authorization.CrmPermissions.LeadsEdit,
+            Crm.Domain.Authorization.CrmPermissions.LeadsAssign,
+            Crm.Domain.Authorization.CrmPermissions.TasksCreate,
+            Crm.Domain.Authorization.CrmPermissions.TasksEdit,
+            Crm.Domain.Authorization.CrmPermissions.TasksAssign,
+            Crm.Domain.Authorization.CrmPermissions.TasksComplete,
+            Crm.Domain.Authorization.CrmPermissions.ReportsView
+        }.Select(permission => new RolePermission
+        {
+            Role = Crm.Domain.Enums.UserRole.SalesManager,
+            PermissionCode = permission
+        });
+
+        var agentPermissions = new[]
+        {
+            Crm.Domain.Authorization.CrmPermissions.LeadsCreate,
+            Crm.Domain.Authorization.CrmPermissions.LeadsEdit,
+            Crm.Domain.Authorization.CrmPermissions.TasksCreate,
+            Crm.Domain.Authorization.CrmPermissions.TasksEdit,
+            Crm.Domain.Authorization.CrmPermissions.TasksComplete
+        }.Select(permission => new RolePermission
+        {
+            Role = Crm.Domain.Enums.UserRole.Agent,
+            PermissionCode = permission
+        });
+
+        modelBuilder.Entity<RolePermission>().HasData(
+            superAdminPermissions
+                .Concat(adminPermissions)
+                .Concat(salesManagerPermissions)
+                .Concat(agentPermissions));
     }
 
     private void ApplyAuditInformation()

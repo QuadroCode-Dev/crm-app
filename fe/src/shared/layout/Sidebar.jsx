@@ -20,6 +20,7 @@ import {
   PlugsConnected,
   Tag,
   SquaresFour,
+  UserGear,
   Users,
 } from '@phosphor-icons/react';
 import { NavLink } from 'react-router-dom';
@@ -35,6 +36,7 @@ const navItems = [
   { icon: Users, labelKey: 'navigation.contacts', to: '/contacts' },
   { icon: SquaresFour, labelKey: 'navigation.tasks', to: '/tasks' },
   { icon: ChartBar, labelKey: 'navigation.reports', to: '/reports' },
+  { icon: UserGear, labelKey: 'navigation.usersManagement', to: '/users-management' },
 ];
 
 const settingsItems = [

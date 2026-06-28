@@ -423,6 +423,91 @@ export const handlers = [
       success: true,
     });
   }),
+  http.get(`${apiBaseUrl}/api/users-management/users`, ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    return HttpResponse.json(state.users);
+  }),
+  http.post(`${apiBaseUrl}/api/users-management/users`, async ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    const body = await request.json();
+    const user = {
+      id: createId('user'),
+      fullName: body.fullName,
+      email: body.email,
+      role: body.role || 'Agent',
+      isActive: body.isActive ?? true,
+      createdAtUtc: dayjs().toISOString(),
+      updatedAtUtc: null,
+    };
+
+    state.users.push(user);
+    persistState();
+
+    return HttpResponse.json(user, { status: 201 });
+  }),
+  http.put(`${apiBaseUrl}/api/users-management/users/:id`, async ({ params, request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    const index = state.users.findIndex((user) => user.id === params.id);
+    if (index === -1) {
+      return notFoundResponse('User not found.');
+    }
+
+    const body = await request.json();
+    state.users[index] = {
+      ...state.users[index],
+      ...body,
+      updatedAtUtc: dayjs().toISOString(),
+    };
+    persistState();
+
+    return HttpResponse.json(state.users[index]);
+  }),
+  http.get(`${apiBaseUrl}/api/users-management/permissions`, ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    return HttpResponse.json(state.permissions);
+  }),
+  http.get(`${apiBaseUrl}/api/users-management/roles`, ({ request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    return HttpResponse.json(state.roles);
+  }),
+  http.put(`${apiBaseUrl}/api/users-management/roles/:roleCode/permissions`, async ({ params, request }) => {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
+    const index = state.roles.findIndex((role) => role.code === params.roleCode);
+    if (index === -1) {
+      return notFoundResponse('Role not found.');
+    }
+
+    if (!state.roles[index].isEditable) {
+      return HttpResponse.json({ message: 'Role permissions cannot be changed.' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    state.roles[index] = {
+      ...state.roles[index],
+      permissions: body.permissions || [],
+    };
+    persistState();
+
+    return HttpResponse.json(state.roles[index]);
+  }),
   http.get(`${apiBaseUrl}/api/leads`, ({ request }) => {
     if (!isAuthorized(request)) {
       return unauthorizedResponse();

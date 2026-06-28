@@ -1,0 +1,65 @@
+.crm-users-management-page {
+  width: 100%;
+}
+
+.crm-users-management__shell {
+  border-radius: 16px !important;
+}
+
+.crm-users-management__tab-panel {
+  padding-top: 1.5rem;
+}
+
+.crm-users-management__panel-header,
+.crm-users-management__role-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.crm-users-management__list,
+.crm-users-management__roles {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-users-management__card {
+  border-radius: 12px !important;
+}
+
+.crm-users-management__user-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.crm-users-management__permission-groups {
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.crm-users-management__permission-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.crm-users-management__permissions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.25rem 1rem;
+}
+
+@media (max-width: 760px) {
+  .crm-users-management__panel-header,
+  .crm-users-management__role-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .crm-users-management__user-card {
+    grid-template-columns: 1fr;
+  }
+}

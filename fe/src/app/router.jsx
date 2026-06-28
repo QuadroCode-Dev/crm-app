@@ -20,6 +20,7 @@ import SettingsIntegrationsPage from '../features/settings/SettingsIntegrationsP
 import SettingsPipelinePage from '../features/settings/SettingsPipelinePage.jsx';
 import SettingsServicesPage from '../features/settings/SettingsServicesPage.jsx';
 import TasksPage from '../features/tasks/TasksPage.jsx';
+import UsersManagementPage from '../features/users-management/UsersManagementPage.jsx';
 import AppLayout from '../shared/layout/AppLayout.jsx';
 
 function AppRouter() {
@@ -119,6 +120,10 @@ export const appRoutes = [
           {
             path: '/settings/customization',
             element: <SettingsCustomizationPage />,
+          },
+          {
+            path: '/users-management',
+            element: <UsersManagementPage />,
           },
         ],
       },

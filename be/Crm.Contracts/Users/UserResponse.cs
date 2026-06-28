@@ -1,6 +1,6 @@
-namespace Crm.Contracts.Auth;
+namespace Crm.Contracts.Users;
 
-public sealed class MeResponse
+public sealed class UserResponse
 {
     public Guid Id { get; set; }
 
@@ -10,5 +10,9 @@ public sealed class MeResponse
 
     public string Role { get; set; } = string.Empty;
 
-    public IReadOnlyList<string> Permissions { get; set; } = Array.Empty<string>();
+    public bool IsActive { get; set; }
+
+    public DateTime CreatedAtUtc { get; set; }
+
+    public DateTime? UpdatedAtUtc { get; set; }
 }
