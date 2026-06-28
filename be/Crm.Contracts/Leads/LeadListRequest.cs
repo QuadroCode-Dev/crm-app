@@ -15,4 +15,6 @@ public sealed class LeadListRequest
     public string? Status { get; set; }
 
     public Guid? OwnerUserId { get; set; }
+
+    public Guid? ContactId { get; set; }
 }

@@ -1,10 +1,19 @@
 import httpClient from './httpClient.js';
 import { appendQueryParams } from './queryHelpers.js';
 
+function normalizePagedResponse(data) {
+  return {
+    ...data,
+    items: data?.items || [],
+    total: data?.total ?? data?.totalCount ?? 0,
+    totalCount: data?.totalCount ?? data?.total ?? 0,
+  };
+}
+
 export function getContacts(params = {}) {
   return httpClient
     .get(appendQueryParams('/api/contacts', params))
-    .then((response) => response.data);
+    .then((response) => normalizePagedResponse(response.data));
 }
 
 export function createContact(payload) {

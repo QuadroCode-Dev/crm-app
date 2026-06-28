@@ -420,6 +420,11 @@ public sealed class LeadsService : ILeadsService
             query = query.Where(x => x.OwnerUserId == request.OwnerUserId.Value);
         }
 
+        if (request.ContactId.HasValue)
+        {
+            query = query.Where(x => x.ContactId == request.ContactId.Value);
+        }
+
         var status = ParseStatus(request.Status);
         if (status.HasValue)
         {

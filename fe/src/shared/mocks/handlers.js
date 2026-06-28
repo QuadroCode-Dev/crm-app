@@ -123,6 +123,7 @@ function applyLeadFilters(leads, searchParams) {
   const stage = searchParams.get('stage') || searchParams.get('stageId');
   const status = searchParams.get('status');
   const owner = searchParams.get('owner');
+  const contactId = searchParams.get('contactId');
 
   return leads.filter((lead) => {
     const matchesSearch =
@@ -142,9 +143,24 @@ function applyLeadFilters(leads, searchParams) {
       (!source || lead.source === source) &&
       (!stage || lead.stageId === stage || lead.stageName === stage) &&
       (!status || lead.status === status) &&
-      (!owner || lead.ownerUserId === owner)
+      (!owner || lead.ownerUserId === owner) &&
+      (!contactId || lead.contactId === contactId)
     );
   });
+}
+
+function applyContactFilters(contacts, searchParams) {
+  const search = searchParams.get('search')?.toLowerCase();
+
+  if (!search) {
+    return contacts;
+  }
+
+  return contacts.filter((contact) =>
+    [contact.fullName, contact.email, contact.phone]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search)),
+  );
 }
 
 function paginate(items, searchParams) {
@@ -726,7 +742,10 @@ export const handlers = [
       return unauthorizedResponse();
     }
 
-    return HttpResponse.json(paginate(state.contacts, getSearchParams(request)));
+    const searchParams = getSearchParams(request);
+    return HttpResponse.json(
+      paginate(applyContactFilters(state.contacts, searchParams), searchParams),
+    );
   }),
   http.post(`${apiBaseUrl}/api/contacts`, async ({ request }) => {
     if (!isAuthorized(request)) {

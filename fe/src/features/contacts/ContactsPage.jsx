@@ -3,12 +3,18 @@ import {
   Button,
   Card,
   CardContent,
+  IconButton,
   Stack,
-  Typography,
+  TextField,
+  Tooltip,
 } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   createContact,
   deleteContact,
@@ -26,14 +32,13 @@ import useNotifications from '../../shared/hooks/useNotifications.js';
 import useAuth from '../../shared/hooks/useAuth.js';
 import ContactFormDialog from './ContactFormDialog.jsx';
 import './contacts.css';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-function ContactField({ label, value }) {
+function renderCompactCell(value) {
   return (
-    <Box className="crm-contact-field">
-      <Typography className="crm-contact-field__label">{label}</Typography>
-      <Typography className="crm-contact-field__value">{value || '-'}</Typography>
-    </Box>
+    <Tooltip title={value || ''}>
+      <span className="crm-contacts-table__cell-text">{value || '-'}</span>
+    </Tooltip>
   );
 }
 
@@ -46,6 +51,7 @@ function ContactsPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [deletingContact, setDeletingContact] = useState(null);
@@ -53,10 +59,18 @@ function ContactsPage() {
   const canCreateContact = userPermissions.has('contacts.create');
   const canEditContact = userPermissions.has('contacts.edit');
   const canDeleteContact = userPermissions.has('contacts.delete');
+  const page = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+  const query = {
+    page,
+    pageSize,
+    search: searchParams.get('search') || '',
+  };
 
   const contactsQuery = useQuery({
-    queryKey: ['contacts', { page: 1, pageSize: 100 }],
-    queryFn: () => getContacts({ page: 1, pageSize: 100 }),
+    queryKey: ['contacts', query],
+    queryFn: () => getContacts(query),
+    placeholderData: (previousData) => previousData,
   });
 
   const createContactMutation = useMutation({
@@ -136,7 +150,134 @@ function ContactsPage() {
     return createContactMutation.mutateAsync(values);
   }
 
-  if (contactsQuery.isLoading) {
+  function updateFilters(nextValues) {
+    const updated = new URLSearchParams(searchParams);
+
+    Object.entries(nextValues).forEach(([key, value]) => {
+      if (value === '' || value === null || value === undefined) {
+        updated.delete(key);
+      } else {
+        updated.set(key, String(value));
+      }
+    });
+
+    if (nextValues.search !== undefined) {
+      updated.set('page', '1');
+    }
+
+    if (!updated.get('pageSize')) {
+      updated.set('pageSize', String(pageSize));
+    }
+
+    setSearchParams(updated);
+  }
+
+  const columns = useMemo(
+    () => [
+      {
+        field: 'fullName',
+        headerName: t('Name'),
+        flex: 1,
+        minWidth: 180,
+        renderCell: (params) => (
+          <Button
+            className="crm-contacts-table__name-link"
+            component={Link}
+            to={`/contacts/${params.row.id}`}
+            variant="text"
+          >
+            {params.value}
+          </Button>
+        ),
+      },
+      {
+        field: 'companyName',
+        headerName: t('Company'),
+        flex: 0.95,
+        minWidth: 170,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'email',
+        headerName: t('Email'),
+        flex: 1.15,
+        minWidth: 210,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'phone',
+        headerName: t('Phone'),
+        flex: 0.8,
+        minWidth: 140,
+        renderCell: (params) => renderCompactCell(params.value),
+      },
+      {
+        field: 'updatedAtUtc',
+        headerName: t('Updated'),
+        flex: 0.75,
+        minWidth: 130,
+        valueFormatter: (value) => formatDate(value),
+      },
+      {
+        field: 'createdAtUtc',
+        headerName: t('Created'),
+        flex: 0.75,
+        minWidth: 130,
+        valueFormatter: (value) => formatDate(value),
+      },
+      {
+        field: 'actions',
+        headerName: t('Actions'),
+        flex: 0.55,
+        minWidth: 120,
+        sortable: false,
+        filterable: false,
+        hideable: false,
+        renderCell: (params) => (
+          <Stack className="crm-contacts-table__actions" direction="row" spacing={0.5}>
+            <Tooltip title={t('Open')}>
+              <IconButton
+                aria-label={t('Open')}
+                color="primary"
+                component={Link}
+                to={`/contacts/${params.row.id}`}
+                size="small"
+              >
+                <VisibilityOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            {canEditContact ? (
+              <Tooltip title={t('Edit')}>
+                <IconButton
+                  aria-label={t('Edit')}
+                  color="primary"
+                  onClick={() => handleEdit(params.row)}
+                  size="small"
+                >
+                  <EditOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+            {canDeleteContact ? (
+              <Tooltip title={t('Delete')}>
+                <IconButton
+                  aria-label={t('Delete')}
+                  color="error"
+                  onClick={() => setDeletingContact(params.row)}
+                  size="small"
+                >
+                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+          </Stack>
+        ),
+      },
+    ],
+    [canDeleteContact, canEditContact, t],
+  );
+
+  if (contactsQuery.isLoading && !contactsQuery.data) {
     return <LoadingState />;
   }
 
@@ -151,6 +292,7 @@ function ContactsPage() {
   }
 
   const contacts = contactsQuery.data?.items || [];
+  const hasFilters = Boolean(query.search);
 
   return (
     <Stack spacing={3} className="crm-contacts-page">
@@ -167,55 +309,78 @@ function ContactsPage() {
         }
       />
 
+      {contacts.length || hasFilters ? (
+        <Card className="crm-card crm-contacts-filters-card">
+          <CardContent>
+            <Box className="crm-contacts-filters">
+              <TextField
+                label={t('Search')}
+                value={query.search}
+                onChange={(event) => updateFilters({ search: event.target.value })}
+                placeholder={t('Name, email, or phone')}
+                className="crm-contacts-filters__search"
+              />
+              <Box className="crm-contacts-filters__actions">
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    setSearchParams({
+                      page: '1',
+                      pageSize: String(pageSize),
+                    })
+                  }
+                >
+                  {t('Reset')}
+                </Button>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {contacts.length === 0 ? (
         <EmptyState
-          title={t('No contacts yet')}
-          description={t('Create your first contact to start linking people and companies to leads.')}
-          actionLabel={canCreateContact ? t('Create contact') : undefined}
-          onAction={canCreateContact ? handleCreate : undefined}
+          title={hasFilters ? t('No contacts match this search') : t('No contacts yet')}
+          description={
+            hasFilters
+              ? t('Try a different name, email, or phone number.')
+              : t('Create your first contact to start linking people and companies to leads.')
+          }
+          actionLabel={!hasFilters && canCreateContact ? t('Create contact') : undefined}
+          onAction={!hasFilters && canCreateContact ? handleCreate : undefined}
         />
       ) : (
-        <Box className="crm-contacts-list">
-          {contacts.map((contact) => (
-            <Card key={contact.id} className="crm-card">
-              <CardContent className="crm-contact-card__content">
-                <Box className="crm-contact-card__header">
-                  <Box>
-                    <Typography variant="h6">{contact.fullName}</Typography>
-                    <Typography className="crm-muted-text">
-                      {t('Updated')} {formatDate(contact.updatedAtUtc)}
-                    </Typography>
-                  </Box>
-                  <Box className="crm-contact-card__actions">
-                    <Button component={Link} to={`/contacts/${contact.id}`} variant="outlined">
-                      {t('Open')}
-                    </Button>
-                    {canEditContact ? (
-                      <Button onClick={() => handleEdit(contact)} variant="outlined">
-                        {t('Edit')}
-                      </Button>
-                    ) : null}
-                    {canDeleteContact ? (
-                      <Button
-                        color="error"
-                        onClick={() => setDeletingContact(contact)}
-                        variant="outlined"
-                      >
-                        {t('Delete')}
-                      </Button>
-                    ) : null}
-                  </Box>
-                </Box>
-                <Box className="crm-contact-card__fields">
-                  <ContactField label={t('Email')} value={contact.email} />
-                  <ContactField label={t('Phone')} value={contact.phone} />
-                  <ContactField label={t('Company')} value={contact.companyName} />
-                  <ContactField label={t('Created')} value={formatDate(contact.createdAtUtc)} />
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        <Card className="crm-card crm-contacts-table-card">
+          <CardContent>
+            <Box className="crm-contacts-table">
+              <DataGrid
+                autoHeight
+                columns={columns}
+                columnHeaderHeight={44}
+                disableColumnMenu
+                disableRowSelectionOnClick
+                disableVirtualization
+                loading={contactsQuery.isFetching}
+                pageSizeOptions={[5, 10, 25]}
+                pagination
+                paginationMode="server"
+                paginationModel={{
+                  page: page - 1,
+                  pageSize,
+                }}
+                rowCount={contactsQuery.data?.totalCount || 0}
+                rows={contacts}
+                rowHeight={44}
+                onPaginationModelChange={(model) =>
+                  updateFilters({
+                    page: model.page + 1,
+                    pageSize: model.pageSize,
+                  })
+                }
+              />
+            </Box>
+          </CardContent>
+        </Card>
       )}
 
       <ContactFormDialog

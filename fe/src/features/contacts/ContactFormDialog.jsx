@@ -13,16 +13,54 @@ import { useEffect } from 'react';
 import * as yup from 'yup';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 
+const salutationOptions = [
+  '',
+  'Mr.',
+  'Mrs.',
+  'Ms.',
+  'Miss',
+  'Dr.',
+  'Prof.',
+];
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function sanitizeFullName(value) {
+  return String(value || '').replace(/[^\p{L}\s]/gu, '');
+}
+
+function sanitizePhone(value) {
+  const sanitized = String(value || '').replace(/[^\d+]/g, '');
+  return `${sanitized.startsWith('+') ? '+' : ''}${sanitized.replace(/\+/g, '')}`;
+}
+
 function createContactSchema(t) {
   return yup.object({
-    fullName: yup.string().trim().required(t('Full name is required.')),
+    fullName: yup
+      .string()
+      .trim()
+      .required(t('Full name is required.'))
+      .matches(/^[\p{L}\s]+$/u, t('Full name can contain letters and spaces only.')),
+    salutation: yup.string().trim().nullable(),
     email: yup
       .string()
       .trim()
       .nullable()
       .transform((value) => (value === '' ? null : value))
-      .email(t('Enter a valid email address.')),
-    phone: yup.string().trim().nullable(),
+      .email(t('Enter a valid email address.'))
+      .matches(emailPattern, {
+        message: t('Enter a valid email address.'),
+        excludeEmptyString: true,
+      }),
+    phone: yup
+      .string()
+      .trim()
+      .nullable()
+      .test(
+        'valid-contact-phone',
+        t('Phone can contain numbers and an optional leading + only.'),
+        (value) => !value || /^\+?\d+$/.test(value),
+      ),
     companyName: yup.string().trim().nullable(),
   });
 }
@@ -36,6 +74,7 @@ function ContactFormDialog({ open, contact, onClose, onSubmit }) {
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
+      salutation: '',
       fullName: '',
       email: '',
       phone: '',
@@ -46,6 +85,7 @@ function ContactFormDialog({ open, contact, onClose, onSubmit }) {
 
   useEffect(() => {
     reset({
+      salutation: contact?.salutation || '',
       fullName: contact?.fullName || '',
       email: contact?.email || '',
       phone: contact?.phone || '',
@@ -59,12 +99,32 @@ function ContactFormDialog({ open, contact, onClose, onSubmit }) {
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Controller
+            name="salutation"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                select
+                SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
+                label={t('Salutation')}
+              >
+                {salutationOptions.map((option) => (
+                  <option key={option || 'none'} value={option}>
+                    {option ? t(option) : t('Select salutation')}
+                  </option>
+                ))}
+              </TextField>
+            )}
+          />
+          <Controller
             name="fullName"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
                 label={t('Full name')}
+                onChange={(event) => field.onChange(sanitizeFullName(event.target.value))}
                 error={Boolean(errors.fullName)}
                 helperText={errors.fullName?.message}
               />
@@ -86,7 +146,16 @@ function ContactFormDialog({ open, contact, onClose, onSubmit }) {
           <Controller
             name="phone"
             control={control}
-            render={({ field }) => <TextField {...field} label={t('Phone')} />}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label={t('Phone')}
+                inputProps={{ inputMode: 'tel' }}
+                onChange={(event) => field.onChange(sanitizePhone(event.target.value))}
+                error={Boolean(errors.phone)}
+                helperText={errors.phone?.message}
+              />
+            )}
           />
           <Controller
             name="companyName"

@@ -6,11 +6,16 @@ using Crm.Domain.Entities;
 using Crm.Domain.Enums;
 using Crm.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace Crm.Infrastructure.Services;
 
 public sealed class ContactsService : IContactsService
 {
+    private static readonly Regex EmailRegex = new(
+        @"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private readonly CrmDbContext _dbContext;
 
     public ContactsService(CrmDbContext dbContext)
@@ -74,6 +79,7 @@ public sealed class ContactsService : IContactsService
         CancellationToken cancellationToken)
     {
         ValidateContact(request.FullName);
+        ValidateEmail(request.Email);
 
         var utcNow = DateTime.UtcNow;
         var contact = new Contact
@@ -111,6 +117,7 @@ public sealed class ContactsService : IContactsService
         CancellationToken cancellationToken)
     {
         ValidateContact(request.FullName);
+        ValidateEmail(request.Email);
 
         var contact = await _dbContext.Contacts
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
@@ -159,6 +166,14 @@ public sealed class ContactsService : IContactsService
         if (string.IsNullOrWhiteSpace(fullName))
         {
             throw new ArgumentException("Full name is required.");
+        }
+    }
+
+    private static void ValidateEmail(string? email)
+    {
+        if (!string.IsNullOrWhiteSpace(email) && !EmailRegex.IsMatch(email.Trim()))
+        {
+            throw new ArgumentException("Enter a valid email address.");
         }
     }
 
