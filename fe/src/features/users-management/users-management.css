@@ -10,8 +10,7 @@
   padding-top: 1.5rem;
 }
 
-.crm-users-management__panel-header,
-.crm-users-management__role-header {
+.crm-users-management__panel-header {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
@@ -35,26 +34,64 @@
   align-items: center;
 }
 
-.crm-users-management__permission-groups {
-  display: grid;
-  gap: 1.25rem;
-  padding-top: 1.25rem;
+.crm-users-management__permissions-table-wrap {
+  border: 1px solid var(--crm-color-border);
+  border-radius: 8px;
+  max-width: 100%;
+  overflow: auto;
 }
 
-.crm-users-management__permission-group {
-  display: grid;
-  gap: 0.5rem;
+.crm-users-management__permissions-table {
+  min-width: 1320px;
 }
 
-.crm-users-management__permissions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.25rem 1rem;
+.crm-users-management__permissions-table th,
+.crm-users-management__permissions-table td {
+  border-color: var(--crm-color-border);
+}
+
+.crm-users-management__role-cell {
+  min-width: 220px;
+  width: 220px;
+}
+
+.crm-users-management__sticky-column {
+  background: var(--crm-color-surface);
+  left: 0;
+  position: sticky;
+  z-index: 2;
+}
+
+.crm-users-management__permissions-table thead .crm-users-management__sticky-column {
+  z-index: 4;
+}
+
+.crm-users-management__permission-cell {
+  min-width: 128px;
+  vertical-align: top;
+}
+
+.crm-users-management__permission-group-label {
+  color: var(--crm-color-text-muted);
+  font-weight: 700 !important;
+  text-transform: uppercase;
+}
+
+.crm-users-management__permission-label {
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.crm-users-management__permission-check-cell {
+  height: 64px;
+}
+
+.crm-users-management__actions-cell {
+  min-width: 120px;
 }
 
 @media (max-width: 760px) {
-  .crm-users-management__panel-header,
-  .crm-users-management__role-header {
+  .crm-users-management__panel-header {
     flex-direction: column;
     align-items: stretch;
   }

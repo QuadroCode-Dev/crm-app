@@ -89,8 +89,11 @@ describe('Users Management feature', () => {
     await user.click(screen.getByRole('tab', { name: 'Roles & Permissions' }));
 
     expect(await screen.findByRole('heading', { name: 'Roles & Permissions' })).toBeInTheDocument();
-    expect(screen.getAllByLabelText('Delete leads').length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: 'Save permissions' })[0]).toBeDisabled();
+    expect(screen.getByRole('columnheader', { name: /Role/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Delete leads/ })).toBeInTheDocument();
+    expect(screen.getByRole('row', { name: /Super Admin/ })).toBeInTheDocument();
+    expect(screen.getByRole('row', { name: /Agent/ })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Save' })[0]).toBeDisabled();
   });
 
   it('creates a user with a fixed role', async () => {

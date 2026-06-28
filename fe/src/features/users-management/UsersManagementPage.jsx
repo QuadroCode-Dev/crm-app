@@ -14,6 +14,12 @@ import {
   Stack,
   Switch,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Tabs,
   TextField,
   Typography,
@@ -223,15 +229,6 @@ function RolesPanel({ roles, permissions, onSave }) {
     setDrafts(Object.fromEntries(roles.map((role) => [role.code, role.permissions || []])));
   }, [roles]);
 
-  const permissionsByGroup = useMemo(() => {
-    return permissions.reduce((groups, permission) => {
-      const group = permission.group || 'Other';
-      groups[group] = groups[group] || [];
-      groups[group].push(permission);
-      return groups;
-    }, {});
-  }, [permissions]);
-
   function togglePermission(roleCode, permissionCode, checked) {
     setDrafts((current) => {
       const existing = new Set(current[roleCode] || []);
@@ -254,65 +251,83 @@ function RolesPanel({ roles, permissions, onSave }) {
       <Box>
         <Typography variant="h6">{t('Roles & Permissions')}</Typography>
         <Typography className="crm-muted-text">
-          {t('Adjust what each fixed CRM role can do. Super Admin always keeps full access.')}
+          {t('Compare each fixed CRM role and adjust editable permission sets. Super Admin always keeps full access.')}
         </Typography>
       </Box>
 
-      <Box className="crm-users-management__roles">
-        {roles.map((role) => {
-          const selectedPermissions = new Set(drafts[role.code] || []);
-          const hasChanged =
-            JSON.stringify([...(role.permissions || [])].sort()) !==
-            JSON.stringify([...(drafts[role.code] || [])].sort());
-
-          return (
-            <Card key={role.code} className="crm-users-management__card">
-              <CardContent>
-                <Box className="crm-users-management__role-header">
-                  <Box>
-                    <Typography variant="h6">{role.name}</Typography>
-                    <Typography className="crm-muted-text">
-                      {role.isEditable ? t('Editable permission set') : t('Protected system role')}
+      <TableContainer className="crm-users-management__permissions-table-wrap">
+        <Table stickyHeader className="crm-users-management__permissions-table">
+          <TableHead>
+            <TableRow>
+              <TableCell className="crm-users-management__role-cell crm-users-management__sticky-column">
+                {t('Role')}
+              </TableCell>
+              {permissions.map((permission) => (
+                <TableCell key={permission.code} align="center" className="crm-users-management__permission-cell">
+                  <Stack spacing={0.25} alignItems="center">
+                    <Typography variant="caption" className="crm-users-management__permission-group-label">
+                      {t(permission.group || 'Other')}
                     </Typography>
-                  </Box>
-                  <Button
-                    variant="contained"
-                    disabled={!role.isEditable || !hasChanged}
-                    onClick={() => onSave(role.code, drafts[role.code] || [])}
-                  >
-                    {t('Save permissions')}
-                  </Button>
-                </Box>
+                    <Typography variant="body2" className="crm-users-management__permission-label">
+                      {t(permission.label)}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+              ))}
+              <TableCell align="right" className="crm-users-management__actions-cell">
+                {t('Actions')}
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {roles.map((role) => {
+              const selectedPermissions = new Set(drafts[role.code] || []);
+              const hasChanged =
+                JSON.stringify([...(role.permissions || [])].sort()) !==
+                JSON.stringify([...(drafts[role.code] || [])].sort());
 
-                <Box className="crm-users-management__permission-groups">
-                  {Object.entries(permissionsByGroup).map(([group, groupPermissions]) => (
-                    <Box key={`${role.code}-${group}`} className="crm-users-management__permission-group">
-                      <Typography variant="subtitle2">{t(group)}</Typography>
-                      <Box className="crm-users-management__permissions">
-                        {groupPermissions.map((permission) => (
-                          <FormControlLabel
-                            key={`${role.code}-${permission.code}`}
-                            control={
-                              <Checkbox
-                                checked={selectedPermissions.has(permission.code)}
-                                disabled={!role.isEditable}
-                                onChange={(event) =>
-                                  togglePermission(role.code, permission.code, event.target.checked)
-                                }
-                              />
-                            }
-                            label={t(permission.label)}
-                          />
-                        ))}
-                      </Box>
-                    </Box>
+              return (
+                <TableRow key={role.code} hover>
+                  <TableCell className="crm-users-management__role-cell crm-users-management__sticky-column">
+                    <Typography variant="subtitle2">{role.name}</Typography>
+                    <Typography className="crm-muted-text">
+                      {role.isEditable ? t('Editable') : t('Protected')}
+                    </Typography>
+                  </TableCell>
+                  {permissions.map((permission) => (
+                    <TableCell
+                      key={`${role.code}-${permission.code}`}
+                      align="center"
+                      className="crm-users-management__permission-check-cell"
+                    >
+                      <Checkbox
+                        checked={selectedPermissions.has(permission.code)}
+                        disabled={!role.isEditable}
+                        inputProps={{
+                          'aria-label': t(`${role.name} - ${permission.label}`),
+                        }}
+                        onChange={(event) =>
+                          togglePermission(role.code, permission.code, event.target.checked)
+                        }
+                      />
+                    </TableCell>
                   ))}
-                </Box>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Box>
+                  <TableCell align="right" className="crm-users-management__actions-cell">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      disabled={!role.isEditable || !hasChanged}
+                      onClick={() => onSave(role.code, drafts[role.code] || [])}
+                    >
+                      {t('Save')}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Stack>
   );
 }
