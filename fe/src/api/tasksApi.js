@@ -1,5 +1,6 @@
 import httpClient from './httpClient.js';
 import { appendQueryParams } from './queryHelpers.js';
+import dayjs from 'dayjs';
 
 function normalizePagedResponse(data) {
   if (Array.isArray(data)) {
@@ -34,12 +35,16 @@ function normalizeTask(task) {
 }
 
 function toTaskQuery(params) {
-  const { dueDateFrom, dueDateTo, ...rest } = params;
+  const { assignedUserId, dueDateFrom, dueDateTo, ...rest } = params;
 
   return {
     ...rest,
-    dueFromUtc: dueDateFrom || params.dueFromUtc || '',
-    dueToUtc: dueDateTo || params.dueToUtc || '',
+    assignedUserId,
+    assignedToUserId: assignedUserId || params.assignedToUserId || '',
+    dueFromUtc: dueDateFrom
+      ? dayjs(dueDateFrom).startOf('day').toISOString()
+      : params.dueFromUtc || '',
+    dueToUtc: dueDateTo ? dayjs(dueDateTo).endOf('day').toISOString() : params.dueToUtc || '',
   };
 }
 

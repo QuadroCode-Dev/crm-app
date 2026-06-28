@@ -183,14 +183,14 @@ function getSearchParams(request) {
 
 function filterTasks(tasks, searchParams) {
   return tasks.filter((task) => {
-    const assignedUserId = searchParams.get('assignedUserId');
+    const assignedUserId = searchParams.get('assignedUserId') || searchParams.get('assignedToUserId');
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');
     const leadId = searchParams.get('leadId');
     const contactId = searchParams.get('contactId');
     const overdueOnly = searchParams.get('overdueOnly');
-    const dueDateFrom = searchParams.get('dueDateFrom');
-    const dueDateTo = searchParams.get('dueDateTo');
+    const dueDateFrom = searchParams.get('dueDateFrom') || searchParams.get('dueFromUtc');
+    const dueDateTo = searchParams.get('dueDateTo') || searchParams.get('dueToUtc');
 
     return (
       (!assignedUserId || task.assignedUserId === assignedUserId) &&
@@ -200,7 +200,8 @@ function filterTasks(tasks, searchParams) {
       (!contactId || task.contactId === contactId) &&
       (!dueDateFrom || dayjs(task.dueDateUtc).isAfter(dayjs(dueDateFrom).subtract(1, 'day'))) &&
       (!dueDateTo || dayjs(task.dueDateUtc).isBefore(dayjs(dueDateTo).add(1, 'day'))) &&
-      (overdueOnly !== 'true' || dayjs(task.dueDateUtc).isBefore(dayjs()) && !task.isCompleted)
+      (overdueOnly !== 'true' ||
+        (dayjs(task.dueDateUtc).isBefore(dayjs(), 'day') && !task.isCompleted))
     );
   });
 }

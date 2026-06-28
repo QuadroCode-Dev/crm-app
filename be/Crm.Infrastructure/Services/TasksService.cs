@@ -55,22 +55,24 @@ public sealed class TasksService : ITasksService
             query = query.Where(x => x.Priority == priority.Value);
         }
 
-        if (request.DueFromUtc.HasValue)
+        var dueFromUtc = NormalizeUtcDateTime(request.DueFromUtc);
+        if (dueFromUtc.HasValue)
         {
-            query = query.Where(x => x.DueAtUtc >= request.DueFromUtc.Value);
+            query = query.Where(x => x.DueAtUtc >= dueFromUtc.Value);
         }
 
-        if (request.DueToUtc.HasValue)
+        var dueToUtc = NormalizeUtcDateTime(request.DueToUtc);
+        if (dueToUtc.HasValue)
         {
-            query = query.Where(x => x.DueAtUtc <= request.DueToUtc.Value);
+            query = query.Where(x => x.DueAtUtc <= dueToUtc.Value);
         }
 
         if (request.OverdueOnly)
         {
-            var utcNow = DateTime.UtcNow;
+            var todayUtc = DateTime.UtcNow.Date;
             query = query.Where(x =>
                 x.DueAtUtc.HasValue &&
-                x.DueAtUtc.Value < utcNow &&
+                x.DueAtUtc.Value.Date < todayUtc &&
                 x.Status != DomainTaskStatus.Done);
         }
 
@@ -119,7 +121,7 @@ public sealed class TasksService : ITasksService
             AssignedToUserId = relation.AssignedToUserId,
             Title = request.Title.Trim(),
             Description = NormalizeOptional(request.Description),
-            DueAtUtc = request.DueAtUtc,
+            DueAtUtc = NormalizeUtcDateTime(request.DueAtUtc),
             Priority = priority,
             Status = status,
             CompletedAtUtc = status == DomainTaskStatus.Done ? utcNow : null,
@@ -164,7 +166,7 @@ public sealed class TasksService : ITasksService
         taskItem.AssignedToUserId = relation.AssignedToUserId;
         taskItem.Title = request.Title.Trim();
         taskItem.Description = NormalizeOptional(request.Description);
-        taskItem.DueAtUtc = request.DueAtUtc;
+        taskItem.DueAtUtc = NormalizeUtcDateTime(request.DueAtUtc);
         taskItem.Priority = priority;
         taskItem.Status = status;
         taskItem.CompletedAtUtc = status == DomainTaskStatus.Done
@@ -271,6 +273,21 @@ public sealed class TasksService : ITasksService
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static DateTime? NormalizeUtcDateTime(DateTime? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        return value.Value.Kind switch
+        {
+            DateTimeKind.Utc => value.Value,
+            DateTimeKind.Local => value.Value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value.Value, DateTimeKind.Utc)
+        };
     }
 
     private static TaskPriority? ParsePriority(string? priority)

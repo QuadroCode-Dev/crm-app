@@ -292,6 +292,8 @@ function TasksPage() {
       {
         field: 'actions',
         headerName: t('Actions'),
+        align: 'right',
+        headerAlign: 'right',
         minWidth: 260,
         sortable: false,
         renderCell: (params) => (
@@ -445,6 +447,24 @@ function TasksPage() {
             </TextField>
 
             <TextField
+              InputLabelProps={{ shrink: true }}
+              label={t('Due from')}
+              className="crm-tasks-filters__field"
+              type="date"
+              value={query.dueDateFrom}
+              onChange={(event) => updateFilters({ dueDateFrom: event.target.value })}
+            />
+
+            <TextField
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              label={t('Due to')}
+              className="crm-tasks-filters__field"
+              value={query.dueDateTo}
+              onChange={(event) => updateFilters({ dueDateTo: event.target.value })}
+            />
+
+            <TextField
               select
               SelectProps={{ native: true }}
               InputLabelProps={{ shrink: true }}
@@ -460,24 +480,6 @@ function TasksPage() {
                 </option>
               ))}
             </TextField>
-
-            <TextField
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              label={t('Due from')}
-              className="crm-tasks-filters__field"
-              value={query.dueDateFrom}
-              onChange={(event) => updateFilters({ dueDateFrom: event.target.value })}
-            />
-
-            <TextField
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              label={t('Due to')}
-              className="crm-tasks-filters__field"
-              value={query.dueDateTo}
-              onChange={(event) => updateFilters({ dueDateTo: event.target.value })}
-            />
 
             <TextField
               select
