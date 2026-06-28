@@ -36,6 +36,7 @@ import { createLead, getLeads, updateLeadStage } from '../../api/leadsApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
 import { getServiceNames } from '../../api/servicesApi.js';
+import { getTasks } from '../../api/tasksApi.js';
 import PageHeader from '../../shared/components/PageHeader.jsx';
 import EmptyState from '../../shared/components/feedback/EmptyState.jsx';
 import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
@@ -92,6 +93,46 @@ function isLeadRotting(lead, stage) {
   const rottingThresholdHours = stage?.rottingThresholdHours || defaultRottingThresholdHours;
 
   return getHoursInStage(lead) >= rottingThresholdHours;
+}
+
+function isTaskDone(task) {
+  return task.isCompleted || task.status === 'Done' || task.status === 'Completed';
+}
+
+function isTaskOverdue(task) {
+  return !isTaskDone(task) && task.dueDateUtc && dayjs(task.dueDateUtc).isBefore(dayjs());
+}
+
+function getLeadTaskStatus(tasks = []) {
+  if (!tasks.length) {
+    return 'none';
+  }
+
+  if (tasks.some(isTaskOverdue)) {
+    return 'overdue';
+  }
+
+  if (tasks.every(isTaskDone)) {
+    return 'done';
+  }
+
+  return 'pending';
+}
+
+function getLeadTaskStatusLabel(status, t) {
+  if (status === 'overdue') {
+    return t('Has overdue task');
+  }
+
+  if (status === 'done') {
+    return t('Tasks done');
+  }
+
+  if (status === 'none') {
+    return t('No tasks');
+  }
+
+  return t('Tasks not due yet');
 }
 
 function formatStageAge(totalHours, t) {
@@ -180,7 +221,7 @@ function StageColumn({ stage, leads, activeStageId, children }) {
               style: 'currency',
               currency: 'USD',
               maximumFractionDigits: 0,
-            }).format(stageValue)} · {leads.length} {t('deals')}
+            }).format(stageValue)} · {leads.length} {t('leads')}
           </Typography>
         </Box>
         <Box className="crm-pipeline-column__list">
@@ -197,10 +238,11 @@ function StageColumn({ stage, leads, activeStageId, children }) {
   );
 }
 
-function PipelineCard({ lead, stage, canChangeStage = true }) {
+function PipelineCard({ lead, stage, tasks = [], canChangeStage = true }) {
   const { t } = useLanguage();
   const hoursInStage = getHoursInStage(lead);
   const isRotting = isLeadRotting(lead, stage);
+  const taskStatus = getLeadTaskStatus(tasks);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
     disabled: !canChangeStage,
@@ -223,9 +265,16 @@ function PipelineCard({ lead, stage, canChangeStage = true }) {
         <Link className="crm-pipeline-card__title" to={`/leads/${lead.id}`}>
           {lead.title}
         </Link>
-        {lead.isDuplicateWarning ? (
-          <WarningCircle className="crm-pipeline-card__warning" size={22} weight="fill" />
-        ) : null}
+        <Box className="crm-pipeline-card__signals">
+          <Box
+            aria-label={getLeadTaskStatusLabel(taskStatus, t)}
+            className={`crm-pipeline-card__task-dot crm-pipeline-card__task-dot--${taskStatus}`}
+            title={getLeadTaskStatusLabel(taskStatus, t)}
+          />
+          {lead.isDuplicateWarning ? (
+            <WarningCircle className="crm-pipeline-card__warning" size={22} weight="fill" />
+          ) : null}
+        </Box>
       </Box>
       <Box className="crm-pipeline-card__meta">
         <Typography className="crm-pipeline-card__contact">
@@ -349,6 +398,19 @@ function PipelineBoardToolbar({
               <MenuItem value="today">{t('Today')}</MenuItem>
             </TextField>
             <TextField
+              label={t('Task status')}
+              select
+              size="small"
+              value={filters.taskStatus}
+              onChange={(event) => handleFilterChange('taskStatus', event.target.value)}
+            >
+              <MenuItem value={allFilterValue}>{t('All task statuses')}</MenuItem>
+              <MenuItem value="overdue">{t('Overdue')}</MenuItem>
+              <MenuItem value="pending">{t('Pending')}</MenuItem>
+              <MenuItem value="done">{t('Completed')}</MenuItem>
+              <MenuItem value="none">{t('No tasks')}</MenuItem>
+            </TextField>
+            <TextField
               label={t('Source')}
               select
               size="small"
@@ -404,7 +466,7 @@ function PipelineBoardToolbar({
 
       <Box className="crm-pipeline-toolbar__summary">
         <Typography className="crm-pipeline-toolbar__count">
-          {dealCount} {t('deals')}
+          {dealCount} {t('leads')}
         </Typography>
         <Typography className="crm-pipeline-toolbar__value">
           {new Intl.NumberFormat('en-US', {
@@ -429,6 +491,7 @@ function PipelinePage() {
   const [filters, setFilters] = useState({
     stageTiming: allFilterValue,
     createdDate: allFilterValue,
+    taskStatus: allFilterValue,
     source: allFilterValue,
     service: allFilterValue,
     country: allFilterValue,
@@ -445,6 +508,10 @@ function PipelinePage() {
   const leadsQuery = useQuery({
     queryKey: ['pipeline-board-leads'],
     queryFn: () => getLeads({ page: 1, pageSize: 100 }),
+  });
+  const tasksQuery = useQuery({
+    queryKey: ['pipeline-board-tasks'],
+    queryFn: () => getTasks({ page: 1, pageSize: 500 }),
   });
   const leadSourcesQuery = useQuery({
     queryKey: ['lead-sources'],
@@ -585,6 +652,18 @@ function PipelinePage() {
     [stagesQuery.data],
   );
   const allLeads = leadsQuery.data?.items || [];
+  const tasksByLeadId = useMemo(() => {
+    return (tasksQuery.data?.items || []).reduce((groups, task) => {
+      if (!task.leadId) {
+        return groups;
+      }
+
+      return {
+        ...groups,
+        [task.leadId]: [...(groups[task.leadId] || []), task],
+      };
+    }, {});
+  }, [tasksQuery.data]);
   const stageById = useMemo(
     () => Object.fromEntries(sortedStages.map((stage) => [stage.id, stage])),
     [sortedStages],
@@ -632,6 +711,13 @@ function PipelinePage() {
         return false;
       }
 
+      if (
+        filters.taskStatus !== allFilterValue &&
+        getLeadTaskStatus(tasksByLeadId[lead.id] || []) !== filters.taskStatus
+      ) {
+        return false;
+      }
+
       if (filters.source !== allFilterValue) {
         const sourceValue = String(lead.sourceId || lead.source || '');
 
@@ -657,7 +743,7 @@ function PipelinePage() {
 
       return true;
     });
-  }, [allLeads, filters, normalizedSearch, stageById]);
+  }, [allLeads, filters, normalizedSearch, stageById, tasksByLeadId]);
   const filterCount = Object.values(filters).filter((value) => value !== allFilterValue).length;
   const dealValue = leads.reduce((total, lead) => total + Number(lead.estimatedCost || 0), 0);
   const activeLead = leads.find((lead) => lead.id === activeLeadId) || null;
@@ -713,8 +799,8 @@ function PipelinePage() {
   return (
     <Stack spacing={0} className="crm-pipeline-page">
       <PageHeader
-        title={t('Deals')}
-        description={t('Move leads between stages with drag and drop to reflect how deals are progressing.')}
+        title={t('Leads')}
+        description={t('Move leads between stages with drag and drop to reflect how leads are progressing.')}
       />
 
       <PipelineBoardToolbar
@@ -733,6 +819,7 @@ function PipelinePage() {
           setFilters({
             stageTiming: allFilterValue,
             createdDate: allFilterValue,
+            taskStatus: allFilterValue,
             source: allFilterValue,
             service: allFilterValue,
             country: allFilterValue,
@@ -784,6 +871,7 @@ function PipelinePage() {
                     key={lead.id}
                     lead={lead}
                     stage={stage}
+                    tasks={tasksByLeadId[lead.id] || []}
                     canChangeStage={canChangeStage}
                   />
                 ))}
@@ -798,6 +886,7 @@ function PipelinePage() {
               <PipelineCard
                 lead={activeLead}
                 stage={sortedStages.find((stage) => stage.id === activeLead.stageId)}
+                tasks={tasksByLeadId[activeLead.id] || []}
                 canChangeStage={canChangeStage}
               />
             </Box>

@@ -354,6 +354,7 @@ function LeadDetailPage() {
     mutationFn: createTask,
     onSuccess: (createdTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['pipeline-board-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
@@ -377,6 +378,7 @@ function LeadDetailPage() {
     mutationFn: ({ taskId, payload }) => updateTask(taskId, payload),
     onSuccess: (updatedTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['pipeline-board-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
@@ -400,6 +402,7 @@ function LeadDetailPage() {
     mutationFn: completeTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['pipeline-board-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['lead-timeline', id] });
       showNotification({
         severity: 'success',
@@ -418,6 +421,7 @@ function LeadDetailPage() {
     mutationFn: deleteTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['pipeline-board-tasks'] });
       showNotification({
         severity: 'success',
         message: t('Task deleted successfully.'),

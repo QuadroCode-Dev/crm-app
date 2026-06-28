@@ -55,7 +55,7 @@ describe('Pipeline feature', () => {
 
     renderRoute(['/pipeline']);
 
-    expect(await screen.findByRole('heading', { name: 'Deals' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Leads' })).toBeInTheDocument();
 
     const qualifiedColumn = screen.getByText('Qualified').closest('.crm-pipeline-column');
     const proposalColumn = screen.getByText('Proposal').closest('.crm-pipeline-column');
@@ -63,8 +63,12 @@ describe('Pipeline feature', () => {
     expect(within(qualifiedColumn).getByText('Solar rooftop installation')).toBeInTheDocument();
     expect(within(qualifiedColumn).getByText('Avg 4d 6h')).toBeInTheDocument();
     expect(within(qualifiedColumn).getByText('4d 6h in stage')).toBeInTheDocument();
+    expect(within(qualifiedColumn).getByLabelText('Has overdue task')).toBeInTheDocument();
     expect(within(proposalColumn).getByText('Kitchen remodel consultation')).toBeInTheDocument();
     expect(within(proposalColumn).getByText('8d 3h rotting')).toBeInTheDocument();
+
+    const incomingColumn = screen.getByText('Incoming').closest('.crm-pipeline-column');
+    expect(within(incomingColumn).getByLabelText('Tasks done')).toBeInTheDocument();
   });
 
   it('maps drag end into a stage-change callback', () => {
@@ -84,6 +88,22 @@ describe('Pipeline feature', () => {
       leadId: 'lead-1',
       stageId: 'stage-3',
     });
+  });
+
+  it('filters pipeline leads by task status', async () => {
+    const user = userEvent.setup();
+    authenticate();
+
+    renderRoute(['/pipeline']);
+
+    expect(await screen.findByRole('heading', { name: 'Leads' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    await user.click(screen.getByLabelText('Task status'));
+    await user.click(await screen.findByRole('option', { name: 'Completed' }));
+
+    expect(await screen.findByText('Brand website redesign')).toBeInTheDocument();
+    expect(screen.queryByText('Solar rooftop installation')).not.toBeInTheDocument();
+    expect(screen.queryByText('Kitchen remodel consultation')).not.toBeInTheDocument();
   });
 
   it('renders the stage settings list', async () => {
