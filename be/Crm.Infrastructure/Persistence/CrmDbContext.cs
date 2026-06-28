@@ -238,17 +238,26 @@ public class CrmDbContext : DbContext
 
         var adminPermissions = new[]
         {
+            Crm.Domain.Authorization.CrmPermissions.ContactsCreate,
+            Crm.Domain.Authorization.CrmPermissions.ContactsEdit,
+            Crm.Domain.Authorization.CrmPermissions.ContactsDelete,
+            Crm.Domain.Authorization.CrmPermissions.PipelineView,
             Crm.Domain.Authorization.CrmPermissions.LeadsCreate,
             Crm.Domain.Authorization.CrmPermissions.LeadsEdit,
             Crm.Domain.Authorization.CrmPermissions.LeadsDelete,
             Crm.Domain.Authorization.CrmPermissions.LeadsAssign,
+            Crm.Domain.Authorization.CrmPermissions.LeadsChangeStage,
             Crm.Domain.Authorization.CrmPermissions.TasksCreate,
             Crm.Domain.Authorization.CrmPermissions.TasksEdit,
             Crm.Domain.Authorization.CrmPermissions.TasksDelete,
             Crm.Domain.Authorization.CrmPermissions.TasksAssign,
             Crm.Domain.Authorization.CrmPermissions.TasksComplete,
             Crm.Domain.Authorization.CrmPermissions.ReportsView,
-            Crm.Domain.Authorization.CrmPermissions.SettingsManage
+            Crm.Domain.Authorization.CrmPermissions.SettingsManage,
+            Crm.Domain.Authorization.CrmPermissions.SettingsPipelineManage,
+            Crm.Domain.Authorization.CrmPermissions.SettingsServicesManage,
+            Crm.Domain.Authorization.CrmPermissions.SettingsAutomationManage,
+            Crm.Domain.Authorization.CrmPermissions.SettingsIntegrationsManage
         }.Select(permission => new RolePermission
         {
             Role = Crm.Domain.Enums.UserRole.Admin,
@@ -257,9 +266,13 @@ public class CrmDbContext : DbContext
 
         var salesManagerPermissions = new[]
         {
+            Crm.Domain.Authorization.CrmPermissions.ContactsCreate,
+            Crm.Domain.Authorization.CrmPermissions.ContactsEdit,
+            Crm.Domain.Authorization.CrmPermissions.PipelineView,
             Crm.Domain.Authorization.CrmPermissions.LeadsCreate,
             Crm.Domain.Authorization.CrmPermissions.LeadsEdit,
             Crm.Domain.Authorization.CrmPermissions.LeadsAssign,
+            Crm.Domain.Authorization.CrmPermissions.LeadsChangeStage,
             Crm.Domain.Authorization.CrmPermissions.TasksCreate,
             Crm.Domain.Authorization.CrmPermissions.TasksEdit,
             Crm.Domain.Authorization.CrmPermissions.TasksAssign,
@@ -273,8 +286,12 @@ public class CrmDbContext : DbContext
 
         var agentPermissions = new[]
         {
+            Crm.Domain.Authorization.CrmPermissions.ContactsCreate,
+            Crm.Domain.Authorization.CrmPermissions.ContactsEdit,
+            Crm.Domain.Authorization.CrmPermissions.PipelineView,
             Crm.Domain.Authorization.CrmPermissions.LeadsCreate,
             Crm.Domain.Authorization.CrmPermissions.LeadsEdit,
+            Crm.Domain.Authorization.CrmPermissions.LeadsChangeStage,
             Crm.Domain.Authorization.CrmPermissions.TasksCreate,
             Crm.Domain.Authorization.CrmPermissions.TasksEdit,
             Crm.Domain.Authorization.CrmPermissions.TasksComplete

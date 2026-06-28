@@ -197,12 +197,13 @@ function StageColumn({ stage, leads, activeStageId, children }) {
   );
 }
 
-function PipelineCard({ lead, stage }) {
+function PipelineCard({ lead, stage, canChangeStage = true }) {
   const { t } = useLanguage();
   const hoursInStage = getHoursInStage(lead);
   const isRotting = isLeadRotting(lead, stage);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `lead-card-${lead.id}`,
+    disabled: !canChangeStage,
   });
 
   const style = {
@@ -216,7 +217,7 @@ function PipelineCard({ lead, stage }) {
       style={style}
       className={`crm-pipeline-card ${isRotting ? 'crm-pipeline-card--rotting' : ''}`}
       {...attributes}
-      {...listeners}
+      {...(canChangeStage ? listeners : {})}
     >
       <Box className="crm-pipeline-card__header">
         <Link className="crm-pipeline-card__title" to={`/leads/${lead.id}`}>
@@ -263,6 +264,7 @@ function PipelineBoardToolbar({
   search,
   serviceOptions,
   sourceOptions,
+  canAddLead,
   onAddLead,
   onFilterChange,
   onResetFilters,
@@ -284,6 +286,7 @@ function PipelineBoardToolbar({
       <Box className="crm-pipeline-toolbar__main">
         <Button
           className="crm-pipeline-add-button"
+          disabled={!canAddLead}
           startIcon={<Plus size={18} weight="bold" />}
           variant="contained"
           onClick={onAddLead}
@@ -430,6 +433,9 @@ function PipelinePage() {
     service: allFilterValue,
     country: allFilterValue,
   });
+  const userPermissions = new Set(user?.permissions || []);
+  const canCreateLead = userPermissions.has('leads.create');
+  const canChangeStage = userPermissions.has('leads.change_stage');
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const stagesQuery = useQuery({
@@ -720,6 +726,7 @@ function PipelinePage() {
         search={search}
         serviceOptions={servicesQuery.data || []}
         sourceOptions={leadSourcesQuery.data || []}
+        canAddLead={canCreateLead}
         onAddLead={() => setFormOpen(true)}
         onFilterChange={setFilters}
         onResetFilters={() =>
@@ -738,9 +745,18 @@ function PipelinePage() {
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={(event) => {
+          if (!canChangeStage) {
+            return;
+          }
+
           setActiveLeadId(getDragLeadId(event.active.id));
         }}
         onDragEnd={(event) => {
+          if (!canChangeStage) {
+            setActiveLeadId(null);
+            return;
+          }
+
           applyPipelineDragEnd({
             activeId: event.active.id,
             overId: event.over?.id,
@@ -764,7 +780,12 @@ function PipelinePage() {
                 activeStageId={activeLead ? leadStageMap[activeLead.id] : null}
               >
                 {stageLeads.map((lead) => (
-                  <PipelineCard key={lead.id} lead={lead} stage={stage} />
+                  <PipelineCard
+                    key={lead.id}
+                    lead={lead}
+                    stage={stage}
+                    canChangeStage={canChangeStage}
+                  />
                 ))}
               </StageColumn>
             );
@@ -777,6 +798,7 @@ function PipelinePage() {
               <PipelineCard
                 lead={activeLead}
                 stage={sortedStages.find((stage) => stage.id === activeLead.stageId)}
+                canChangeStage={canChangeStage}
               />
             </Box>
           ) : null}

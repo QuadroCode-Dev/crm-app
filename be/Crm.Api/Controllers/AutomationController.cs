@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Crm.Application.Abstractions.Automation;
 using Crm.Contracts.Automation;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -17,6 +19,7 @@ public sealed class AutomationController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = CrmPermissions.SettingsAutomationManage)]
     public async Task<ActionResult<IReadOnlyList<AutomationRuleResponse>>> GetRules(
         CancellationToken cancellationToken)
     {
@@ -25,6 +28,7 @@ public sealed class AutomationController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsAutomationManage)]
     public async Task<ActionResult<AutomationRuleResponse>> GetRule(
         Guid id,
         CancellationToken cancellationToken)
@@ -34,6 +38,7 @@ public sealed class AutomationController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.SettingsAutomationManage)]
     public async Task<ActionResult<AutomationRuleResponse>> CreateRule(
         [FromBody] CreateAutomationRuleRequest request,
         CancellationToken cancellationToken)
@@ -47,6 +52,7 @@ public sealed class AutomationController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsAutomationManage)]
     public async Task<ActionResult<AutomationRuleResponse>> UpdateRule(
         Guid id,
         [FromBody] UpdateAutomationRuleRequest request,
@@ -62,6 +68,7 @@ public sealed class AutomationController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsAutomationManage)]
     public async Task<IActionResult> DeleteRule(
         Guid id,
         CancellationToken cancellationToken)

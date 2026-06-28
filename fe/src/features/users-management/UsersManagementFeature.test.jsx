@@ -89,8 +89,10 @@ describe('Users Management feature', () => {
     await user.click(screen.getByRole('tab', { name: 'Roles & Permissions' }));
 
     expect(await screen.findByRole('heading', { name: 'Roles & Permissions' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /Role/ })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /Delete leads/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Role' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Leads' })).toBeInTheDocument();
+    expect(screen.getByText('Change stage')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Sales Manager - Delete leads' })).toBeInTheDocument();
     expect(screen.getByRole('row', { name: /Super Admin/ })).toBeInTheDocument();
     expect(screen.getByRole('row', { name: /Agent/ })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Save' })[0]).toBeDisabled();

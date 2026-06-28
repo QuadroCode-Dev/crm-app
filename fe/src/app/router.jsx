@@ -1,6 +1,7 @@
 import { Navigate, RouterProvider, createBrowserRouter, createMemoryRouter } from 'react-router-dom';
 import AuthLayout from '../features/auth/AuthLayout.jsx';
 import LoginPage from '../features/auth/LoginPage.jsx';
+import PermissionRoute from '../features/auth/PermissionRoute.jsx';
 import ProtectedRoute from '../features/auth/ProtectedRoute.jsx';
 import PublicOnlyRoute from '../features/auth/PublicOnlyRoute.jsx';
 import RoleRoute from '../features/auth/RoleRoute.jsx';
@@ -71,8 +72,13 @@ export const appRoutes = [
             element: <DashboardPage />,
           },
           {
-            path: '/pipeline',
-            element: <PipelinePage />,
+            element: <PermissionRoute permission="pipeline.view" />,
+            children: [
+              {
+                path: '/pipeline',
+                element: <PipelinePage />,
+              },
+            ],
           },
           {
             path: '/leads',
@@ -95,32 +101,62 @@ export const appRoutes = [
             element: <TasksPage />,
           },
           {
-            path: '/reports',
-            element: <ReportsPage />,
+            element: <PermissionRoute permission="reports.view" />,
+            children: [
+              {
+                path: '/reports',
+                element: <ReportsPage />,
+              },
+            ],
           },
           {
             path: '/help',
             element: <HelpPage />,
           },
           {
-            path: '/settings/pipeline',
-            element: <SettingsPipelinePage />,
+            element: <PermissionRoute permission="settings.pipeline.manage" />,
+            children: [
+              {
+                path: '/settings/pipeline',
+                element: <SettingsPipelinePage />,
+              },
+            ],
           },
           {
-            path: '/settings/automation',
-            element: <SettingsAutomationPage />,
+            element: <PermissionRoute permission="settings.automation.manage" />,
+            children: [
+              {
+                path: '/settings/automation',
+                element: <SettingsAutomationPage />,
+              },
+            ],
           },
           {
-            path: '/settings/integrations',
-            element: <SettingsIntegrationsPage />,
+            element: <PermissionRoute permission="settings.integrations.manage" />,
+            children: [
+              {
+                path: '/settings/integrations',
+                element: <SettingsIntegrationsPage />,
+              },
+            ],
           },
           {
-            path: '/settings/services',
-            element: <SettingsServicesPage />,
+            element: <PermissionRoute permission="settings.services.manage" />,
+            children: [
+              {
+                path: '/settings/services',
+                element: <SettingsServicesPage />,
+              },
+            ],
           },
           {
-            path: '/settings/customization',
-            element: <SettingsCustomizationPage />,
+            element: <PermissionRoute permission="settings.manage" />,
+            children: [
+              {
+                path: '/settings/customization',
+                element: <SettingsCustomizationPage />,
+              },
+            ],
           },
           {
             element: <RoleRoute allowedRoles={['SuperAdmin', 'Admin']} />,

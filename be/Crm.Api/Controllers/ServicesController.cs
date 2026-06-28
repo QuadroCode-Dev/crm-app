@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Crm.Contracts.Services;
+using Crm.Domain.Authorization;
 using Crm.Domain.Entities;
 using Crm.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -36,6 +37,7 @@ public sealed class ServicesController : ControllerBase
     }
 
     [HttpGet("all")]
+    [Authorize(Policy = CrmPermissions.SettingsServicesManage)]
     public async Task<ActionResult<IReadOnlyList<ServiceResponse>>> GetAllServices(
         CancellationToken cancellationToken)
     {
@@ -49,6 +51,7 @@ public sealed class ServicesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.SettingsServicesManage)]
     public async Task<ActionResult<ServiceResponse>> CreateService(
         CreateServiceRequest request,
         CancellationToken cancellationToken)
@@ -72,6 +75,7 @@ public sealed class ServicesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsServicesManage)]
     public async Task<ActionResult<ServiceResponse>> UpdateService(
         Guid id,
         UpdateServiceRequest request,
@@ -94,6 +98,7 @@ public sealed class ServicesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsServicesManage)]
     public async Task<ActionResult> DeleteService(Guid id, CancellationToken cancellationToken)
     {
         var service = await _dbContext.Services

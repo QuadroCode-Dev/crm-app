@@ -22,6 +22,7 @@ import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
+import useAuth from '../../shared/hooks/useAuth.js';
 import ContactFormDialog from './ContactFormDialog.jsx';
 import './contacts.css';
 import { useState } from 'react';
@@ -43,10 +44,14 @@ function ContactDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const userPermissions = new Set(user?.permissions || []);
+  const canEditContact = userPermissions.has('contacts.edit');
+  const canDeleteContact = userPermissions.has('contacts.delete');
 
   const contactQuery = useQuery({
     queryKey: ['contact', id],
@@ -127,12 +132,16 @@ function ContactDetailPage() {
             <Button component={Link} to="/contacts" variant="outlined">
               {t('Back to contacts')}
             </Button>
-            <Button onClick={() => setFormOpen(true)} variant="contained">
-              {t('Edit contact')}
-            </Button>
-            <Button color="error" onClick={() => setConfirmOpen(true)} variant="outlined">
-              {t('Delete')}
-            </Button>
+            {canEditContact ? (
+              <Button onClick={() => setFormOpen(true)} variant="contained">
+                {t('Edit contact')}
+              </Button>
+            ) : null}
+            {canDeleteContact ? (
+              <Button color="error" onClick={() => setConfirmOpen(true)} variant="outlined">
+                {t('Delete')}
+              </Button>
+            ) : null}
           </Box>
         }
       />

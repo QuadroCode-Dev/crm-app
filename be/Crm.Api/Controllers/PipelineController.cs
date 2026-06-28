@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Crm.Application.Abstractions.Pipeline;
 using Crm.Contracts.Pipeline;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -25,6 +27,7 @@ public sealed class PipelineController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.SettingsPipelineManage)]
     public async Task<ActionResult<PipelineStageResponse>> CreateStage(
         [FromBody] CreatePipelineStageRequest request,
         CancellationToken cancellationToken)
@@ -38,6 +41,7 @@ public sealed class PipelineController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsPipelineManage)]
     public async Task<ActionResult<PipelineStageResponse>> UpdateStage(
         Guid id,
         [FromBody] UpdatePipelineStageRequest request,
@@ -53,6 +57,7 @@ public sealed class PipelineController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.SettingsPipelineManage)]
     public async Task<IActionResult> DeleteStage(
         Guid id,
         [FromQuery] Guid? replacementStageId,
@@ -72,6 +77,7 @@ public sealed class PipelineController : ControllerBase
     }
 
     [HttpPut("reorder")]
+    [Authorize(Policy = CrmPermissions.SettingsPipelineManage)]
     public async Task<ActionResult<IReadOnlyList<PipelineStageResponse>>> ReorderStages(
         [FromBody] ReorderPipelineStagesRequest request,
         CancellationToken cancellationToken)

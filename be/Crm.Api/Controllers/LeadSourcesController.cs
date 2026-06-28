@@ -1,5 +1,7 @@
 using Crm.Application.Abstractions.LeadSources;
 using Crm.Contracts.LeadSources;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -24,6 +26,7 @@ public sealed class LeadSourcesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.SettingsManage)]
     public async Task<ActionResult<LeadSourceResponse>> CreateLeadSource(
         [FromBody] CreateLeadSourceRequest request,
         CancellationToken cancellationToken)

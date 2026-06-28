@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Crm.Application.Abstractions.Contacts;
 using Crm.Contracts.Common;
 using Crm.Contracts.Contacts;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -36,6 +38,7 @@ public sealed class ContactsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = CrmPermissions.ContactsCreate)]
     public async Task<ActionResult<ContactResponse>> CreateContact(
         [FromBody] CreateContactRequest request,
         CancellationToken cancellationToken)
@@ -49,6 +52,7 @@ public sealed class ContactsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.ContactsEdit)]
     public async Task<ActionResult<ContactResponse>> UpdateContact(
         Guid id,
         [FromBody] UpdateContactRequest request,
@@ -64,6 +68,7 @@ public sealed class ContactsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = CrmPermissions.ContactsDelete)]
     public async Task<IActionResult> DeleteContact(
         Guid id,
         CancellationToken cancellationToken)

@@ -50,6 +50,29 @@ const emptyUserForm = {
   isActive: true,
 };
 
+function getPermissionActionLabel(permission) {
+  const label = permission.label || permission.code;
+
+  const exactLabels = {
+    'Manage users': 'Users',
+    'Manage roles and permissions': 'Roles',
+    'Change lead stage': 'Change stage',
+    'Manage settings': 'General',
+    'Manage pipeline stages': 'Pipeline stages',
+    'Manage services': 'Services',
+    'Manage automation': 'Automation',
+    'Manage integrations': 'Integrations',
+  };
+
+  if (exactLabels[label]) {
+    return exactLabels[label];
+  }
+
+  const action = label.match(/^(Create|Edit|Delete|Assign|Complete|View|Manage)\b/i)?.[1];
+
+  return action || label;
+}
+
 function UserFormDialog({ open, user, roleOptions, onClose, onSubmit }) {
   const { t } = useLanguage();
   const [values, setValues] = useState(emptyUserForm);
@@ -229,6 +252,41 @@ function RolesPanel({ roles, permissions, onSave }) {
     setDrafts(Object.fromEntries(roles.map((role) => [role.code, role.permissions || []])));
   }, [roles]);
 
+  const permissionGroups = useMemo(() => {
+    const groups = [];
+    const groupByName = new Map();
+
+    permissions.forEach((permission) => {
+      const groupName = permission.group || 'Other';
+
+      if (!groupByName.has(groupName)) {
+        const group = {
+          name: groupName,
+          permissions: [],
+        };
+        groupByName.set(groupName, group);
+        groups.push(group);
+      }
+
+      groupByName.get(groupName).permissions.push(permission);
+    });
+
+    return groups;
+  }, [permissions]);
+
+  const permissionColumns = useMemo(
+    () =>
+      permissionGroups.flatMap((group, groupIndex) =>
+        group.permissions.map((permission, permissionIndex) => ({
+          ...permission,
+          groupIndex,
+          isFirstInGroup: permissionIndex === 0,
+          isLastInGroup: permissionIndex === group.permissions.length - 1,
+        })),
+      ),
+    [permissionGroups],
+  );
+
   function togglePermission(roleCode, permissionCode, checked) {
     setDrafts((current) => {
       const existing = new Set(current[roleCode] || []);
@@ -259,24 +317,35 @@ function RolesPanel({ roles, permissions, onSave }) {
         <Table stickyHeader className="crm-users-management__permissions-table">
           <TableHead>
             <TableRow>
-              <TableCell className="crm-users-management__role-cell crm-users-management__sticky-column">
+              <TableCell rowSpan={2} className="crm-users-management__role-cell crm-users-management__sticky-column">
                 {t('Role')}
               </TableCell>
-              {permissions.map((permission) => (
-                <TableCell key={permission.code} align="center" className="crm-users-management__permission-cell">
-                  <Stack spacing={0.25} alignItems="center">
-                    <Typography variant="caption" className="crm-users-management__permission-group-label">
-                      {t(permission.group || 'Other')}
-                    </Typography>
-                    <Typography variant="body2" className="crm-users-management__permission-label">
-                      {t(permission.label)}
-                    </Typography>
-                  </Stack>
+              {permissionGroups.map((group, groupIndex) => (
+                <TableCell
+                  key={group.name}
+                  align="center"
+                  colSpan={group.permissions.length}
+                  className={`crm-users-management__permission-group-cell crm-users-management__permission-cell--group-${groupIndex % 2}`}
+                >
+                  {t(group.name)}
                 </TableCell>
               ))}
-              <TableCell align="right" className="crm-users-management__actions-cell">
+              <TableCell rowSpan={2} align="right" className="crm-users-management__actions-cell">
                 {t('Actions')}
               </TableCell>
+            </TableRow>
+            <TableRow>
+              {permissionColumns.map((permission) => (
+                <TableCell
+                  key={permission.code}
+                  align="center"
+                  className={`crm-users-management__permission-cell crm-users-management__permission-cell--group-${permission.groupIndex % 2} ${permission.isFirstInGroup ? 'crm-users-management__permission-cell--group-start' : ''} ${permission.isLastInGroup ? 'crm-users-management__permission-cell--group-end' : ''}`}
+                >
+                  <Typography variant="body2" className="crm-users-management__permission-label">
+                    {t(getPermissionActionLabel(permission))}
+                  </Typography>
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -294,11 +363,11 @@ function RolesPanel({ roles, permissions, onSave }) {
                       {role.isEditable ? t('Editable') : t('Protected')}
                     </Typography>
                   </TableCell>
-                  {permissions.map((permission) => (
+                  {permissionColumns.map((permission) => (
                     <TableCell
                       key={`${role.code}-${permission.code}`}
                       align="center"
-                      className="crm-users-management__permission-check-cell"
+                      className={`crm-users-management__permission-check-cell crm-users-management__permission-cell--group-${permission.groupIndex % 2} ${permission.isFirstInGroup ? 'crm-users-management__permission-cell--group-start' : ''} ${permission.isLastInGroup ? 'crm-users-management__permission-cell--group-end' : ''}`}
                     >
                       <Checkbox
                         checked={selectedPermissions.has(permission.code)}

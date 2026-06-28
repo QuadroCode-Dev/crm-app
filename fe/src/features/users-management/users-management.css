@@ -67,14 +67,30 @@
 }
 
 .crm-users-management__permission-cell {
-  min-width: 128px;
+  min-width: 112px;
   vertical-align: top;
 }
 
-.crm-users-management__permission-group-label {
-  color: var(--crm-color-text-muted);
+.crm-users-management__permission-group-cell {
+  color: var(--crm-color-text);
   font-weight: 700 !important;
   text-transform: uppercase;
+}
+
+.crm-users-management__permission-cell--group-0 {
+  background: color-mix(in srgb, var(--crm-color-primary) 7%, var(--crm-color-surface)) !important;
+}
+
+.crm-users-management__permission-cell--group-1 {
+  background: color-mix(in srgb, var(--crm-color-accent) 14%, var(--crm-color-surface)) !important;
+}
+
+.crm-users-management__permission-cell--group-start {
+  border-left: 2px solid color-mix(in srgb, var(--crm-color-primary) 38%, var(--crm-color-border)) !important;
+}
+
+.crm-users-management__permission-cell--group-end {
+  border-right: 2px solid color-mix(in srgb, var(--crm-color-primary) 38%, var(--crm-color-border)) !important;
 }
 
 .crm-users-management__permission-label {

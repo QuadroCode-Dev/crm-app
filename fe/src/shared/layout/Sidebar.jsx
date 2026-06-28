@@ -32,11 +32,11 @@ import './layout.css';
 
 const navItems = [
   { icon: House, labelKey: 'navigation.dashboard', to: '/dashboard' },
-  { icon: GitBranch, labelKey: 'navigation.pipeline', to: '/pipeline' },
+  { icon: GitBranch, labelKey: 'navigation.pipeline', to: '/pipeline', permission: 'pipeline.view' },
   { icon: Handshake, labelKey: 'navigation.leads', to: '/leads' },
   { icon: Users, labelKey: 'navigation.contacts', to: '/contacts' },
   { icon: SquaresFour, labelKey: 'navigation.tasks', to: '/tasks' },
-  { icon: ChartBar, labelKey: 'navigation.reports', to: '/reports' },
+  { icon: ChartBar, labelKey: 'navigation.reports', to: '/reports', permission: 'reports.view' },
 ];
 
 const settingsItems = [
@@ -46,11 +46,36 @@ const settingsItems = [
     to: '/users-management',
     roles: ['SuperAdmin', 'Admin'],
   },
-  { icon: GearSix, labelKey: 'navigation.pipelineStages', to: '/settings/pipeline' },
-  { icon: Lightning, labelKey: 'navigation.automationRules', to: '/settings/automation' },
-  { icon: PlugsConnected, labelKey: 'navigation.integrations', to: '/settings/integrations' },
-  { icon: Tag, labelKey: 'navigation.services', to: '/settings/services' },
-  { icon: Palette, labelKey: 'navigation.customization', to: '/settings/customization' },
+  {
+    icon: GearSix,
+    labelKey: 'navigation.pipelineStages',
+    to: '/settings/pipeline',
+    permission: 'settings.pipeline.manage',
+  },
+  {
+    icon: Lightning,
+    labelKey: 'navigation.automationRules',
+    to: '/settings/automation',
+    permission: 'settings.automation.manage',
+  },
+  {
+    icon: PlugsConnected,
+    labelKey: 'navigation.integrations',
+    to: '/settings/integrations',
+    permission: 'settings.integrations.manage',
+  },
+  {
+    icon: Tag,
+    labelKey: 'navigation.services',
+    to: '/settings/services',
+    permission: 'settings.services.manage',
+  },
+  {
+    icon: Palette,
+    labelKey: 'navigation.customization',
+    to: '/settings/customization',
+    permission: 'settings.manage',
+  },
 ];
 
 const supportItems = [
@@ -86,8 +111,14 @@ function Sidebar({ onNavigate }) {
   const { user } = useAuth();
   const { direction, t } = useLanguage();
   const { logoSrc } = usePlatformCustomization();
+  const permissions = new Set(user?.permissions || []);
+  const visibleNavItems = navItems.filter(
+    (item) => !item.permission || permissions.has(item.permission),
+  );
   const visibleSettingsItems = settingsItems.filter(
-    (item) => !item.roles || item.roles.includes(user?.role),
+    (item) =>
+      (!item.roles || item.roles.includes(user?.role)) &&
+      (!item.permission || permissions.has(item.permission)),
   );
 
   return (
@@ -111,7 +142,7 @@ function Sidebar({ onNavigate }) {
           {t('app.workspaceLabel')}
         </Typography>
         <List disablePadding className="crm-sidebar__list">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <SidebarLink key={item.to} {...item} onNavigate={onNavigate} />
           ))}
         </List>

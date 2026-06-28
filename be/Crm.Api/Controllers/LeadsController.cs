@@ -78,7 +78,7 @@ public sealed class LeadsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/stage")]
-    [Authorize(Policy = CrmPermissions.LeadsEdit)]
+    [Authorize(Policy = CrmPermissions.LeadsChangeStage)]
     public async Task<ActionResult<LeadResponse>> ChangeStage(
         Guid id,
         [FromBody] ChangeLeadStageRequest request,

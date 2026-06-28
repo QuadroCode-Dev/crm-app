@@ -23,6 +23,7 @@ import ErrorState from '../../shared/components/feedback/ErrorState.jsx';
 import LoadingState from '../../shared/components/feedback/LoadingState.jsx';
 import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
+import useAuth from '../../shared/hooks/useAuth.js';
 import ContactFormDialog from './ContactFormDialog.jsx';
 import './contacts.css';
 import { useState } from 'react';
@@ -42,11 +43,16 @@ function formatDate(value) {
 
 function ContactsPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { showNotification } = useNotifications();
   const [formOpen, setFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [deletingContact, setDeletingContact] = useState(null);
+  const userPermissions = new Set(user?.permissions || []);
+  const canCreateContact = userPermissions.has('contacts.create');
+  const canEditContact = userPermissions.has('contacts.edit');
+  const canDeleteContact = userPermissions.has('contacts.delete');
 
   const contactsQuery = useQuery({
     queryKey: ['contacts', { page: 1, pageSize: 100 }],
@@ -153,9 +159,11 @@ function ContactsPage() {
         title={t('Contacts')}
         description={t('Manage the people behind your leads and keep core contact details clean.')}
         actions={
-          <Button onClick={handleCreate} variant="contained">
-            {t('Add contact')}
-          </Button>
+          canCreateContact ? (
+            <Button onClick={handleCreate} variant="contained">
+              {t('Add contact')}
+            </Button>
+          ) : null
         }
       />
 
@@ -163,8 +171,8 @@ function ContactsPage() {
         <EmptyState
           title={t('No contacts yet')}
           description={t('Create your first contact to start linking people and companies to leads.')}
-          actionLabel={t('Create contact')}
-          onAction={handleCreate}
+          actionLabel={canCreateContact ? t('Create contact') : undefined}
+          onAction={canCreateContact ? handleCreate : undefined}
         />
       ) : (
         <Box className="crm-contacts-list">
@@ -182,16 +190,20 @@ function ContactsPage() {
                     <Button component={Link} to={`/contacts/${contact.id}`} variant="outlined">
                       {t('Open')}
                     </Button>
-                    <Button onClick={() => handleEdit(contact)} variant="outlined">
-                      {t('Edit')}
-                    </Button>
-                    <Button
-                      color="error"
-                      onClick={() => setDeletingContact(contact)}
-                      variant="outlined"
-                    >
-                      {t('Delete')}
-                    </Button>
+                    {canEditContact ? (
+                      <Button onClick={() => handleEdit(contact)} variant="outlined">
+                        {t('Edit')}
+                      </Button>
+                    ) : null}
+                    {canDeleteContact ? (
+                      <Button
+                        color="error"
+                        onClick={() => setDeletingContact(contact)}
+                        variant="outlined"
+                      >
+                        {t('Delete')}
+                      </Button>
+                    ) : null}
                   </Box>
                 </Box>
                 <Box className="crm-contact-card__fields">

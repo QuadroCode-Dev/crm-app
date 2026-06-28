@@ -1,5 +1,7 @@
 using Crm.Application.Abstractions.Reports;
 using Crm.Contracts.Reports;
+using Crm.Domain.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Crm.Api.Controllers;
@@ -16,6 +18,7 @@ public sealed class ReportsController : ControllerBase
     }
 
     [HttpGet("leads-by-source")]
+    [Authorize(Policy = CrmPermissions.ReportsView)]
     public async Task<ActionResult<IReadOnlyList<LeadsBySourceReportItemResponse>>> GetLeadsBySource(
         [FromQuery] ReportFilterRequest request,
         CancellationToken cancellationToken)
@@ -25,6 +28,7 @@ public sealed class ReportsController : ControllerBase
     }
 
     [HttpGet("pipeline-summary")]
+    [Authorize(Policy = CrmPermissions.ReportsView)]
     public async Task<ActionResult<IReadOnlyList<PipelineSummaryReportItemResponse>>> GetPipelineSummary(
         [FromQuery] ReportFilterRequest request,
         CancellationToken cancellationToken)
@@ -34,6 +38,7 @@ public sealed class ReportsController : ControllerBase
     }
 
     [HttpGet("stage-aging")]
+    [Authorize(Policy = CrmPermissions.ReportsView)]
     public async Task<ActionResult<IReadOnlyList<StageAgingReportItemResponse>>> GetStageAging(
         [FromQuery] ReportFilterRequest request,
         CancellationToken cancellationToken)
@@ -43,6 +48,7 @@ public sealed class ReportsController : ControllerBase
     }
 
     [HttpGet("tasks-summary")]
+    [Authorize(Policy = CrmPermissions.ReportsView)]
     public async Task<ActionResult<TasksSummaryReportResponse>> GetTasksSummary(
         [FromQuery] ReportFilterRequest request,
         CancellationToken cancellationToken)

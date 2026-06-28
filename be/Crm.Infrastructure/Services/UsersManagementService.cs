@@ -15,17 +15,26 @@ public sealed class UsersManagementService : IUsersManagementService
     {
         Permission(CrmPermissions.UsersManage, "Manage users", "Administration"),
         Permission(CrmPermissions.RolesManage, "Manage roles and permissions", "Administration"),
+        Permission(CrmPermissions.ContactsCreate, "Create contacts", "Contacts"),
+        Permission(CrmPermissions.ContactsEdit, "Edit contacts", "Contacts"),
+        Permission(CrmPermissions.ContactsDelete, "Delete contacts", "Contacts"),
+        Permission(CrmPermissions.PipelineView, "View pipeline", "Pipeline"),
         Permission(CrmPermissions.LeadsCreate, "Create leads", "Leads"),
         Permission(CrmPermissions.LeadsEdit, "Edit leads", "Leads"),
         Permission(CrmPermissions.LeadsDelete, "Delete leads", "Leads"),
         Permission(CrmPermissions.LeadsAssign, "Assign leads", "Leads"),
+        Permission(CrmPermissions.LeadsChangeStage, "Change lead stage", "Leads"),
         Permission(CrmPermissions.TasksCreate, "Create tasks", "Tasks"),
         Permission(CrmPermissions.TasksEdit, "Edit tasks", "Tasks"),
         Permission(CrmPermissions.TasksDelete, "Delete tasks", "Tasks"),
         Permission(CrmPermissions.TasksAssign, "Assign tasks", "Tasks"),
         Permission(CrmPermissions.TasksComplete, "Complete tasks", "Tasks"),
         Permission(CrmPermissions.ReportsView, "View reports", "Reports"),
-        Permission(CrmPermissions.SettingsManage, "Manage settings", "Settings")
+        Permission(CrmPermissions.SettingsManage, "Manage settings", "Settings"),
+        Permission(CrmPermissions.SettingsPipelineManage, "Manage pipeline stages", "Settings"),
+        Permission(CrmPermissions.SettingsServicesManage, "Manage services", "Settings"),
+        Permission(CrmPermissions.SettingsAutomationManage, "Manage automation", "Settings"),
+        Permission(CrmPermissions.SettingsIntegrationsManage, "Manage integrations", "Settings")
     };
 
     private readonly CrmDbContext _dbContext;
