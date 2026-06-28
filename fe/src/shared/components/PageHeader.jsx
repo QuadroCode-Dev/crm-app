@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { usePageHeaderDispatch } from './PageHeaderContext.jsx';
 import './shared-components.css';
 
 function PageHeader({ title, description, actions = null }) {
   const { setPageHeader } = usePageHeaderDispatch();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setPageHeader({
       actions,
       description: description || '',

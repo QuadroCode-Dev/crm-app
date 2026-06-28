@@ -2,7 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import {
   AlertTriangleIcon,
   ArrowRightIcon,
@@ -75,6 +87,15 @@ const compactCurrencyFormatter = new Intl.NumberFormat('en-US', {
 });
 
 const numberFormatter = new Intl.NumberFormat('en-US');
+
+const LEAD_SOURCE_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--crm-color-primary)',
+];
 
 export const LEGACY_DASHBOARD_SECTIONS = {
   kpiSummary: 'kpi-summary',
@@ -1296,11 +1317,7 @@ function SalesFunnelCard({ funnelRows, t }) {
 }
 
 function LeadSourcesCard({ leadSources, t }) {
-  const maxRevenue = Math.max(...leadSources.map((item) => item.revenue || 0), 0);
-  const maxConversionRate = Math.max(
-    ...leadSources.map((item) => item.conversionRate || 0),
-    0,
-  );
+  const totalLeads = leadSources.reduce((sum, source) => sum + (source.totalLeads || 0), 0);
   const topLeadSource = [...leadSources].sort(
     (left, right) => right.totalLeads - left.totalLeads,
   )[0];
@@ -1330,27 +1347,58 @@ function LeadSourcesCard({ leadSources, t }) {
             description={t('Lead source performance will appear here once the CRM has reportable data.')}
           />
         ) : (
-          <>
-            <div className="crm-dashboard-source-header">
-              <span>{t('Source')}</span>
-              <span>{t('Leads')}</span>
-              <span>{t('Won')}</span>
-              <span>{t('Conv. %')}</span>
-              <span>{t('Revenue')}</span>
+          <div className="crm-dashboard-source-performance">
+            <div className="crm-dashboard-source-pie">
+              <ChartContainer
+                className="h-[12rem] w-full"
+                config={{ leads: { label: t('Leads'), color: 'var(--chart-1)' } }}
+                initialDimension={{ width: 220, height: 192 }}
+              >
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent nameKey="source" />} />
+                  <Pie
+                    data={leadSources}
+                    dataKey="totalLeads"
+                    nameKey="source"
+                    innerRadius={46}
+                    outerRadius={78}
+                    paddingAngle={2}
+                    stroke="var(--crm-color-surface)"
+                    strokeWidth={2}
+                  >
+                    {leadSources.map((source, index) => (
+                      <Cell
+                        key={source.source}
+                        fill={LEAD_SOURCE_COLORS[index % LEAD_SOURCE_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
+              <div className="crm-dashboard-source-pie__center" aria-hidden="true">
+                <strong>{formatNumber(totalLeads)}</strong>
+                <span>{t('Total Leads')}</span>
+              </div>
             </div>
-            <div className="space-y-3">
-              {leadSources.map((source) => {
-                const revenueProgress =
-                  maxRevenue > 0 ? Math.max(5, Math.round((source.revenue / maxRevenue) * 100)) : 0;
-                const conversionProgress =
-                  maxConversionRate > 0
-                    ? Math.max(5, Math.round((source.conversionRate / maxConversionRate) * 100))
-                    : 0;
-
-                return (
+            <div className="crm-dashboard-source-table">
+              <div className="crm-dashboard-source-header">
+                <span>{t('Source')}</span>
+                <span>{t('Leads')}</span>
+                <span>{t('Won')}</span>
+                <span>{t('Conv. %')}</span>
+                <span>{t('Revenue')}</span>
+              </div>
+              <div className="space-y-2">
+                {leadSources.map((source, index) => (
                   <div key={source.source} className="crm-dashboard-source-row">
                     <div className="crm-dashboard-source-row__summary">
-                      <span className="crm-dashboard-source-row__dot" aria-hidden="true" />
+                      <span
+                        className="crm-dashboard-source-row__dot"
+                        style={{
+                          backgroundColor: LEAD_SOURCE_COLORS[index % LEAD_SOURCE_COLORS.length],
+                        }}
+                        aria-hidden="true"
+                      />
                       <strong>{t(source.source)}</strong>
                     </div>
                     <span>{formatNumber(source.totalLeads)}</span>
@@ -1359,31 +1407,11 @@ function LeadSourcesCard({ leadSources, t }) {
                     <span className="font-semibold text-foreground">
                       {formatCompactCurrency(source.revenue)}
                     </span>
-                    <div className="crm-dashboard-source-row__bars">
-                      <div className="crm-dashboard-source-row__bar-group">
-                        <span>{t('Revenue')}</span>
-                        <div className="crm-dashboard-progress-track">
-                          <div
-                            className="crm-dashboard-progress-fill"
-                            style={{ width: `${revenueProgress}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="crm-dashboard-source-row__bar-group crm-dashboard-source-row__bar-group--quality">
-                        <span>{t('Quality')}</span>
-                        <div className="crm-dashboard-progress-track">
-                          <div
-                            className="crm-dashboard-progress-fill"
-                            style={{ width: `${conversionProgress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </>
+          </div>
         )}
       </CardContent>
       {leadSources.length > 0 ? (
@@ -1405,6 +1433,8 @@ function LeadSourcesCard({ leadSources, t }) {
 }
 
 function FollowUpHealthCard({ health, t }) {
+  const visibleMetrics = health.metrics.slice(0, 4);
+
   return (
     <DashboardCard className="min-h-[18rem]">
       <CardHeader className="gap-2">
@@ -1429,8 +1459,19 @@ function FollowUpHealthCard({ health, t }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="sr-only">
+          <p>{health.hasIssues ? t('Needs attention today') : t('Follow-ups are under control')}</p>
+          {!health.hasIssues ? (
+            <p>
+              {t('No overdue follow-ups, ignored new leads, or inactive high-value leads need action right now.')}
+            </p>
+          ) : null}
+          {health.priorityItems.map((item) => (
+            <p key={item.label}>{item.label}</p>
+          ))}
+        </div>
         <div className="crm-dashboard-follow-up-grid">
-          {health.metrics.map((item) => {
+          {visibleMetrics.map((item) => {
             const Icon = item.icon;
 
             return (
@@ -1444,46 +1485,14 @@ function FollowUpHealthCard({ health, t }) {
                 )}
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="text-sm text-muted-foreground">{item.label}</p>
+                  <p className={cn('text-sm font-semibold', item.tone)}>{item.label}</p>
                   <Icon className={cn('size-4', item.tone)} />
                 </div>
-                <p className="text-lg font-semibold text-foreground">{item.value}</p>
+                <p className="crm-dashboard-follow-up-metric__value">{item.value}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{item.helper}</p>
               </div>
             );
           })}
-        </div>
-
-        <div
-          className={cn(
-            'crm-dashboard-follow-up-summary',
-            !health.hasIssues && 'crm-dashboard-follow-up-summary--healthy',
-          )}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <strong>{health.hasIssues ? t('Needs attention today') : t('Follow-ups are under control')}</strong>
-            {health.hasIssues ? (
-              <AlertTriangleIcon className="size-4 text-rose-500" />
-            ) : (
-              <CheckCircle2Icon className="size-4 text-emerald-500" />
-            )}
-          </div>
-          {health.hasIssues ? (
-            <ul className="mt-3 space-y-2">
-              {health.priorityItems.map((item) => (
-                <li key={item.label} className="crm-dashboard-follow-up-summary__item">
-                  <span className={cn('crm-dashboard-follow-up-summary__count', item.tone)}>
-                    {formatNumber(item.count)}
-                  </span>
-                  <span>{item.label}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t('No overdue follow-ups, ignored new leads, or inactive high-value leads need action right now.')}
-            </p>
-          )}
         </div>
       </CardContent>
       <CardFooter className="justify-between border-t border-border/70 bg-background/55">
@@ -2057,7 +2066,7 @@ function PipelineVelocityCard({ dashboardModel, t }) {
 
           return (
             <div key={item.label} className="crm-dashboard-velocity-item">
-              <Icon className="size-5 text-primary" />
+              <Icon className="size-9 text-primary" />
               <span>{item.label}</span>
               <strong>{item.value}</strong>
               <small>{item.helper}</small>
@@ -2213,6 +2222,16 @@ function DashboardPage() {
       }),
     [leads, leadsBySource, pipelineSummary, selectedDateRange, t, tasks, tasksSummary],
   );
+  const periodControls = useMemo(
+    () => (
+      <DashboardPeriodControls
+        selectedDateRange={selectedDateRange}
+        onDateRangeChange={setSelectedDateRange}
+        t={t}
+      />
+    ),
+    [selectedDateRange, t],
+  );
 
   function handleRetry() {
     leadsQuery.refetch();
@@ -2245,20 +2264,13 @@ function DashboardPage() {
       <PageHeader
         title={t('Dashboard')}
         description={t('Keep an eye on pipeline momentum, overdue work, and the next best actions for the team.')}
+        actions={periodControls}
       />
 
-      <h1 className="sr-only">{t('Dashboard')}</h1>
-
       <div className="crm-dashboard-shell">
-        <DashboardPeriodControls
-          selectedDateRange={selectedDateRange}
-          onDateRangeChange={setSelectedDateRange}
-          t={t}
-        />
-
         <div className="crm-dashboard-target-layout">
           <main className="crm-dashboard-target-main">
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               {dashboardModel.summaryCards.map((card) => (
                 <KpiCard key={card.label} card={card} />
               ))}
