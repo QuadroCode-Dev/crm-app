@@ -186,7 +186,7 @@ export function applyPipelineDragEnd({ activeId, overId, leadStageMap, onStageCh
   return true;
 }
 
-function StageColumn({ stage, leads, activeStageId, children }) {
+function StageColumn({ stage, leads, activeStageId, showEmptyState = true, children }) {
   const { t } = useLanguage();
   const { setNodeRef, isOver } = useDroppable({
     id: `stage-drop-${stage.id}`,
@@ -226,7 +226,7 @@ function StageColumn({ stage, leads, activeStageId, children }) {
         </Box>
         <Box className="crm-pipeline-column__list">
           {children}
-          {leads.length === 0 ? (
+          {showEmptyState && leads.length === 0 ? (
             <EmptyState
               title={t('No leads here yet')}
               description={t('Drag a lead into this stage or create a new lead to start filling the pipeline.')}
@@ -865,6 +865,7 @@ function PipelinePage() {
                 stage={stage}
                 leads={stageLeads}
                 activeStageId={activeLead ? leadStageMap[activeLead.id] : null}
+                showEmptyState={filterCount === 0}
               >
                 {stageLeads.map((lead) => (
                   <PipelineCard

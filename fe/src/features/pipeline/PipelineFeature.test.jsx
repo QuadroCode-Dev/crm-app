@@ -104,6 +104,7 @@ describe('Pipeline feature', () => {
     expect(await screen.findByText('Brand website redesign')).toBeInTheDocument();
     expect(screen.queryByText('Solar rooftop installation')).not.toBeInTheDocument();
     expect(screen.queryByText('Kitchen remodel consultation')).not.toBeInTheDocument();
+    expect(screen.queryByText('No leads here yet')).not.toBeInTheDocument();
   });
 
   it('renders the stage settings list', async () => {
