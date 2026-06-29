@@ -8,6 +8,9 @@ fe/coverage/
 be/**/bin/
 be/**/obj/
 
+# Local deployment scratch
+tmp/
+
 # Editor / OS
 .DS_Store
 Thumbs.db
