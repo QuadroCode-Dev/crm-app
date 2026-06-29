@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildExistingImportDuplicateKeys,
   createImportPayload,
+  getImportDuplicateKeys,
   inferImportMapping,
   importTargets,
   parseImportFile,
@@ -139,5 +141,23 @@ describe('Data importer helpers', () => {
       title: 'Plastic Surgery',
       serviceRequested: 'Hair Transplant',
     });
+  });
+
+  it('builds duplicate keys from existing leads and import payloads', () => {
+    const existingKeys = buildExistingImportDuplicateKeys(importTargets.leads, [
+      {
+        email: 'Rida@Example.com',
+        phone: '+961 70 123 456',
+      },
+    ]);
+
+    expect(existingKeys.has('email:rida@example.com')).toBe(true);
+    expect(existingKeys.has('phone:+96170123456')).toBe(true);
+    expect(
+      getImportDuplicateKeys(importTargets.leads, {
+        contactEmail: 'rida@example.com',
+        contactPhone: '+96170123456',
+      }).some((key) => existingKeys.has(key)),
+    ).toBe(true);
   });
 });

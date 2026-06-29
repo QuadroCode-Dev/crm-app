@@ -187,9 +187,39 @@
   margin-top: 1rem;
 }
 
+.crm-data-importer-summary-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.crm-data-importer-summary-grid > div {
+  background: var(--crm-surface-muted);
+  border: 1px solid var(--crm-border-color);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem;
+}
+
+.crm-data-importer-summary-grid strong {
+  color: var(--crm-color-text);
+  font-size: 1.5rem;
+}
+
+.crm-data-importer-summary-grid span {
+  color: var(--crm-color-text-muted);
+  font-size: 0.8rem;
+}
+
 @media (max-width: 1100px) {
   .crm-data-importer-mapper,
   .crm-data-importer-defaults {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-data-importer-summary-grid {
     grid-template-columns: 1fr;
   }
 }

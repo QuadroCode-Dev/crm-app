@@ -6,6 +6,10 @@ import {
   CardContent,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControlLabel,
   LinearProgress,
   MenuItem,
@@ -15,8 +19,8 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { createContact } from '../../api/contactsApi.js';
-import { createLead } from '../../api/leadsApi.js';
+import { createContact, getContacts } from '../../api/contactsApi.js';
+import { createLead, getLeads } from '../../api/leadsApi.js';
 import { getLeadSources } from '../../api/leadSourcesApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
 import { getPipelineStages } from '../../api/pipelineApi.js';
@@ -30,7 +34,9 @@ import useLanguage from '../../shared/hooks/useLanguage.js';
 import useNotifications from '../../shared/hooks/useNotifications.js';
 import {
   contactImportFields,
+  buildExistingImportDuplicateKeys,
   createImportPayload,
+  getImportDuplicateKeys,
   inferImportMapping,
   importTargets,
   leadImportFields,
@@ -40,6 +46,7 @@ import {
 import './dataImporter.css';
 
 const acceptedFileTypes = '.csv,.xls,.xlsx';
+const duplicateLookupPageSize = 100;
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
 
 function getDefaultLeadValues(sourceOptions, stageOptions, ownerOptions, serviceOptions) {
@@ -150,6 +157,29 @@ function FieldCard({ field, mapped, t }) {
   );
 }
 
+async function fetchAllImportDuplicateRecords(target) {
+  const fetchPage = target === importTargets.contacts ? getContacts : getLeads;
+  const records = [];
+  let page = 1;
+  let total = null;
+
+  while (total === null || records.length < total) {
+    const response = await fetchPage({ page, pageSize: duplicateLookupPageSize });
+    const items = response.items || [];
+
+    records.push(...items);
+    total = response.totalCount ?? response.total ?? records.length;
+
+    if (items.length === 0 || items.length < duplicateLookupPageSize) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return records;
+}
+
 function SettingsDataImporterPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -166,6 +196,7 @@ function SettingsDataImporterPage() {
   const [mapping, setMapping] = useState({});
   const [fileError, setFileError] = useState('');
   const [importResult, setImportResult] = useState(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const sourceOptionsQuery = useQuery({
     queryKey: ['lead-sources'],
@@ -283,6 +314,7 @@ function SettingsDataImporterPage() {
     setMapping({});
     setFileError('');
     setImportResult(null);
+    setSummaryOpen(false);
     setDefaults(getDefaultLeadValues(sourceOptions, stageOptions, ownerOptions, serviceOptions));
     setTarget(nextTarget);
   }
@@ -375,6 +407,10 @@ function SettingsDataImporterPage() {
 
     const successes = [];
     const failures = [];
+    const skipped = [];
+    const existingRecords = await fetchAllImportDuplicateRecords(target);
+    const duplicateKeys = buildExistingImportDuplicateKeys(target, existingRecords);
+    const importedKeys = new Set();
 
     for (const row of fileState.rows) {
       try {
@@ -388,6 +424,20 @@ function SettingsDataImporterPage() {
           stageOptions,
           ownerOptions,
         });
+        const rowDuplicateKeys = getImportDuplicateKeys(target, payload);
+        const duplicateKey = rowDuplicateKeys.find(
+          (key) => duplicateKeys.has(key) || importedKeys.has(key),
+        );
+
+        if (duplicateKey) {
+          skipped.push({
+            reason: duplicateKey.startsWith('email:')
+              ? t('Duplicate email already exists.')
+              : t('Duplicate phone already exists.'),
+            rowNumber: row.__rowNumber,
+          });
+          continue;
+        }
 
         if (target === importTargets.contacts) {
           const contact = await createContact(payload);
@@ -396,6 +446,8 @@ function SettingsDataImporterPage() {
           const lead = await createLead(payload);
           successes.push(lead);
         }
+
+        rowDuplicateKeys.forEach((key) => importedKeys.add(key));
       } catch (error) {
         failures.push({
           rowNumber: row.__rowNumber,
@@ -411,14 +463,16 @@ function SettingsDataImporterPage() {
 
     setImportResult({
       failures,
+      skipped,
       successes,
     });
-    showNotification(
-      failures.length
+    setSummaryOpen(true);
+    showNotification({
+      message: failures.length
         ? t('Import finished with row errors.')
         : t('Import completed successfully.'),
-      failures.length ? 'warning' : 'success',
-    );
+      severity: failures.length ? 'warning' : 'success',
+    });
   }
 
   const importMutation = useMutation({
@@ -673,7 +727,7 @@ function SettingsDataImporterPage() {
             <CardContent>
               <Typography variant="h6">{t('CRM fields')}</Typography>
               <Typography className="crm-muted-text">
-                {t('Drag these larger CRM field cards onto matching file columns. Required fields show a Required badge.')}
+                {t('Drag and drop on matching field')}
               </Typography>
               <Alert severity="info" className="crm-data-importer-help">
                 {target === importTargets.leads
@@ -769,9 +823,19 @@ function SettingsDataImporterPage() {
           <CardContent>
             <Typography variant="h6">{t('Import results')}</Typography>
             <Typography className="crm-muted-text">
-              {importResult.successes.length} {t('imported')}, {importResult.failures.length}{' '}
-              {t('failed')}
+              {importResult.successes.length} {t('imported')},{' '}
+              {importResult.skipped?.length || 0} {t('skipped')},{' '}
+              {importResult.failures.length} {t('failed')}
             </Typography>
+            {importResult.skipped?.length ? (
+              <Box className="crm-data-importer-errors">
+                {importResult.skipped.map((skippedRow) => (
+                  <Alert key={`${skippedRow.rowNumber}-${skippedRow.reason}`} severity="info">
+                    {t('Row')} {skippedRow.rowNumber}: {skippedRow.reason}
+                  </Alert>
+                ))}
+              </Box>
+            ) : null}
             {importResult.failures.length ? (
               <Box className="crm-data-importer-errors">
                 {importResult.failures.map((failure) => (
@@ -784,6 +848,45 @@ function SettingsDataImporterPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Dialog open={summaryOpen} onClose={() => setSummaryOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('Import summary')}</DialogTitle>
+        <DialogContent>
+          {importResult ? (
+            <Stack spacing={2}>
+              <Box className="crm-data-importer-summary-grid">
+                <Box>
+                  <strong>{importResult.successes.length}</strong>
+                  <span>{t('Imported')}</span>
+                </Box>
+                <Box>
+                  <strong>{importResult.skipped?.length || 0}</strong>
+                  <span>{t('Skipped duplicates')}</span>
+                </Box>
+                <Box>
+                  <strong>{importResult.failures.length}</strong>
+                  <span>{t('Failed')}</span>
+                </Box>
+              </Box>
+              {importResult.skipped?.length ? (
+                <Alert severity="info">
+                  {t('Duplicate rows were skipped and no new record was created for them.')}
+                </Alert>
+              ) : null}
+              {importResult.failures.length ? (
+                <Alert severity="warning">
+                  {t('Some rows could not be imported. Review the import results below.')}
+                </Alert>
+              ) : null}
+            </Stack>
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSummaryOpen(false)} variant="contained">
+            {t('Done')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

@@ -339,3 +339,29 @@ export function createImportPayload({
     message: values.message || '',
   };
 }
+
+function normalizeDuplicateValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function normalizePhoneDuplicateValue(value) {
+  return String(value || '').replace(/[^\d+]/g, '');
+}
+
+export function getImportDuplicateKeys(target, record) {
+  const email = normalizeDuplicateValue(
+    target === importTargets.contacts ? record.email : record.contactEmail || record.email,
+  );
+  const phone = normalizePhoneDuplicateValue(
+    target === importTargets.contacts ? record.phone : record.contactPhone || record.phone,
+  );
+
+  return [
+    email ? `email:${email}` : '',
+    phone ? `phone:${phone}` : '',
+  ].filter(Boolean);
+}
+
+export function buildExistingImportDuplicateKeys(target, records = []) {
+  return new Set(records.flatMap((record) => getImportDuplicateKeys(target, record)));
+}
