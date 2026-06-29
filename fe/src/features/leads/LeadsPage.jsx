@@ -5,6 +5,7 @@ import {
   CardContent,
   Chip,
   IconButton,
+  MenuItem,
   Stack,
   TextField,
   Tooltip,
@@ -22,6 +23,7 @@ import {
   deleteLead,
   getLeads,
   updateLead,
+  updateLeadStage,
 } from '../../api/leadsApi.js';
 import { normalizeApiError } from '../../api/normalizeApiError.js';
 import PageHeader from '../../shared/components/PageHeader.jsx';
@@ -41,6 +43,15 @@ import './leads.css';
 const statusOptions = ['Open', 'Won', 'Lost', 'Archived'];
 const defaultRottingThresholdHours = 168;
 const hoursPerDay = 24;
+
+const bulkActionOptions = [
+  { value: 'owner', label: 'Assign' },
+  { value: 'stage', label: 'Stage' },
+  { value: 'status', label: 'Status' },
+  { value: 'service', label: 'Service' },
+  { value: 'source', label: 'Source' },
+  { value: 'delete', label: 'Delete' },
+];
 
 function formatCurrency(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
@@ -107,6 +118,25 @@ function renderCompactCell(value) {
   );
 }
 
+function buildLeadUpdatePayload(lead, overrides = {}) {
+  return {
+    contactId: lead.contactId,
+    contactSalutation: lead.contactSalutation || '',
+    contactName: lead.contactName || lead.contactFullName || '',
+    contactEmail: lead.email || lead.contactEmail || '',
+    contactPhone: lead.phone || lead.contactPhone || '',
+    sourceId: lead.sourceId || lead.leadSourceId || '',
+    stageId: lead.stageId || lead.currentPipelineStageId || '',
+    ownerUserId: lead.ownerUserId || '',
+    title: lead.title || '',
+    status: lead.status || 'Open',
+    estimatedCost: lead.estimatedCost ?? null,
+    serviceRequested: lead.serviceRequested || '',
+    message: lead.message || '',
+    ...overrides,
+  };
+}
+
 function LeadsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -116,6 +146,10 @@ function LeadsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [deletingLead, setDeletingLead] = useState(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState('');
+  const [bulkValue, setBulkValue] = useState('');
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
   const userPermissions = new Set(user?.permissions || []);
   const canCreateLead = userPermissions.has('leads.create');
   const canEditLead = userPermissions.has('leads.edit');
@@ -171,6 +205,14 @@ function LeadsPage() {
   const stageById = useMemo(
     () => Object.fromEntries((stagesQuery.data || []).map((stage) => [stage.id, stage])),
     [stagesQuery.data],
+  );
+  const rows = leadsQuery.data?.items || [];
+  const selectedLeads = useMemo(
+    () => rows.filter((lead) => selectedLeadIds.includes(lead.id)),
+    [rows, selectedLeadIds],
+  );
+  const visibleBulkActions = bulkActionOptions.filter((option) =>
+    option.value === 'delete' ? canDeleteLead : canEditLead,
   );
 
   const createLeadMutation = useMutation({
@@ -256,6 +298,65 @@ function LeadsPage() {
         message: t('Lead deleted successfully.'),
       });
       setDeletingLead(null);
+    },
+    onError: (error) => {
+      showNotification({
+        severity: 'error',
+        message: normalizeApiError(error).message,
+      });
+    },
+  });
+
+  const bulkActionMutation = useMutation({
+    mutationFn: async ({ action, value, leads }) => {
+      const failures = [];
+      let successes = 0;
+
+      for (const lead of leads) {
+        try {
+          if (action === 'delete') {
+            await deleteLead(lead.id);
+          } else if (action === 'stage') {
+            await updateLeadStage(lead.id, { stageId: value });
+          } else {
+            const payloadByAction = {
+              owner: { ownerUserId: value },
+              status: { status: value },
+              service: { serviceRequested: value },
+              source: { sourceId: value },
+            };
+
+            await updateLead(lead.id, buildLeadUpdatePayload(lead, payloadByAction[action]));
+          }
+
+          successes += 1;
+        } catch (error) {
+          failures.push({
+            lead,
+            message: normalizeApiError(error).message,
+          });
+        }
+      }
+
+      return { failures, successes };
+    },
+    onSuccess: ({ failures, successes }, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      setBulkDeleteOpen(false);
+
+      if (!failures.length) {
+        setSelectedLeadIds([]);
+        setBulkAction('');
+        setBulkValue('');
+      }
+
+      showNotification({
+        severity: failures.length ? 'warning' : 'success',
+        message: failures.length
+          ? t('Bulk action finished with errors.')
+          : `${successes} ${t(variables.action === 'delete' ? 'leads deleted.' : 'leads updated.')}`,
+      });
     },
     onError: (error) => {
       showNotification({
@@ -450,6 +551,66 @@ function LeadsPage() {
     return createLeadMutation.mutateAsync(payload);
   }
 
+  function getBulkValueOptions() {
+    if (bulkAction === 'owner') {
+      return ownerOptions.map((option) => ({
+        label: option.fullName || option.email,
+        value: option.id,
+      }));
+    }
+
+    if (bulkAction === 'stage') {
+      return (stagesQuery.data || []).map((option) => ({
+        label: option.name,
+        value: option.id,
+      }));
+    }
+
+    if (bulkAction === 'status') {
+      return statusOptions.map((option) => ({
+        label: t(option),
+        value: option,
+      }));
+    }
+
+    if (bulkAction === 'service') {
+      return (servicesQuery.data || []).map((option) => ({
+        label: option,
+        value: option,
+      }));
+    }
+
+    if (bulkAction === 'source') {
+      return (leadSourcesQuery.data || []).map((option) => ({
+        label: option.name,
+        value: option.id,
+      }));
+    }
+
+    return [];
+  }
+
+  function handleBulkApply() {
+    if (!selectedLeads.length || !bulkAction) {
+      return;
+    }
+
+    if (bulkAction === 'delete') {
+      setBulkDeleteOpen(true);
+      return;
+    }
+
+    if (!bulkValue) {
+      return;
+    }
+
+    bulkActionMutation.mutate({
+      action: bulkAction,
+      value: bulkValue,
+      leads: selectedLeads,
+    });
+  }
+
   function updateFilters(nextValues) {
     const updated = new URLSearchParams(searchParams);
 
@@ -493,7 +654,13 @@ function LeadsPage() {
     );
   }
 
-  const rows = leadsQuery.data?.items || [];
+  const bulkValueOptions = getBulkValueOptions();
+  const bulkNeedsValue = bulkAction && bulkAction !== 'delete';
+  const canApplyBulkAction =
+    selectedLeads.length > 0 &&
+    bulkAction &&
+    (!bulkNeedsValue || bulkValue) &&
+    !bulkActionMutation.isPending;
 
   return (
     <Stack spacing={3} className="crm-leads-page">
@@ -607,9 +774,74 @@ function LeadsPage() {
       ) : (
         <Card className="crm-leads-table-card">
           <CardContent>
+            {selectedLeads.length ? (
+              <Box className="crm-leads-bulk-bar">
+                <Box>
+                  <strong>
+                    {selectedLeads.length} {t(selectedLeads.length === 1 ? 'lead selected' : 'leads selected')}
+                  </strong>
+                  <span>{t('Apply one change to every selected lead.')}</span>
+                </Box>
+                <TextField
+                  label={t('Bulk action')}
+                  onChange={(event) => {
+                    setBulkAction(event.target.value);
+                    setBulkValue('');
+                  }}
+                  select
+                  size="small"
+                  value={bulkAction}
+                >
+                  <MenuItem value="">{t('Choose action')}</MenuItem>
+                  {visibleBulkActions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {t(option.label)}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                {bulkNeedsValue ? (
+                  <TextField
+                    label={t('New value')}
+                    onChange={(event) => setBulkValue(event.target.value)}
+                    select
+                    size="small"
+                    value={bulkValue}
+                  >
+                    <MenuItem value="">{t('Choose value')}</MenuItem>
+                    {bulkValueOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ) : null}
+                <Box className="crm-leads-bulk-bar__actions">
+                  <Button
+                    disabled={!canApplyBulkAction}
+                    onClick={handleBulkApply}
+                    color={bulkAction === 'delete' ? 'error' : 'primary'}
+                    variant="contained"
+                  >
+                    {bulkActionMutation.isPending ? t('Applying...') : t('Apply')}
+                  </Button>
+                  <Button
+                    disabled={bulkActionMutation.isPending}
+                    onClick={() => {
+                      setSelectedLeadIds([]);
+                      setBulkAction('');
+                      setBulkValue('');
+                    }}
+                    variant="outlined"
+                  >
+                    {t('Clear selection')}
+                  </Button>
+                </Box>
+              </Box>
+            ) : null}
             <Box className="crm-leads-table">
               <DataGrid
                 autoHeight
+                checkboxSelection
                 columns={columns}
                 columnHeaderHeight={44}
                 disableColumnReorder={false}
@@ -626,12 +858,14 @@ function LeadsPage() {
                 rowCount={leadsQuery.data?.total || 0}
                 rows={rows}
                 rowHeight={44}
+                rowSelectionModel={selectedLeadIds}
                 onPaginationModelChange={(model) =>
                   updateFilters({
                     page: model.page + 1,
                     pageSize: model.pageSize,
                   })
                 }
+                onRowSelectionModelChange={(model) => setSelectedLeadIds(Array.from(model))}
               />
             </Box>
           </CardContent>
@@ -660,6 +894,21 @@ function LeadsPage() {
         confirmLabel={t('Delete lead')}
         onCancel={() => setDeletingLead(null)}
         onConfirm={() => deleteLeadMutation.mutate(deletingLead.id)}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        title={t('Delete selected leads?')}
+        description={`${t('This removes')} ${selectedLeads.length} ${t("selected leads from the CRM list. You can't undo this action.")}`}
+        confirmLabel={t('Delete selected')}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() =>
+          bulkActionMutation.mutate({
+            action: 'delete',
+            leads: selectedLeads,
+            value: '',
+          })
+        }
       />
     </Stack>
   );

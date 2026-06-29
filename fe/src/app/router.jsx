@@ -27,7 +27,7 @@ import UsersManagementPage from '../features/users-management/UsersManagementPag
 import AppLayout from '../shared/layout/AppLayout.jsx';
 
 function AppRouter() {
-  return <RouterProvider router={createAppRouter()} />;
+  return <RouterProvider router={createAppRouter()} future={{ v7_startTransition: true }} />;
 }
 
 export const appRoutes = [
@@ -184,11 +184,18 @@ export const appRoutes = [
 ];
 
 export function createAppRouter() {
-  return createBrowserRouter(appRoutes);
+  return createBrowserRouter(appRoutes, {
+    future: {
+      v7_startTransition: true,
+    },
+  });
 }
 
 export function createTestRouter(initialEntries = ['/dashboard']) {
   return createMemoryRouter(appRoutes, {
+    future: {
+      v7_startTransition: true,
+    },
     initialEntries,
   });
 }
