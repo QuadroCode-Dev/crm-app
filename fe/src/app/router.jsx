@@ -18,6 +18,7 @@ import PipelinePage from '../features/pipeline/PipelinePage.jsx';
 import ReportsPage from '../features/reports/ReportsPage.jsx';
 import SettingsAutomationPage from '../features/settings/SettingsAutomationPage.jsx';
 import SettingsCustomizationPage from '../features/settings/SettingsCustomizationPage.jsx';
+import SettingsDataImporterPage from '../features/settings/SettingsDataImporterPage.jsx';
 import SettingsIntegrationsPage from '../features/settings/SettingsIntegrationsPage.jsx';
 import SettingsPipelinePage from '../features/settings/SettingsPipelinePage.jsx';
 import SettingsServicesPage from '../features/settings/SettingsServicesPage.jsx';
@@ -137,6 +138,15 @@ export const appRoutes = [
               {
                 path: '/settings/integrations',
                 element: <SettingsIntegrationsPage />,
+              },
+            ],
+          },
+          {
+            element: <PermissionRoute permission="settings.data_import.manage" />,
+            children: [
+              {
+                path: '/settings/data-importer',
+                element: <SettingsDataImporterPage />,
               },
             ],
           },

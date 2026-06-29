@@ -14,6 +14,7 @@ import {
   GitBranch,
   Handshake,
   House,
+  UploadSimple,
   Lifebuoy,
   Lightning,
   Palette,
@@ -63,6 +64,12 @@ const settingsItems = [
     labelKey: 'navigation.integrations',
     to: '/settings/integrations',
     permission: 'settings.integrations.manage',
+  },
+  {
+    icon: UploadSimple,
+    labelKey: 'navigation.dataImporter',
+    to: '/settings/data-importer',
+    permission: 'settings.data_import.manage',
   },
   {
     icon: Tag,

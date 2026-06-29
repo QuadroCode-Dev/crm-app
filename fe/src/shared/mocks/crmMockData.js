@@ -49,6 +49,7 @@ export const mockPermissions = [
   { code: 'settings.services.manage', label: 'Manage services', group: 'Settings' },
   { code: 'settings.automation.manage', label: 'Manage automation', group: 'Settings' },
   { code: 'settings.integrations.manage', label: 'Manage integrations', group: 'Settings' },
+  { code: 'settings.data_import.manage', label: 'Manage data imports', group: 'Settings' },
 ];
 
 export const mockRoles = [
@@ -83,6 +84,7 @@ export const mockRoles = [
       'settings.services.manage',
       'settings.automation.manage',
       'settings.integrations.manage',
+      'settings.data_import.manage',
     ],
   },
   {

@@ -34,7 +34,8 @@ public sealed class UsersManagementService : IUsersManagementService
         Permission(CrmPermissions.SettingsPipelineManage, "Manage pipeline stages", "Settings"),
         Permission(CrmPermissions.SettingsServicesManage, "Manage services", "Settings"),
         Permission(CrmPermissions.SettingsAutomationManage, "Manage automation", "Settings"),
-        Permission(CrmPermissions.SettingsIntegrationsManage, "Manage integrations", "Settings")
+        Permission(CrmPermissions.SettingsIntegrationsManage, "Manage integrations", "Settings"),
+        Permission(CrmPermissions.SettingsDataImportManage, "Manage data imports", "Settings")
     };
 
     private readonly CrmDbContext _dbContext;

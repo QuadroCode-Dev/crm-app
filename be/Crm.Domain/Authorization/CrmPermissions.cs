@@ -24,6 +24,7 @@ public static class CrmPermissions
     public const string SettingsServicesManage = "settings.services.manage";
     public const string SettingsAutomationManage = "settings.automation.manage";
     public const string SettingsIntegrationsManage = "settings.integrations.manage";
+    public const string SettingsDataImportManage = "settings.data_import.manage";
 
     public static readonly IReadOnlyList<string> All = new[]
     {
@@ -48,6 +49,7 @@ public static class CrmPermissions
         SettingsPipelineManage,
         SettingsServicesManage,
         SettingsAutomationManage,
-        SettingsIntegrationsManage
+        SettingsIntegrationsManage,
+        SettingsDataImportManage
     };
 }

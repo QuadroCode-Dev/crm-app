@@ -1,0 +1,195 @@
+.crm-data-importer-page {
+  min-width: 0;
+}
+
+.crm-data-importer-steps,
+.crm-data-importer-topbar,
+.crm-data-importer-section-header,
+.crm-data-importer-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.crm-data-importer-steps {
+  justify-content: flex-start;
+}
+
+.crm-data-importer-steps span {
+  align-items: center;
+  border: 1px solid var(--crm-border-color);
+  border-radius: 999px;
+  color: var(--crm-color-text-muted);
+  display: inline-flex;
+  font-size: 0.82rem;
+  gap: 0.5rem;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.crm-data-importer-steps strong {
+  align-items: center;
+  background: var(--crm-color-primary);
+  border-radius: 999px;
+  color: var(--crm-color-primary-contrast);
+  display: inline-flex;
+  height: 1.35rem;
+  justify-content: center;
+  width: 1.35rem;
+}
+
+.crm-data-importer-topbar {
+  justify-content: flex-start;
+}
+
+.crm-data-importer-defaults {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(6, minmax(9rem, 1fr));
+  margin-top: 1rem;
+}
+
+.crm-data-importer-mapper {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.38fr);
+}
+
+.crm-data-importer-source-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  margin-top: 1rem;
+}
+
+.crm-data-importer-column-picker {
+  background: var(--crm-surface-muted);
+  border: 1px solid var(--crm-border-color);
+  border-radius: 8px;
+  margin-top: 1rem;
+  padding: 0.75rem;
+}
+
+.crm-data-importer-column-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.crm-data-importer-source-card {
+  background: var(--crm-surface);
+  min-height: 12rem;
+}
+
+.crm-data-importer-source-card__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.crm-data-importer-source-card__mapping {
+  align-items: center;
+  border: 1px dashed var(--crm-border-color);
+  border-radius: 8px;
+  color: var(--crm-color-text-muted);
+  display: flex;
+  min-height: 2.5rem;
+  margin: 0.9rem 0;
+  padding: 0.5rem;
+}
+
+.crm-data-importer-source-card__mapped-field {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.crm-data-importer-source-card__mapped-field span {
+  color: var(--crm-color-text-muted);
+  font-size: 0.75rem;
+}
+
+.crm-data-importer-source-card__preview span {
+  background: var(--crm-surface-muted);
+  border-radius: 6px;
+  color: var(--crm-color-text);
+  font-size: 0.8rem;
+  overflow: hidden;
+  padding: 0.35rem 0.5rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-data-importer-field-list,
+.crm-data-importer-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.crm-data-importer-field-card {
+  align-items: center;
+  background: var(--crm-surface-muted);
+  border: 1px solid var(--crm-border-color);
+  border-left: 4px solid var(--crm-color-primary);
+  border-radius: 8px;
+  color: var(--crm-color-text);
+  cursor: grab;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  width: 100%;
+}
+
+.crm-data-importer-field-card__handle {
+  color: var(--crm-color-primary);
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.crm-data-importer-field-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.crm-data-importer-field-card__body strong {
+  font-size: 0.9rem;
+}
+
+.crm-data-importer-field-card__body small {
+  color: var(--crm-color-text-muted);
+  font-size: 0.72rem;
+}
+
+.crm-data-importer-field-card[draggable='false'] {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.crm-data-importer-help {
+  margin-top: 1rem;
+}
+
+.crm-data-importer-actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .crm-data-importer-mapper,
+  .crm-data-importer-defaults {
+    grid-template-columns: 1fr;
+  }
+}

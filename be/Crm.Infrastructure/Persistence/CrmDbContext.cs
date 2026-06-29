@@ -257,7 +257,8 @@ public class CrmDbContext : DbContext
             Crm.Domain.Authorization.CrmPermissions.SettingsPipelineManage,
             Crm.Domain.Authorization.CrmPermissions.SettingsServicesManage,
             Crm.Domain.Authorization.CrmPermissions.SettingsAutomationManage,
-            Crm.Domain.Authorization.CrmPermissions.SettingsIntegrationsManage
+            Crm.Domain.Authorization.CrmPermissions.SettingsIntegrationsManage,
+            Crm.Domain.Authorization.CrmPermissions.SettingsDataImportManage
         }.Select(permission => new RolePermission
         {
             Role = Crm.Domain.Enums.UserRole.Admin,

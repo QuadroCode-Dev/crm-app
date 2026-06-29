@@ -31,6 +31,7 @@ export const mockAuthUser = {
     'settings.services.manage',
     'settings.automation.manage',
     'settings.integrations.manage',
+    'settings.data_import.manage',
   ],
 };
 
