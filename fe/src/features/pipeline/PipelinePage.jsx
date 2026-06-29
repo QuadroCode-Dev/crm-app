@@ -599,6 +599,7 @@ function PipelinePage() {
           ),
         };
       });
+      setActiveLeadId(null);
 
       return { previousData };
     },
@@ -850,8 +851,7 @@ function PipelinePage() {
             leadStageMap,
             onStageChange: ({ leadId, stageId }) =>
               stageChangeMutation.mutate({ leadId, stageId }),
-          });
-          setActiveLeadId(null);
+          }) || setActiveLeadId(null);
         }}
         onDragCancel={() => setActiveLeadId(null)}
       >
@@ -881,7 +881,7 @@ function PipelinePage() {
           })}
         </Box>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeLead ? (
             <Box className="crm-pipeline-overlay">
               <PipelineCard
