@@ -7,6 +7,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Label,
   LabelList,
   Line,
   LineChart,
@@ -17,6 +18,7 @@ import {
 } from 'recharts';
 import {
   AlertTriangleIcon,
+  ArrowDownIcon,
   ArrowRightIcon,
   BriefcaseBusinessIcon,
   CalendarDaysIcon,
@@ -1042,21 +1044,11 @@ function QuickActionsCard({ t }) {
   ];
 
   return (
-    <DashboardCard className="crm-dashboard-card-glow min-h-[21rem]">
-      <CardHeader className="gap-3">
-        <Badge className="w-fit border-transparent bg-[color-mix(in_srgb,var(--crm-color-accent)_18%,transparent)] text-primary">
-          {t('Quick actions')}
-        </Badge>
-        <CardTitle className="text-2xl font-semibold leading-tight">
-          {t('Move the CRM forward without breaking flow.')}
-        </CardTitle>
-        <CardDescription className="max-w-md text-sm leading-6">
-          {t('Jump straight into the highest-frequency workflows from the dashboard command surface.')}
-        </CardDescription>
-      </CardHeader>
+    <DashboardCard className="crm-dashboard-card-glow crm-dashboard-quick-actions-card">
       <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
         {actions.map((action) => {
           const Icon = action.icon;
+          const isHighlighted = action.variant === 'default';
 
           return (
             <RouterLink
@@ -1065,16 +1057,17 @@ function QuickActionsCard({ t }) {
               aria-label={action.label}
               className={cn(
                 buttonVariants({ variant: action.variant, size: 'lg' }),
+                isHighlighted && 'crm-dashboard-quick-action--highlighted',
                 'crm-dashboard-quick-action h-auto justify-between rounded-[1.35rem] px-4 py-4 text-left',
               )}
             >
               <span className="flex items-center gap-3">
-                <span className="rounded-xl border border-border/70 bg-background/80 p-2 text-primary">
+                <span className="crm-dashboard-quick-action__icon rounded-xl border border-border/70 bg-background/80 p-2 text-primary">
                   <Icon className="size-4" />
                 </span>
                 <span className="flex flex-col">
-                  <span>{action.label}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
+                  <span className="crm-dashboard-quick-action__label">{action.label}</span>
+                  <span className="crm-dashboard-quick-action__description text-xs font-normal">
                     {action.description}
                   </span>
                 </span>
@@ -1279,9 +1272,10 @@ function SalesFunnelCard({ funnelRows, t }) {
                   <div className="crm-dashboard-funnel-row__conversion">
                     {stage.nextStageName ? (
                       <>
-                        <span>
+                        <span className="sr-only">
                           {stage.stageName} {'->'} {stage.nextStageName}
                         </span>
+                        <ArrowDownIcon className="crm-dashboard-funnel-row__arrow" aria-hidden="true" />
                         <strong>{conversion}</strong>
                       </>
                     ) : (
@@ -1350,9 +1344,9 @@ function LeadSourcesCard({ leadSources, t }) {
           <div className="crm-dashboard-source-performance">
             <div className="crm-dashboard-source-pie">
               <ChartContainer
-                className="h-[12rem] w-full"
+                className="h-[10.5rem] w-full"
                 config={{ leads: { label: t('Leads'), color: 'var(--chart-1)' } }}
-                initialDimension={{ width: 220, height: 192 }}
+                initialDimension={{ width: 168, height: 168 }}
               >
                 <PieChart>
                   <ChartTooltip content={<ChartTooltipContent nameKey="source" />} />
@@ -1360,8 +1354,8 @@ function LeadSourcesCard({ leadSources, t }) {
                     data={leadSources}
                     dataKey="totalLeads"
                     nameKey="source"
-                    innerRadius={46}
-                    outerRadius={78}
+                    innerRadius={38}
+                    outerRadius={62}
                     paddingAngle={2}
                     stroke="var(--crm-color-surface)"
                     strokeWidth={2}
@@ -1372,13 +1366,33 @@ function LeadSourcesCard({ leadSources, t }) {
                         fill={LEAD_SOURCE_COLORS[index % LEAD_SOURCE_COLORS.length]}
                       />
                     ))}
+                    <Label
+                      content={({ viewBox }) => {
+                        if (!viewBox || !('cx' in viewBox) || !('cy' in viewBox)) {
+                          return null;
+                        }
+
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            className="crm-dashboard-source-pie__label"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            <tspan x={viewBox.cx} dy="-0.15em">
+                              {formatNumber(totalLeads)}
+                            </tspan>
+                            <tspan x={viewBox.cx} dy="1.35em">
+                              {t('Total Leads')}
+                            </tspan>
+                          </text>
+                        );
+                      }}
+                    />
                   </Pie>
                 </PieChart>
               </ChartContainer>
-              <div className="crm-dashboard-source-pie__center" aria-hidden="true">
-                <strong>{formatNumber(totalLeads)}</strong>
-                <span>{t('Total Leads')}</span>
-              </div>
             </div>
             <div className="crm-dashboard-source-table">
               <div className="crm-dashboard-source-header">
