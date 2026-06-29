@@ -21,6 +21,7 @@ export const DASHBOARD_SECTIONS = {
 };
 
 export const DATE_RANGE_OPTIONS = [
+  { id: 'all-time', label: 'All time' },
   { id: 'today', label: 'Today' },
   { id: 'this-week', label: 'This Week' },
   { id: 'this-month', label: 'This Month' },
@@ -45,7 +46,20 @@ function getIcon(icons, key) {
 export function getDateRangeLabel(dateRange, t = defaultTranslate) {
   const option = DATE_RANGE_OPTIONS.find((item) => item.id === dateRange);
 
-  return t(option?.label || 'This Month');
+  return t(option?.label || 'All time');
+}
+
+export function getDateRangeQueryParams(dateRange) {
+  const range = getDateRangeBounds(dateRange);
+
+  if (!range) {
+    return {};
+  }
+
+  return {
+    dateFrom: range.start.toISOString(),
+    dateTo: range.end.subtract(1, 'millisecond').toISOString(),
+  };
 }
 
 export function buildSalesFunnelRows(pipelineSummaryInput) {
@@ -298,8 +312,38 @@ export function buildLeadsNeedingAttentionRows({
     .slice(0, 6);
 }
 
-function getTrendBuckets(dateRange) {
+function getTrendBuckets(dateRange, leads = []) {
   const now = dayjs();
+
+  if (dateRange === 'all-time') {
+    const validDates = leads
+      .flatMap((lead) => [
+        lead.createdAtUtc,
+        lead.wonAtUtc,
+        lead.lostAtUtc,
+        lead.closedAtUtc,
+        lead.updatedAtUtc,
+      ])
+      .filter(Boolean)
+      .map((value) => dayjs(value))
+      .filter((date) => date.isValid());
+    const firstDate =
+      validDates.length > 0
+        ? validDates.reduce((earliest, date) => (date.isBefore(earliest) ? date : earliest))
+        : now;
+    const start = firstDate.startOf('month');
+    const monthCount = Math.max(now.startOf('month').diff(start, 'month') + 1, 1);
+
+    return Array.from({ length: monthCount }, (_, index) => {
+      const bucketStart = start.add(index, 'month');
+
+      return {
+        start: bucketStart,
+        end: bucketStart.add(1, 'month'),
+        label: bucketStart.format('MMM YYYY'),
+      };
+    });
+  }
 
   if (dateRange === 'today') {
     const startOfToday = now.startOf('day');
@@ -345,10 +389,77 @@ function isWithinTrendBucket(value, bucket) {
   return date.isValid() && !date.isBefore(bucket.start) && date.isBefore(bucket.end);
 }
 
+function getDateRangeBounds(dateRange) {
+  const now = dayjs();
+
+  if (dateRange === 'all-time') {
+    return null;
+  }
+
+  if (dateRange === 'today') {
+    return {
+      start: now.startOf('day'),
+      end: now.add(1, 'day').startOf('day'),
+    };
+  }
+
+  if (dateRange === 'this-week') {
+    return {
+      start: now.startOf('week'),
+      end: now.add(1, 'day').startOf('day'),
+    };
+  }
+
+  if (dateRange === 'last-30-days') {
+    return {
+      start: now.subtract(29, 'day').startOf('day'),
+      end: now.add(1, 'day').startOf('day'),
+    };
+  }
+
+  if (dateRange === 'custom') {
+    return {
+      start: now.subtract(13, 'day').startOf('day'),
+      end: now.add(1, 'day').startOf('day'),
+    };
+  }
+
+  return {
+    start: now.startOf('month'),
+    end: now.add(1, 'day').startOf('day'),
+  };
+}
+
+function isWithinDateRange(value, range) {
+  if (!range) {
+    return true;
+  }
+
+  if (!value) {
+    return false;
+  }
+
+  const date = dayjs(value);
+
+  return date.isValid() && !date.isBefore(range.start) && date.isBefore(range.end);
+}
+
+function getLeadClosedAt(lead) {
+  return lead.wonAtUtc ?? lead.lostAtUtc ?? lead.closedAtUtc ?? lead.updatedAtUtc;
+}
+
+function isWonLead(lead) {
+  return lead.status?.toLowerCase() === 'won' || lead.stageName?.toLowerCase() === 'won';
+}
+
+function isLostLead(lead) {
+  return lead.status?.toLowerCase() === 'lost' || lead.stageName?.toLowerCase() === 'lost';
+}
+
 export function buildTrendRows({ leads: leadsInput, dateRange }) {
   const leads = asArray(leadsInput);
 
-  return getTrendBuckets(dateRange).map((bucket) => {
+  return getTrendBuckets(dateRange, leads).map((bucket) => {
     const createdLeads = leads.filter((lead) => isWithinTrendBucket(lead.createdAtUtc, bucket));
     const wonLeads = leads.filter((lead) => {
       const status = lead.status?.toLowerCase();
@@ -552,19 +663,29 @@ export function buildDashboardModel({
   const pipelineSummary = asArray(pipelineSummaryInput);
   const tasks = asArray(tasksInput);
   const tasksSummary = tasksSummaryInput || {};
-  const newLeads = leads.filter((lead) => lead.status?.toLowerCase() === 'new').length;
+  const selectedRange = getDateRangeBounds(dateRange);
+  const periodLeads = leads.filter((lead) => isWithinDateRange(lead.createdAtUtc, selectedRange));
+  const periodClosedLeads = leads.filter((lead) => {
+    return (
+      (isWonLead(lead) || isLostLead(lead)) &&
+      isWithinDateRange(getLeadClosedAt(lead), selectedRange)
+    );
+  });
+  const periodWonLeadItems = periodClosedLeads.filter(isWonLead);
+  const periodLostLeadItems = periodClosedLeads.filter(isLostLead);
+  const periodTasks = tasks.filter((task) => isWithinDateRange(task.dueDateUtc, selectedRange));
+  const newLeads = periodLeads.length;
   const openLeads = leadsBySource.reduce((sum, item) => sum + safeNumber(item.openLeads), 0);
-  const wonLeads = leadsBySource.reduce((sum, item) => sum + safeNumber(item.wonLeads), 0);
-  const lostLeads = leadsBySource.reduce((sum, item) => sum + safeNumber(item.lostLeads), 0);
-  const overdueTasks = safeNumber(tasksSummary.overdueTasks);
+  const wonLeads = periodWonLeadItems.length;
+  const lostLeads = periodLostLeadItems.length;
   const pendingTasks = safeNumber(tasksSummary.pendingTasks);
   const completedTasks = safeNumber(tasksSummary.completedTasks);
   const estimatedPipelineValue = pipelineSummary.reduce(
     (sum, stage) => sum + safeNumber(stage.totalEstimatedValue ?? stage.value),
     0,
   );
-  const wonRevenue = leadsBySource.reduce(
-    (sum, item) => sum + safeNumber(item.wonValue ?? item.wonRevenue ?? item.revenue),
+  const wonRevenue = periodWonLeadItems.reduce(
+    (sum, lead) => sum + safeNumber(lead.wonValue ?? lead.estimatedCost ?? lead.value),
     0,
   );
   const totalLeads = leads.length;
@@ -584,6 +705,14 @@ export function buildDashboardModel({
       dayjs(task.dueDateUtc).isBefore(dayjs(), 'day')
     );
   });
+  const periodOverdueTaskItems = periodTasks.filter((task) => {
+    return (
+      !task.isCompleted &&
+      task.dueDateUtc &&
+      dayjs(task.dueDateUtc).isBefore(dayjs(), 'day')
+    );
+  });
+  const overdueTasks = periodOverdueTaskItems.length;
   const unassignedLeads = leads.filter((lead) => !lead.ownerName);
   const highValueProposals = leads.filter((lead) => {
     const stageName = lead.stageName?.toLowerCase() ?? '';
@@ -648,8 +777,8 @@ export function buildDashboardModel({
     t,
   });
   const trendRows = buildTrendRows({ leads, dateRange });
-  const lostReasons = buildLostReasonRows(leads);
-  const teamPerformance = buildTeamPerformanceRows({ leads, tasks, t });
+  const lostReasons = buildLostReasonRows(periodLostLeadItems);
+  const teamPerformance = buildTeamPerformanceRows({ leads: periodLeads, tasks: periodTasks, t });
   const overdueLeadIds = new Set(overdueTaskItems.map((task) => task.leadId).filter(Boolean));
   const overdueFollowUpCount = overdueLeadIds.size || overdueTaskItems.length;
   const todayPriorities = [

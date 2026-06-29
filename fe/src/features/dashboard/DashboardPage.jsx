@@ -72,6 +72,7 @@ import {
   buildDashboardModel as buildDashboardDataModel,
   DATE_RANGE_OPTIONS as DASHBOARD_DATE_RANGE_OPTIONS,
   getDateRangeLabel as getDashboardDateRangeLabel,
+  getDateRangeQueryParams as getDashboardDateRangeQueryParams,
 } from './dashboardData.js';
 import './dashboard.css';
 
@@ -119,6 +120,7 @@ export const LEGACY_SALES_FUNNEL_STAGE_ORDER = [
 ];
 
 export const LEGACY_DATE_RANGE_OPTIONS = [
+  { id: 'all-time', label: 'All time' },
   { id: 'today', label: 'Today' },
   { id: 'this-week', label: 'This Week' },
   { id: 'this-month', label: 'This Month' },
@@ -442,7 +444,7 @@ export function buildLegacyLeadsNeedingAttentionRows({ leads, overdueTaskItems, 
 export function getLegacyDateRangeLabel(dateRange, t) {
   const option = LEGACY_DATE_RANGE_OPTIONS.find((item) => item.id === dateRange);
 
-  return t(option?.label || 'This Month');
+  return t(option?.label || 'All time');
 }
 
 export function getLegacyTrendBuckets(dateRange) {
@@ -1081,7 +1083,7 @@ function QuickActionsCard({ t }) {
   );
 }
 
-function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
+function PipelineValueCard({ chartData, estimatedPipelineValue, dateRangeLabel, t }) {
   const hasValueData = chartData.some((item) => Number(item.value) > 0);
   const highestValueStage = chartData.reduce((current, item) => {
     if (!current || Number(item.value) > Number(current.value)) {
@@ -1108,7 +1110,7 @@ function PipelineValueCard({ chartData, estimatedPipelineValue, t }) {
             </CardDescription>
           </div>
           <CardAction className="static">
-            <Badge variant="outline">{t('This Month')}</Badge>
+            <Badge variant="outline">{dateRangeLabel}</Badge>
           </CardAction>
         </div>
       </CardHeader>
@@ -1206,7 +1208,7 @@ function DashboardPeriodControls({ selectedDateRange, onDateRangeChange, t }) {
   );
 }
 
-function SalesFunnelCard({ funnelRows, t }) {
+function SalesFunnelCard({ funnelRows, dateRangeLabel, t }) {
   const maxLeadCount = Math.max(...funnelRows.map((stage) => Number(stage.leadCount) || 0), 1);
   const transitionRows = funnelRows.filter((stage) => stage.conversionToNext !== null);
   const bottleneckStage = transitionRows.reduce((current, stage) => {
@@ -1231,7 +1233,7 @@ function SalesFunnelCard({ funnelRows, t }) {
               {t('Lead volume by stage and conversion into the next step')}
             </CardDescription>
           </div>
-          <Badge variant="outline">{t('This Month')}</Badge>
+          <Badge variant="outline">{dateRangeLabel}</Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -1310,7 +1312,7 @@ function SalesFunnelCard({ funnelRows, t }) {
   );
 }
 
-function LeadSourcesCard({ leadSources, t }) {
+function LeadSourcesCard({ leadSources, dateRangeLabel, t }) {
   const totalLeads = leadSources.reduce((sum, source) => sum + (source.totalLeads || 0), 0);
   const topLeadSource = [...leadSources].sort(
     (left, right) => right.totalLeads - left.totalLeads,
@@ -1330,7 +1332,7 @@ function LeadSourcesCard({ leadSources, t }) {
             </CardDescription>
           </div>
           <CardAction className="static">
-            <Badge variant="outline">{t('This Month')}</Badge>
+            <Badge variant="outline">{dateRangeLabel}</Badge>
           </CardAction>
         </div>
       </CardHeader>
@@ -1866,7 +1868,7 @@ function TodayPrioritiesCard({ priorities, t }) {
   );
 }
 
-function SnapshotCard({ snapshot, t }) {
+function SnapshotCard({ snapshot, dateRangeLabel, t }) {
   const rows = [
     [t('Open Leads'), formatNumber(snapshot.openLeads)],
     [t('Won Deals'), formatNumber(snapshot.wonLeads)],
@@ -1880,7 +1882,7 @@ function SnapshotCard({ snapshot, t }) {
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <CardTitle>{t('Snapshot')}</CardTitle>
-          <Badge variant="outline">{t('This Month')}</Badge>
+          <Badge variant="outline">{dateRangeLabel}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -1895,7 +1897,7 @@ function SnapshotCard({ snapshot, t }) {
   );
 }
 
-function LostReasonsCard({ reasons, t }) {
+function LostReasonsCard({ reasons, dateRangeLabel, t }) {
   const totalLostReasons = reasons.reduce((sum, reason) => sum + reason.count, 0);
 
   return (
@@ -1908,7 +1910,7 @@ function LostReasonsCard({ reasons, t }) {
               {t('Common failure patterns across deals marked as lost')}
             </CardDescription>
           </div>
-          <Badge variant="outline">{t('This Month')}</Badge>
+          <Badge variant="outline">{dateRangeLabel}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -1953,7 +1955,7 @@ function LostReasonsCard({ reasons, t }) {
   );
 }
 
-function TeamPerformanceCard({ teamMembers, t }) {
+function TeamPerformanceCard({ teamMembers, dateRangeLabel, t }) {
   const hasTeamData = teamMembers.length > 1;
 
   return (
@@ -1966,7 +1968,7 @@ function TeamPerformanceCard({ teamMembers, t }) {
               {t('Owner leaderboard for closing, follow-up load, and response speed')}
             </CardDescription>
           </div>
-          <Badge variant="outline">{t('This Month')}</Badge>
+          <Badge variant="outline">{dateRangeLabel}</Badge>
         </div>
       </CardHeader>
       <CardContent className={cn(hasTeamData && 'px-0')}>
@@ -2168,7 +2170,11 @@ function UpcomingTasksCard({ tasks, t }) {
 
 function DashboardPage() {
   const { t } = useLanguage();
-  const [selectedDateRange, setSelectedDateRange] = useState('this-month');
+  const [selectedDateRange, setSelectedDateRange] = useState('all-time');
+  const reportDateParams = useMemo(
+    () => getDashboardDateRangeQueryParams(selectedDateRange),
+    [selectedDateRange],
+  );
   const leadsQuery = useQuery({
     queryKey: ['dashboard', 'leads'],
     queryFn: () => getLeads({ page: 1, pageSize: 100 }),
@@ -2182,8 +2188,9 @@ function DashboardPage() {
   });
 
   const leadsBySourceQuery = useQuery({
-    queryKey: ['dashboard', 'reports', 'leads-by-source'],
-    queryFn: () => getLeadsBySourceReport(),
+    queryKey: ['dashboard', 'reports', 'leads-by-source', reportDateParams],
+    queryFn: () => getLeadsBySourceReport(reportDateParams),
+    placeholderData: (previousData) => previousData,
     retry: false,
   });
 
@@ -2236,6 +2243,8 @@ function DashboardPage() {
       }),
     [leads, leadsBySource, pipelineSummary, selectedDateRange, t, tasks, tasksSummary],
   );
+  const dateRangeLabel = getDashboardDateRangeLabel(selectedDateRange, t);
+  const currentRangeLabel = t('Current');
   const periodControls = useMemo(
     () => (
       <DashboardPeriodControls
@@ -2292,12 +2301,18 @@ function DashboardPage() {
 
             <section className="grid gap-4 xl:grid-cols-3">
               <SalesFunnelCard
+                dateRangeLabel={currentRangeLabel}
                 funnelRows={dashboardModel.salesFunnel}
                 t={t}
               />
-              <LeadSourcesCard leadSources={dashboardModel.leadSources} t={t} />
+              <LeadSourcesCard
+                dateRangeLabel={dateRangeLabel}
+                leadSources={dashboardModel.leadSources}
+                t={t}
+              />
               <PipelineValueCard
                 chartData={dashboardModel.pipelineValueChartData}
+                dateRangeLabel={currentRangeLabel}
                 estimatedPipelineValue={dashboardModel.estimatedPipelineValue}
                 t={t}
               />
@@ -2305,7 +2320,7 @@ function DashboardPage() {
 
             <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.25fr)]">
               <TrendsCard
-                dateRangeLabel={getDashboardDateRangeLabel(selectedDateRange, t)}
+                dateRangeLabel={dateRangeLabel}
                 trends={dashboardModel.trends}
                 t={t}
               />
@@ -2314,8 +2329,16 @@ function DashboardPage() {
             </section>
 
             <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.45fr)]">
-              <LostReasonsCard reasons={dashboardModel.lostReasons} t={t} />
-              <TeamPerformanceCard teamMembers={dashboardModel.teamPerformance} t={t} />
+              <LostReasonsCard
+                dateRangeLabel={dateRangeLabel}
+                reasons={dashboardModel.lostReasons}
+                t={t}
+              />
+              <TeamPerformanceCard
+                dateRangeLabel={dateRangeLabel}
+                teamMembers={dashboardModel.teamPerformance}
+                t={t}
+              />
               <PipelineVelocityCard dashboardModel={dashboardModel} t={t} />
             </section>
 
@@ -2328,7 +2351,11 @@ function DashboardPage() {
           <aside className="crm-dashboard-target-rail">
             <QuickActionsCard t={t} />
             <TodayPrioritiesCard priorities={dashboardModel.todayPriorities} t={t} />
-            <SnapshotCard snapshot={dashboardModel.snapshot} t={t} />
+            <SnapshotCard
+              dateRangeLabel={dateRangeLabel}
+              snapshot={dashboardModel.snapshot}
+              t={t}
+            />
           </aside>
         </div>
       </div>

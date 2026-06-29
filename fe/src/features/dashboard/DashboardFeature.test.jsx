@@ -573,12 +573,13 @@ describe('Dashboard feature', () => {
     expect(screen.getByText('Won Revenue Over Time')).toBeInTheDocument();
     expect(screen.getByText('Conversion Rate Over Time')).toBeInTheDocument();
 
+    const allTimeButton = screen.getByRole('button', { name: 'All time' });
     const todayButton = screen.getByRole('button', { name: 'Today' });
     const monthButton = screen.getByRole('button', { name: 'This Month' });
     const last30DaysButton = screen.getByRole('button', { name: 'Last 30 Days' });
     const customButton = screen.getByRole('button', { name: 'Custom' });
 
-    expect(monthButton).toHaveAttribute('aria-pressed', 'true');
+    expect(allTimeButton).toHaveAttribute('aria-pressed', 'true');
 
     fireEvent.click(last30DaysButton);
     expect(last30DaysButton).toHaveAttribute('aria-pressed', 'true');
