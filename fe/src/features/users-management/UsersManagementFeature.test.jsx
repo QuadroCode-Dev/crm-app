@@ -91,7 +91,11 @@ describe('Users Management feature', () => {
     expect(await screen.findByRole('heading', { name: 'Roles & Permissions' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Role' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Leads' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByText('Change stage')).toBeInTheDocument();
+    const permissionsTable = screen.getByRole('table');
+    expect(within(permissionsTable).getByText('Data importer')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Admin - Manage data imports' })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Sales Manager - Delete leads' })).toBeInTheDocument();
     expect(screen.getByRole('row', { name: /Super Admin/ })).toBeInTheDocument();
     expect(screen.getByRole('row', { name: /Agent/ })).toBeInTheDocument();

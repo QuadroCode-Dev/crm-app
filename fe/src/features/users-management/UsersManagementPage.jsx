@@ -62,6 +62,7 @@ function getPermissionActionLabel(permission) {
     'Manage services': 'Services',
     'Manage automation': 'Automation',
     'Manage integrations': 'Integrations',
+    'Manage data imports': 'Data importer',
   };
 
   if (exactLabels[label]) {

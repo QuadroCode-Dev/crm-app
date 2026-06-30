@@ -1,5 +1,21 @@
 import httpClient from './httpClient.js';
 
+const dataImportPermission = {
+  code: 'settings.data_import.manage',
+  label: 'Manage data imports',
+  group: 'Settings',
+};
+
+function ensureDataImportPermission(permissions) {
+  const permissionList = Array.isArray(permissions) ? permissions : [];
+
+  if (permissionList.some((permission) => permission.code === dataImportPermission.code)) {
+    return permissionList;
+  }
+
+  return [...permissionList, dataImportPermission];
+}
+
 export function getUsers() {
   return httpClient.get('/api/users-management/users').then((response) => response.data || []);
 }
@@ -17,7 +33,9 @@ export function getRoles() {
 }
 
 export function getPermissions() {
-  return httpClient.get('/api/users-management/permissions').then((response) => response.data || []);
+  return httpClient
+    .get('/api/users-management/permissions')
+    .then((response) => ensureDataImportPermission(response.data));
 }
 
 export function updateRolePermissions(roleCode, permissions) {
